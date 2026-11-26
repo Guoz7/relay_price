@@ -90,6 +90,10 @@
 | `tools/probes.py` | V2A 低成本真实调用探针（连通/TTFT/TPOT/工具调用/缓存命中/账单实扣偏差）与 7 日聚合器 |
 | `tools/scenes.py` | 4 大场景导购页生成器（Claude Code / DeepSeek / Codex·GPT / Gemini·生图视频） |
 | `tools/calc_page.py` | `/calc/` 交互式月度总账、80/20 混合路由省钱与 1 主 + 1 备选站助手生成器 |
+| `tools/verify_page.py` | `/verify/` LLM 模型真伪鉴别页（支持在线边缘无状态验真与本机开源脚本双模式） |
+| `tools/verify_model.py` | 本机零依赖 LLM 真伪校验 CLI（协议指纹 / Thinking 加密签名回传 / Tool-Calling / 缓存命中） |
+| `functions/api/verify.js` | Cloudflare Pages 无状态边缘验真接口（`POST /api/verify`，严格 SSRF 防护、绝不落盘 API Key） |
+| `tools/station_insights.py` | 站点 30 日价格稳定性、域名注册时长档案与结构化社区评价（`data/reviews.json`）聚合器 |
 | `tools/en_page.py` | `/en/` 海外开发者英文概览与美元官网折数对照页 |
 | `tools/build.py` | 静态多页站构建器（生成 `dist/`、Sitemap、RSS、`llms.txt` 并自动同步本 README 榜单） |
 | `tools/verify_dist.py` | 并发静态校验（JSON-LD、HTML 标签闭合、Sitemap `noindex` 隔离）与 HTTP 烟测 |

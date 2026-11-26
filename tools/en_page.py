@@ -68,6 +68,7 @@ def build_en(
   <h1>API Price Radar (<code>agentied.work</code>)</h1>
   <p class="lead">Daily read-only pricing &amp; trust tracker across <b>{len(stations)}</b> public AI API relays (+ {n_stage0} closed Stage-0 archives) and <b>{len(model_pages)}</b> models. Built to stop bait-and-switch rankings: unprobed relays are hard-capped at <b>Stage 1 (Grade B / 74)</b>, multi-group spreads are expanded in full, and coding workloads can toggle <b>7:2:1 Prompt Cache TCO</b>.</p>
   <div class="chips">
+    <a class="chip" href="/verify/">LLM Authenticity Verifier (Thinking Sig / Cache) →</a>
     <a class="chip" href="/calc/">Monthly TCO &amp; Routing Calculator →</a>
     <a class="chip" href="/scenes/claude-code/">Claude Code (Anthropic + Cache)</a>
     <a class="chip" href="/scenes/codex-gpt/">Codex / GPT-6 (Responses API)</a>

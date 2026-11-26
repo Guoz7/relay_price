@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "policy": "Only evidence-backed developer reviews submitted via GitHub Issue (.github/ISSUE_TEMPLATE/station-review.yml) are listed here. No anonymous spam or paid reviews.",
+  "reviews": []
+}

@@ -48,6 +48,7 @@ def render_rank_markdown(
         "## 按使用场景选站与算账工具",
         "",
         f"- [月度成本算账器与主备选站助手（官方直连 vs 中转 vs 80/20 混合路由）]({base}/calc/)",
+        f"- [LLM 模型真伪鉴别与协议自测工具（Thinking 签名 / Tool-Calling / 缓存验真）]({base}/verify/)",
         f"- [Claude Code 编程中转站推荐]({base}/scenes/claude-code/)（Anthropic 原生协议 + 7:2:1 缓存成本）",
         f"- [DeepSeek API 中转与性价比对比]({base}/scenes/deepseek/)（缓存读价 + 分时高低峰提示）",
         f"- [Codex / GPT-6 系列中转站推荐]({base}/scenes/codex-gpt/)（OpenAI Responses 协议 + 多分组价差）",

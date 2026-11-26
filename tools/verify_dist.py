@@ -23,6 +23,7 @@ TAGS = ("table", "thead", "tbody", "tr", "form", "pre", "details")
 SMOKE = {  # path -> text that must appear
     "/": "API",
     "/calc/": 'id="calc-app"',
+    "/verify/": 'id="verify-app"',
     "/en/": "API Price Radar",
     "/scenes/": "Claude Code",
     "/scenes/claude-code/": "ANTHROPIC_BASE_URL",
@@ -75,7 +76,7 @@ def check_files() -> list[str]:
                 noindex_paths.add(ni)
     try:
         locs = [e.text or "" for e in ET.parse(DIST / "sitemap.xml").getroot().iter("{http://www.sitemaps.org/schemas/sitemap/0.9}loc")]
-        for req in ("/submit/", "/scenes/", "/scenes/claude-code/", "/calc/", "/en/"):
+        for req in ("/submit/", "/scenes/", "/scenes/claude-code/", "/calc/", "/verify/", "/en/"):
             if not any(x.endswith(req) for x in locs):
                 errs.append(f"sitemap.xml: {req} missing")
         if any("example.com" in x for x in locs):

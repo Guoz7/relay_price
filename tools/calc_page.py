@@ -199,7 +199,7 @@ def build_calc(
       function stCell(p){{
         if(!p) return '<span class="muted">—</span>';
         var mc = monthCost(p.in, p.out, p.cache, req, inp, out, cr);
-        return '<a href="/site/'+esc(p.dom)+'/">'+esc(p.name)+'</a> <b class="gr gr-'+esc(p.grade)+'">'+esc(p.grade)+'</b><small>'+esc(p.group.slice(0,18))+' · '+fmtY(mc)+'/月</small>';
+        return '<span class="st-head"><a href="/site/'+esc(p.dom)+'/">'+esc(p.name)+'</a> <b class="gr gr-'+esc(p.grade)+'">'+esc(p.grade)+'</b></span><small>'+esc(p.group.slice(0,18))+' · '+fmtY(mc)+'/月</small>';
       }}
       var lt = m.long_tier ? ' <span class="badge warn" title="超过 200K/272K 长上下文官方按高档计费">长文加价</span>' : '';
       return '<tr><td class="mn"><a href="/model/'+esc(m.slug)+'/"><code>'+esc(m.id)+'</code></a><small>'+esc(m.role)+'</small></td>'

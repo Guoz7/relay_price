@@ -1,0 +1,58 @@
+name: 提交站点实测评价 / 真伪反馈
+description: 提交某家中转站的真实使用体验、模型验真结果或暗涨/限流客观证据（需 GitHub 账号，防刷评）
+title: "[实测评价] "
+labels: ["station-review"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢分享真实实测体验！为防止刷评与恶意抹黑，请提供**客观可核对的体验与证据**（可附上 `/verify/` 验真报告或脱敏扣费截图）。审核通过后将收录到 `data/reviews.json` 并展示在对应站点档案页。
+
+  - type: input
+    id: domain
+    attributes:
+      label: 站点域名
+      description: 例如 api.apiyi.com（无需 https://）
+      placeholder: api.example.com
+    validations:
+      required: true
+
+  - type: dropdown
+    id: rating
+    attributes:
+      label: 综合使用评分（1–5 星）
+      options:
+        - "5 - 非常稳定、扣费透明"
+        - "4 - 整体靠谱、偶有波动"
+        - "3 - 勉强可用、有明显短板"
+        - "2 - 体验较差（频繁 429 / 扣费偏差）"
+        - "1 - 严重避雷（疑似套壳 / 跑路 / 严重暗涨）"
+    validations:
+      required: true
+
+  - type: input
+    id: models
+    attributes:
+      label: 实测使用的模型与场景
+      placeholder: 例如 claude-sonnet-5-5（Claude Code 编程） / deepseek-v4.1-flash（日常对话）
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: signals
+    attributes:
+      label: 你观察到的客观情况（可多选）
+      options:
+        - label: 通过 /verify/ 验真（Thinking 签名 / 工具调用 / 缓存命中）
+        - label: 余额实扣与公开标价一致
+        - label: 出现疑似套壳 / 降智 / 剥离缓存或工具调用失败
+        - label: 出现未通知暗涨价或分组倍率突变
+        - label: 出现频繁 429 / 超时 / 充值或售后异常
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: 客观评价与证据（可粘贴 /verify/ 生成的 Markdown 报告，请先抹掉 API Key）
+      placeholder: 简述你的真实使用时长、延迟体感、是否命中缓存以及验真/扣费证据…
+    validations:
+      required: true

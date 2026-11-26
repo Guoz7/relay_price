@@ -42,7 +42,9 @@ import pricing as P  # noqa: E402
 import probes  # noqa: E402
 import scenes  # noqa: E402
 import scoring as S  # noqa: E402
+import station_insights as SI  # noqa: E402
 import submit_page  # noqa: E402
+import verify_page  # noqa: E402
 
 ROOT = TOOLS.parent
 DATA = ROOT / "data"
@@ -527,6 +529,25 @@ class Site:
             })
         full_title = f"{title} | {self.name}" if path != "/" else title
         robots = '<meta name="robots" content="noindex,follow">' if noindex else ""
+        is_en = lang.lower().startswith("en")
+        nav_html = (
+            '<a href="/en/">Overview</a><a href="/calc/">TCO Calc</a><a href="/verify/">Verify Model</a>'
+            '<a href="/scenes/claude-code/">Claude Code</a><a href="/stations/">Relays</a>'
+            '<a href="/about/">Method</a><a href="/submit/">Submit</a><a href="/">中文</a>'
+            if is_en else
+            '<a href="/scenes/">场景</a><a href="/calc/">算账</a><a href="/verify/">验真</a>'
+            '<a href="/stations/">排行</a><a href="/models/">模型</a><a href="/changes/">调价</a>'
+            '<a href="/about/">方法</a><a href="/submit/">收录</a><a href="/en/" title="English Overview">EN</a>'
+        )
+        foot_html = (
+            f'<p>Unprobed relays are hard-capped at Stage 1 (Grade B / 74). Only relays passing 7-day real-call probes unlock Stage 2 (A/S). Prices come from read-only public APIs and official models.dev / LiteLLM baselines; verify with small top-ups first.</p>'
+            f'<p>Built {fmt_cst(self.now)} (UTC+8) · <a href="/calc/">TCO Calculator</a> · <a href="/verify/">Model Verifier</a> · <a href="/about/">Methodology &amp; Disclosure</a> · <a href="/submit/">Submit / Correct</a> · <a href="/">中文主站</a> · <a href="/sitemap.xml">Sitemap</a></p>'
+            if is_en else
+            f'<p>未接入真金白银探针实测的站点统一封顶 Stage 1（最高 B 级 74 分），仅实测达标站点解锁 A/S 认证。价格按站点公开只读接口、分组倍率与公开充值比例换算，未计入卡密折扣与活动；请以站点实时页面为准，大额充值前先小额测试。</p>'
+            f'<p>本页生成于 {fmt_cst(self.now)}（北京时间）· <a href="/scenes/">场景选站</a> · <a href="/calc/">月度算账器</a> · <a href="/verify/">模型验真</a> · <a href="/about/">评分方法与利益披露</a> · <a href="/submit/">提交收录 / 纠错</a> · <a href="/en/">English</a> · <a href="/changes.xml">RSS</a> · <a href="/sitemap.xml">Sitemap</a></p>'
+        )
+        brand_lbl = "API Price Radar" if is_en else self.name
+        search_ph = "Search models, e.g. claude-sonnet-5-5 / gpt-6-astra" if is_en else "搜模型，如 deepseek-v4.1-flash / claude-sonnet-5-5"
         doc = f"""<!doctype html>
 <html lang="{E(lang)}">
 <head>
@@ -551,13 +572,13 @@ class Site:
 <body>
 <header class="top">
   <div class="wrap top-in">
-    <a class="brand" href="/"><span class="logo" aria-hidden="true">◎</span>{E(self.name)}</a>
+    <a class="brand" href="{'/' if not is_en else '/en/'}"><span class="logo" aria-hidden="true">◎</span>{E(brand_lbl)}</a>
     <div class="search" role="search">
-      <input id="q" type="search" placeholder="搜模型，如 deepseek-v4.1-flash / claude-sonnet-5-5" autocomplete="off" aria-label="搜索模型">
+      <input id="q" type="search" placeholder="{E(search_ph)}" autocomplete="off" aria-label="搜索模型">
       <div id="sug" class="sug" hidden></div>
     </div>
     <nav class="nav">
-      <a href="/scenes/">场景选站</a><a href="/calc/">算账器</a><a href="/stations/">站点排行</a><a href="/models/">模型</a><a href="/changes/">调价</a><a href="/about/">方法</a><a href="/submit/">收录</a><a href="/en/" title="English Overview">EN</a>
+      {nav_html}
       <button id="theme" class="ghost" type="button" title="切换深浅色" aria-label="切换深浅色">◐</button>
     </nav>
   </div>
@@ -568,8 +589,7 @@ class Site:
 </main>
 <footer class="foot">
   <div class="wrap">
-    <p>未接入真金白银探针实测的站点统一封顶 Stage 1（最高 B 级 74 分），仅实测达标站点解锁 A/S 认证。价格按站点公开只读接口、分组倍率与公开充值比例换算，未计入卡密折扣与活动；请以站点实时页面为准，大额充值前先小额测试。</p>
-    <p>本页生成于 {fmt_cst(self.now)}（北京时间）· <a href="/scenes/">场景选站</a> · <a href="/calc/">月度算账器</a> · <a href="/about/">评分方法与利益披露</a> · <a href="/submit/">提交收录 / 纠错</a> · <a href="/en/">English</a> · <a href="/changes.xml">RSS</a> · <a href="/sitemap.xml">Sitemap</a></p>
+    {foot_html}
   </div>
 </footer>
 <script src="/assets/app.js?v={self.asset_ver}" defer></script>
@@ -941,8 +961,9 @@ def build(cfg: dict[str, Any]) -> dict[str, Any]:
     for q in quotes:
         by_model[q.canonical].append(q)
         by_station[q.domain].append(q)
+    run_stats = load_run_stats(now)
     mark_anomalies(by_model, cfg)
-    compute_station_scores(stations, by_station, intel, load_run_stats(now), cfg, probe_map)
+    compute_station_scores(stations, by_station, intel, run_stats, cfg, probe_map)
     compute_quote_scores(by_model, stations, cfg)
 
     def dedupe_per_lane(qs: list[P.Quote]) -> list[P.Quote]:
@@ -975,11 +996,13 @@ def build(cfg: dict[str, Any]) -> dict[str, Any]:
         }
 
     changes = update_history(quotes, stations, now)
+    stability_map = SI.compute_price_stability(changes)
+    reviews_map = SI.load_reviews(DATA)
     _log(f"scored {len(model_pages)} models, starting page render")
     build_model_pages(site, model_pages, stations, cfg, specs)
-    build_station_pages(site, stations, by_station, intel, changes, cfg)
+    build_station_pages(site, stations, by_station, intel, changes, cfg, run_stats=run_stats, stability_map=stability_map, reviews_map=reviews_map)
     build_closed_station_pages(site, closed_stations)
-    fam_order, fam_models = build_indexes(site, model_pages, stations, by_station, closed_stations, cfg, min_st)
+    fam_order, fam_models = build_indexes(site, model_pages, stations, by_station, closed_stations, cfg, min_st, intel=intel, stability_map=stability_map)
     build_changes(site, changes, stations, model_pages)
     build_about(site, cfg)
     submit_page.build_submit(site, cfg, len(stations), load_json(DATA / "mine-last.json", None), n_stage0=len(closed_stations))
@@ -991,6 +1014,7 @@ def build(cfg: dict[str, Any]) -> dict[str, Any]:
     }
     scenes.build_scenes(site, model_pages, stations, helpers)
     calc_page.build_calc(site, model_pages, stations, specs, helpers, DIST)
+    verify_page.build_verify(site)
     en_page.build_en(site, model_pages, stations, specs, len(closed_stations), helpers)
     build_home(site, cfg, model_pages, stations, closed_stations, fam_order, fam_models, changes)
     site.page("/404.html", "页面不存在", "页面不存在",
@@ -1252,8 +1276,132 @@ def build_model_pages(site: Site, model_pages, stations, cfg, specs: dict[str, d
 
 
 # ---------------------------------------------------------------- station pages
-def build_station_pages(site: Site, stations, by_station, intel, changes, cfg) -> None:
+def _station_bento(
+    dom: str,
+    st: dict[str, Any],
+    qs: list[P.Quote],
+    it: dict[str, Any],
+    rs: dict[str, Any],
+    stab: dict[str, Any] | None,
+    revs: list[dict[str, Any]],
+) -> str:
+    sc: S.StationScore = st["score"]
+    # 1. Price Stability card
+    stab = stab or {"total": 0, "price_moves": 0, "ups": 0, "downs": 0, "outs": 0, "news": 0, "removed": 0, "max_up_pct": 0.0, "max_down_pct": 0.0, "label": "价格平稳", "cls": "ok"}
+    up_txt = f"{stab['ups']} 次（最大 +{stab['max_up_pct']:g}%）" if stab["ups"] else "0 次"
+    dn_txt = f"{stab['downs']} 次（最大 -{stab['max_down_pct']:g}%）" if stab["downs"] else "0 次"
+    card_price = (
+        '<div class="bcard">'
+        f'<div class="bcard-h"><h3>价格稳定性（近 30 日）</h3><span class="badge {stab["cls"]}">{E(stab["label"])}</span></div>'
+        '<dl class="bkv">'
+        f'<dt>涨价异动</dt><dd>{E(up_txt)}</dd>'
+        f'<dt>降价调整</dt><dd>{E(dn_txt)}</dd>'
+        f'<dt>型号变动</dt><dd>上新 {stab["news"]} · 下架 {stab["removed"]} · 输出档调整 {stab["outs"]}</dd>'
+        f'<dt>公开调价记录</dt><dd>{"见下方 30 日调价明细" if stab["total"] else "近 30 天内未监测到公开报价变动"}</dd>'
+        '</dl></div>'
+    )
+
+    # 2. Domain Longevity & Infra card
+    age_s, age_long, age_cls = SI.fmt_domain_age(it.get("domain_age_days"))
+    reg_at = it.get("domain_registered_at") or "未知"
+    exp_at = it.get("domain_expires_at") or "未知"
+    registrar = (it.get("registrar") or "未公开")[:44]
+    ranks = []
+    if it.get("tranco_rank"):
+        ranks.append(f"Tranco #{int(it['tranco_rank']):,}")
+    if it.get("umbrella_rank"):
+        ranks.append(f"Umbrella #{int(it['umbrella_rank']):,}")
+    if it.get("majestic_rank"):
+        ranks.append(f"Majestic #{int(it['majestic_rank']):,}")
+    rank_s = " · ".join(ranks) if ranks else "暂未进入全球公开流量榜"
+    att, suc = int(rs.get("attempts") or 0), int(rs.get("successes") or 0)
+    ms_list = rs.get("ms") or []
+    med_ms = f"{statistics.median(ms_list):.0f}ms" if ms_list else "—"
+    uptime_s = f"{suc}/{att}（{suc / att:.0%}）· 中位响应 {med_ms}" if att else "样本累计中"
+    card_domain = (
+        '<div class="bcard">'
+        f'<div class="bcard-h"><h3>域名时长与基础设施</h3><span class="badge {age_cls}">{E(age_s)}</span></div>'
+        '<dl class="bkv">'
+        f'<dt>主域名注册</dt><dd>{E(str(reg_at))} · {E(age_long)}</dd>'
+        f'<dt>到期 / 注册商</dt><dd>{E(str(exp_at))} · {E(registrar)}</dd>'
+        f'<dt>全球流量排名</dt><dd>{E(rank_s)}</dd>'
+        f'<dt>30日接口可用</dt><dd>{E(uptime_s)}</dd>'
+        '</dl></div>'
+    )
+
+    # 3. LLM Authenticity & Stage 2 Probe card
+    canon_set = {q.canonical for q in qs}
+    sample_model = next(
+        (m for m in ("claude-sonnet-5-5", "claude-opus-5-5", "gpt-6-astra", "deepseek-v4.1-flash", "gpt-5.4") if m in canon_set),
+        qs[0].canonical if qs else "claude-sonnet-5-5",
+    )
+    verify_href = f"/verify/?base_url={quote(f'https://{dom}', safe='')}&model={quote(sample_model, safe='')}"
+    pr = sc.probe
+    if pr:
+        auth_badge = f'<span class="badge {"danger" if sc.cap_reason else "ok"}">Stage 2 探针已接入</span>'
+        auth_dl = (
+            f'<dt>真实调用率</dt><dd>{pr.get("success_rate", 0):.1%}（{pr.get("total_samples", 0)} 次样本）</dd>'
+            f'<dt>工具 / 缓存</dt><dd>工具 {pr["tool_call_pass_rate"]:.0%} · 缓存 {pr["cache_hit_rate"]:.0%}</dd>'
+            if (pr.get("tool_call_pass_rate") is not None and pr.get("cache_hit_rate") is not None) else
+            f'<dt>真实调用率</dt><dd>{pr.get("success_rate", 0):.1%}（{pr.get("total_samples", 0)} 次样本）</dd>'
+        )
+    else:
+        auth_badge = '<span class="badge">Stage 1 未官测</span>'
+        auth_dl = (
+            '<dt>真伪验真状态</dt><dd>尚未纳入 7 日官测探针池（评级封顶 B 级 74 分）</dd>'
+            '<dt>自带 Key 自测</dt><dd>支持一键检验 Thinking 加密签名回传、Tool-Calling 与两轮缓存命中</dd>'
+        )
+    card_auth = (
+        '<div class="bcard">'
+        f'<div class="bcard-h"><h3>LLM 模型真伪鉴别</h3>{auth_badge}</div>'
+        f'<dl class="bkv">{auth_dl}</dl>'
+        f'<div><a class="btn sm primary" href="{verify_href}">现场鉴别这家站模型真伪 →</a></div>'
+        '</div>'
+    )
+
+    # 4. Community Reviews & Reputation card
+    srcs = it.get("sources") or []
+    rev_issue_url = (
+        "https://github.com/Guoz7/relay_price/issues/new?template=station-review.yml&title="
+        + quote(f"[实测评价] {dom}", safe="")
+    )
+    if revs:
+        avg_r = sum(float(r.get("rating") or 0) for r in revs) / len(revs)
+        rev_badge = f'<span class="badge ok">★ {avg_r:.1f} / 5（{len(revs)} 条实测）</span>'
+        rev_body = '<div class="rev-list">' + "".join(
+            f'<div class="rev-item"><b>{"★" * int(r.get("rating") or 0)}</b> <code>{E(str(r.get("model") or ""))}</code> '
+            f'<small>@{E(str(r.get("author") or "developer"))} · {E(str(r.get("date") or ""))}</small>'
+            f'<p>{E(str(r.get("summary") or "")[:180])}</p></div>'
+            for r in revs[:3]
+        ) + "</div>"
+    else:
+        rev_badge = f'<span class="badge">外部收录 {len(srcs)} 处 · 暂无站内实评</span>'
+        src_preview = "、".join(srcs[:4]) + ("…" if len(srcs) > 4 else "") if srcs else "自主发现"
+        rev_body = (
+            '<dl class="bkv">'
+            f'<dt>外部社区收录</dt><dd>{E(src_preview)}</dd>'
+            '<dt>站内实测评价</dt><dd>为防刷评，仅收录带 GitHub 账号与客观证据的实测评价</dd>'
+            '</dl>'
+        )
+    card_rev = (
+        '<div class="bcard">'
+        f'<div class="bcard-h"><h3>社区口碑与实测评价</h3>{rev_badge}</div>'
+        f'{rev_body}'
+        f'<div><a class="btn sm" href="{rev_issue_url}" target="_blank" rel="noopener">提交我的实测评价 / 避雷证据 →</a></div>'
+        '</div>'
+    )
+    return f'<section class="bento-4" aria-label="站点高级详情">{card_price}{card_domain}{card_auth}{card_rev}</section>'
+
+
+def build_station_pages(
+    site: Site, stations, by_station, intel, changes, cfg,
+    *, run_stats: dict[str, Any] | None = None, stability_map: dict[str, Any] | None = None,
+    reviews_map: dict[str, list[dict[str, Any]]] | None = None,
+) -> None:
     now = site.now
+    run_stats = run_stats or {}
+    stability_map = stability_map or {}
+    reviews_map = reviews_map or {}
     chg_by_dom: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for c in sorted(changes, key=lambda x: x.get("run_at") or "", reverse=True):
         if len(chg_by_dom[c["domain"]]) < 15:
@@ -1304,12 +1452,14 @@ def build_station_pages(site: Site, stations, by_station, intel, changes, cfg) -
         if st.get("telegram_oauth"):
             oauth_tags.append("支持 Telegram 登录")
 
+        bento_html = _station_bento(dom, st, qs, it, run_stats.get(dom) or {}, stability_map.get(dom), reviews_map.get(dom) or [])
         body = f"""
 <section class="hero sm">
   <p class="eyebrow">站点口碑档案 · {E(sc.stage_label)}</p>
   <h1>{E(name)} 靠谱吗？ <small>{E(dom)}</small></h1>
   <p class="lead">{health}</p>
   {score_panel(st, cfg)}
+  {bento_html}
   <div class="kpis">
     <div><b>{E(f"¥{tp:g}" if tp is not None else "未知")}</b><span>{E(st.get("topup_note") or "")}</span></div>
     <div><b>{st.get("parsed", len(qs))}</b><span>有效定价型号</span></div>
@@ -1327,8 +1477,8 @@ def build_station_pages(site: Site, stations, by_station, intel, changes, cfg) -
 {tbl}"""
         site.page(
             f"/site/{dom}/",
-            f"{name}（{dom}）靠谱吗？评分 {sc.grade} 级 {sc.total:.0f} 分、价格与分组倍率",
-            f"{name}（{dom}）站点档案（{sc.stage_label}）：综合 {sc.grade} 级 {sc.total:.0f} 分，{st.get('topup_note')}，收录 {st.get('parsed', len(qs))} 个型号与 {len(groups)} 个分组，更新于 {fmt_cst(st['fetched_at'])}。",
+            f"{name}（{dom}）靠谱吗？评分 {sc.grade} 级 {sc.total:.0f} 分、域名时长、价格稳定性与真伪评测",
+            f"{name}（{dom}）站点档案（{sc.stage_label}）：综合 {sc.grade} 级 {sc.total:.0f} 分，{st.get('topup_note')}，收录 {st.get('parsed', len(qs))} 个型号与 {len(groups)} 个分组，含 30 日价格稳定性、域名注册时长与真伪鉴别入口。",
             body,
             crumbs=[("站点排行", "/stations/"), (name, f"/site/{dom}/")],
             lastmod=st["fetched_at"], priority=0.6,
@@ -1362,7 +1512,12 @@ def build_closed_station_pages(site: Site, closed_stations: dict[str, dict[str, 
 
 
 # ---------------------------------------------------------------- indexes
-def station_rank_table(stations, by_station, now, limit: int | None = None, compact: bool = False) -> str:
+def station_rank_table(
+    stations, by_station, now, limit: int | None = None, compact: bool = False,
+    intel: dict[str, Any] | None = None, stability_map: dict[str, Any] | None = None,
+) -> str:
+    intel = intel or {}
+    stability_map = stability_map or {}
     items = sorted(
         stations.items(),
         key=lambda kv: (-kv[1]["score"].stage, -kv[1]["score"].total, -kv[1]["score"].raw_total, kv[0]),
@@ -1377,23 +1532,39 @@ def station_rank_table(stations, by_station, now, limit: int | None = None, comp
             f'<td class="n" data-v="{sc.dims[k].score:.1f}"><span class="{"" if sc.dims[k].known else "muted"}">{sc.dims[k].score:.0f}</span></td>'
             for k in ("stability", "longevity", "transparency", "reputation", "latency")
         )
+        extra_cols = ""
+        if not compact:
+            days = (intel.get(dom) or {}).get("domain_age_days")
+            age_s, _, age_cls = SI.fmt_domain_age(days)
+            sb = stability_map.get(dom)
+            if sb and (sb["ups"] or sb["downs"]):
+                sb_txt = f'涨{sb["ups"]}·降{sb["downs"]}'
+                sb_cls = sb["cls"]
+                sb_v = sb["ups"] * 100 + sb["price_moves"]
+            else:
+                sb_txt, sb_cls, sb_v = "平稳", "ok", 0
+            extra_cols = (
+                f'<td class="n" data-v="{days if isinstance(days, (int, float)) else -1}"><span class="badge {age_cls}">{E(age_s)}</span></td>'
+                f'<td class="n" data-v="{sb_v}"><span class="badge {sb_cls}">{E(sb_txt)}</span></td>'
+            )
         st_lbl = "Stage 2 实测" if (sc.stage == 2 and not sc.cap_reason) else ("Stage 2 降级" if sc.stage == 2 else "Stage 1 未实测")
         rows.append(
             f'<tr><td class="n" data-v="{i}">{i}</td>'
             f'<td class="st" data-v="{E(dom)}"><a href="/site/{E(dom)}/">{E(st["display_name"])}</a><small>{E(dom)}</small></td>'
             f'<td class="sc" data-v="{sc.total}">{grade_badge(sc.total)} <b>{sc.total:.0f}</b><small>{st_lbl} · 置信度{sc.confidence}</small></td>'
-            f'{dims}'
+            f'{dims}{extra_cols}'
             f'<td class="n" data-v="{tp if tp is not None else 9e9}">{E(f"¥{tp:g}/$1" if tp is not None else "未知")}</td>'
             + ("" if compact else f'<td class="n" data-v="{st.get("parsed", len(by_station.get(dom, [])))}">{st.get("parsed", len(by_station.get(dom, [])))}</td>'
                f'<td class="t" data-v="{int(st["fetched_at"].timestamp())}">{E(ago(st["fetched_at"], now))}</td>')
             + "</tr>"
         )
     dim_heads = "" if compact else "".join(f'<th data-type="n"><button type="button">{S.DIM_LABELS[k]}</button></th>' for k in ("stability", "longevity", "transparency", "reputation", "latency"))
+    extra_heads = "" if compact else '<th data-type="n"><button type="button">域名时长</button></th><th data-type="n"><button type="button">30日价格</button></th>'
     return (
         '<div class="tbl-wrap"><table class="qt sortable"><thead><tr>'
         '<th data-type="n"><button type="button">#</button></th><th data-type="s"><button type="button">站点</button></th>'
         '<th data-type="n" aria-sort="descending"><button type="button">信誉分</button></th>'
-        f'{dim_heads}'
+        f'{dim_heads}{extra_heads}'
         '<th data-type="n"><button type="button">充值比例</button></th>'
         + ("" if compact else '<th data-type="n"><button type="button">型号</button></th><th data-type="n"><button type="button">更新</button></th>')
         + "</tr></thead><tbody>" + "".join(rows) + "</tbody></table></div>"
@@ -1427,7 +1598,10 @@ def model_list(items: list[tuple[str, dict[str, Any]]], stations) -> str:
     )
 
 
-def build_indexes(site: Site, model_pages, stations, by_station, closed_stations, cfg, min_st):
+def build_indexes(
+    site: Site, model_pages, stations, by_station, closed_stations, cfg, min_st,
+    *, intel: dict[str, Any] | None = None, stability_map: dict[str, Any] | None = None,
+):
     fam_models: dict[str, list[tuple[str, dict[str, Any]]]] = defaultdict(list)
     for canon, mp in model_pages.items():
         fam_models[mp["family"]].append((canon, mp))
@@ -1474,7 +1648,7 @@ def build_indexes(site: Site, model_pages, stations, by_station, closed_stations
         f"{len(stations)} 家 AI API 中转站分层信誉评分排行（实测认证 {n_stage2} 家，公开校验 {len(stations) - n_stage2} 家，另含 {len(closed_stations)} 家仅建档闭源站）：{gtxt}。",
         f'<section class="hero sm"><h1>AI API 中转站分层评分排行榜</h1>'
         f'<p class="lead">未接入真实调用探针的站点统一 <b>Stage 1 封顶 B 级（74 分）</b>，仅实测达标解锁 A/S 认证。公开分维度：{E(S.summarize_weights(w))}。当前分布：{gtxt}。<a href="/about/">评分方法 →</a></p></section>'
-        + station_rank_table(stations, by_station, site.now)
+        + station_rank_table(stations, by_station, site.now, intel=intel, stability_map=stability_map)
         + closed_html,
         crumbs=[("站点排行", "/stations/")], priority=0.9,
     )
@@ -1678,6 +1852,11 @@ def build_home(site: Site, cfg, model_pages, stations, closed_stations, fam_orde
     <input id="q2" type="search" placeholder="输入模型名，回车直达推荐页，如 claude-sonnet-5-5 / deepseek-v4.1-flash" autocomplete="off" aria-label="搜索模型">
     <div id="sug2" class="sug" hidden></div>
   </div>
+  <div class="tool-strip">
+    <a class="tool-card info" href="/verify/"><b>LLM 模型真伪鉴别 →</b><span>现场检验 Thinking 加密签名回传、Tool-Calling 与两轮 Prompt Cache 真命中（支持本机脚本）</span></a>
+    <a class="tool-card ok" href="/calc/"><b>月度成本算账与主备选站 →</b><span>对比官网直连 vs 常规中转 vs 80/20 混合路由，自动搭配 1 主 + 1 备独立站点</span></a>
+    <a class="tool-card" href="/stations/"><b>站点高级档案与排行 →</b><span>查看 30 日价格稳定性、域名注册时长、全球流量榜排名与 GitHub 实测评价</span></a>
+  </div>
   <div class="chips">{fam_nav}</div>
 </section>
 <section>
@@ -1734,6 +1913,7 @@ def build_seo_files(site: Site, model_pages, stations, n_stage0: int) -> None:
     lines += [
         "", "## 主要页面",
         f"- [月度成本算账器与主备选站助手]({site.url('/calc/')})：官方直连 vs 常规中转 vs 80/20 混合路由，自动给出 1 主 + 1 备站点组合",
+        f"- [LLM 模型真伪鉴别与协议自测工具]({site.url('/verify/')})：支持在线无状态边缘接口（POST /api/verify）与本机脚本，校验 Thinking 签名、Tool-Calling 与两轮缓存命中",
         f"- [中转站分层评分排行]({site.url('/stations/')})",
         f"- [全部模型]({site.url('/models/')})",
         f"- [调价动态]({site.url('/changes/')})",

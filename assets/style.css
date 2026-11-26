@@ -81,8 +81,8 @@ h3{font-size:15.5px;margin:16px 0 6px}
 html[data-theme=dark] .mode-bar button.on{color:#0b111b}
 .tbl-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
 table{border-collapse:collapse;width:100%;font-size:14px}
-th,td{padding:8px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
-thead th{background:var(--surface2);position:sticky;top:0;font-weight:600;color:var(--ink2);white-space:nowrap;font-size:13px}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+thead th{background:var(--surface2);position:sticky;top:0;font-weight:600;color:var(--ink2);white-space:nowrap;font-size:12.5px}
 th button{all:unset;cursor:pointer}th button:hover{color:var(--accent)}
 th[aria-sort=ascending] button::after{content:" ▲";font-size:10px}th[aria-sort=descending] button::after{content:" ▼";font-size:10px}
 th[data-type=n],th.n{text-align:right}
@@ -90,6 +90,7 @@ td.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 td.n small{display:block;font-size:11.5px}
 td.hl{font-weight:700;color:var(--ok)}
 td.st a{font-weight:600}td.st small{display:block;font-size:12px}
+td.st .st-head{display:inline-flex;align-items:center;gap:5px;flex-wrap:nowrap}
 td.mn code{white-space:nowrap}
 td.g span{font-family:var(--mono);font-size:12.5px}td.g{max-width:240px}
 td.t{white-space:nowrap;font-size:13px;color:var(--ink2)}td.t.stale{color:var(--warn)}
@@ -205,3 +206,34 @@ html[data-theme=dark] .btn.primary{color:#0b111b}
 .calc-grid input,.calc-grid select{font:inherit;font-weight:400;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line2);border-radius:8px;padding:7px 10px;width:100%}
 .calc-grid input:focus-visible,.calc-grid select:focus-visible{outline:none;box-shadow:0 0 0 3px var(--accent-bg);border-color:var(--accent)}
 @media (max-width:860px){.calc-grid{grid-template-columns:1fr}}
+
+/* elevated visual accents, homepage tool strip, station 4-card trust bento & /verify/ UI */
+.hero{position:relative}
+.hero::before{content:"";position:absolute;inset:-18px -24px auto;height:180px;background:radial-gradient(620px 140px at 18% 0%,var(--accent-bg),transparent 72%);opacity:.65;pointer-events:none;z-index:-1}
+.tool-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0 8px}
+.tool-card{display:flex;flex-direction:column;gap:4px;background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:var(--radius);padding:13px 15px;color:var(--ink);box-shadow:var(--shadow);transition:border-color .15s,transform .15s,box-shadow .15s}
+.tool-card:hover{border-color:var(--accent);text-decoration:none;transform:translateY(-2px);box-shadow:0 6px 18px rgba(15,23,42,.09)}
+.tool-card.ok{border-top-color:var(--ok)}.tool-card.info{border-top-color:var(--info)}
+.tool-card b{font-size:15px}.tool-card span{font-size:13px;color:var(--ink2)}
+.bento-4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0 16px}
+.bcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px}
+.bcard-h{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.bcard-h h3{margin:0;font-size:15px}
+.bkv{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;font-size:13px;margin:0}
+.bkv dt{color:var(--ink3);white-space:nowrap}.bkv dd{margin:0;color:var(--ink);font-variant-numeric:tabular-nums;word-break:break-word}
+.rev-list{display:grid;gap:8px}
+.rev-item{background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:13px}
+.rev-item p{margin:4px 0 0;color:var(--ink2)}
+.verify-box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin:12px 0 18px;box-shadow:var(--shadow)}
+.verify-tabs{display:flex;flex-wrap:wrap;gap:8px}
+.v-checks{display:flex;flex-wrap:wrap;gap:10px 16px;margin:10px 0 12px;font-size:13.5px;color:var(--ink2)}
+.v-checks label{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+.v-key-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.v-key-row label{display:grid;gap:5px;font-size:13px;font-weight:600;color:var(--ink2);min-width:240px}
+.v-key-row input{font:inherit;font-weight:400;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line2);border-radius:8px;padding:8px 10px;width:100%}
+.v-verdict{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 14px;background:var(--surface2);border:1px solid var(--line);border-radius:var(--radius);margin:14px 0 10px}
+.v-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.v-card{background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:11px 13px;font-size:13.5px}
+.v-card p{margin:6px 0 0;color:var(--ink2);font-size:13px}
+.v-actions{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 4px}
+@media (max-width:860px){.tool-strip,.bento-4,.v-cards{grid-template-columns:1fr}}
