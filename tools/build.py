@@ -475,6 +475,16 @@ class Site:
         suffix = ' <small class="muted">(含返佣)</small>' if aff else ""
         return f'<a class="ext" href="{E(href)}" rel="{rel}" target="_blank" data-out-domain="{E(domain)}"{tip}>{E(text or domain)}</a>{suffix}'
 
+    def _verification_tags(self) -> str:
+        tags: list[str] = []
+        g = str(self.cfg.get("google_site_verification") or "").strip()
+        if g:
+            tags.append(f'<meta name="google-site-verification" content="{E(g)}">\n')
+        b = str(self.cfg.get("bing_site_verification") or "").strip()
+        if b:
+            tags.append(f'<meta name="msvalidate.01" content="{E(b)}">\n')
+        return "".join(tags)
+
     def _analytics_tag(self) -> str:
         tags: list[str] = []
         cf_tok = str(self.cfg.get("cf_beacon_token") or "").strip()
@@ -516,7 +526,7 @@ class Site:
 <meta name="description" content="{E(desc)}">
 <link rel="canonical" href="{E(canonical)}">
 {robots}
-<meta property="og:type" content="website">
+{self._verification_tags()}<meta property="og:type" content="website">
 <meta property="og:site_name" content="{E(self.name)}">
 <meta property="og:title" content="{E(full_title)}">
 <meta property="og:description" content="{E(desc)}">

@@ -77,10 +77,16 @@ class SwapDistTests(unittest.TestCase):
     def test_cf_beacon_and_readme_sync(self):
         from datetime import datetime, timezone
 
-        site = B.Site({"base_url": "https://agentied.work", "site_name": "T", "cf_beacon_token": "tok123"}, datetime.now(timezone.utc), "v1")
+        site = B.Site({
+            "base_url": "https://agentied.work", "site_name": "T",
+            "cf_beacon_token": "tok123", "google_site_verification": "gver", "bing_site_verification": "bver",
+        }, datetime.now(timezone.utc), "v1")
         tag = site._analytics_tag()
         self.assertIn("static.cloudflareinsights.com/beacon.min.js", tag)
         self.assertIn('"token":"tok123"', tag)
+        vtag = site._verification_tags()
+        self.assertIn('name="google-site-verification" content="gver"', vtag)
+        self.assertIn('name="msvalidate.01" content="bver"', vtag)
 
         tmp = Path(tempfile.mkdtemp())
         try:
