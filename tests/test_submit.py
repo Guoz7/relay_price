@@ -7,6 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
 import adapters as A  # noqa: E402
 import build as B  # noqa: E402
+import export_readme as ER  # noqa: E402
 import pricing as P  # noqa: E402
 import submit_page as SP  # noqa: E402
 
@@ -70,6 +71,23 @@ class SwapDistTests(unittest.TestCase):
             B.sync_tree(src, dst)
             self.assertEqual((dst / "a" / "x.html").read_text(encoding="utf-8"), "new")
             self.assertFalse((dst / "old").exists())
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_cf_beacon_and_readme_sync(self):
+        from datetime import datetime, timezone
+
+        site = B.Site({"base_url": "https://agentied.work", "site_name": "T", "cf_beacon_token": "tok123"}, datetime.now(timezone.utc), "v1")
+        tag = site._analytics_tag()
+        self.assertIn("static.cloudflareinsights.com/beacon.min.js", tag)
+        self.assertIn('"token":"tok123"', tag)
+
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            rm = tmp / "README.md"
+            rm.write_text(f"top\n{ER.MARKER_START}\nold\n{ER.MARKER_END}\nbottom\n", encoding="utf-8")
+            ER.sync_readme_markers(rm, "fresh-rank")
+            self.assertEqual(rm.read_text(encoding="utf-8"), f"top\n{ER.MARKER_START}\nfresh-rank\n{ER.MARKER_END}\nbottom\n")
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
 

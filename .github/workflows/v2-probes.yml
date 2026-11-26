@@ -1,0 +1,90 @@
+name: V2A Real-Call Micro-Probes
+
+on:
+  schedule:
+    - cron: "15 */2 * * *" # 每 2 小时跑连通/TTFT/TPOT；每 6 小时加跑工具与账单对账；每日 1 次缓存命中
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Probe mode to run"
+        required: false
+        default: "auto"
+        type: choice
+        options:
+          - auto
+          - check
+          - tool
+          - cache
+          - all
+
+permissions:
+  contents: write
+
+concurrency:
+  group: v2a-probes
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Restore rolling 7-day probe runs cache
+        uses: actions/cache@v4
+        with:
+          path: data/probe-runs
+          key: probe-runs-${{ github.run_id }}
+          restore-keys: |
+            probe-runs-
+
+      - name: Execute scheduled V2A micro-probes
+        env:
+          PROBE_TARGETS_JSON: ${{ secrets.PROBE_TARGETS_JSON }}
+          INPUT_MODE: ${{ inputs.mode || 'auto' }}
+        run: |
+          if [ -z "$PROBE_TARGETS_JSON" ]; then
+            echo "PROBE_TARGETS_JSON secret not configured yet; skipping V2A probes."
+            exit 0
+          fi
+          CFG="$RUNNER_TEMP/probe-targets.json"
+          printf '%s' "$PROBE_TARGETS_JSON" > "$CFG"
+          trap 'rm -f "$CFG"' EXIT
+
+          if [ "$INPUT_MODE" = "auto" ]; then
+            HOUR=$((10#$(date -u +%H)))
+            python tools/probes.py --config "$CFG" --mode check
+            if [ $((HOUR % 6)) -eq 0 ]; then
+              python tools/probes.py --config "$CFG" --mode tool
+            fi
+            if [ "$HOUR" -eq 2 ]; then
+              python tools/probes.py --config "$CFG" --mode cache
+            fi
+          else
+            python tools/probes.py --config "$CFG" --mode "$INPUT_MODE"
+          fi
+          python tools/probes.py --aggregate
+
+      - name: Commit aggregated Stage 2 probe summary (no keys)
+        run: |
+          if [ ! -f data/probes.json ]; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/probes.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update V2A Stage 2 probe summary [skip ci]"
+            git push
+          else
+            echo "No probe summary changes."
+          fi

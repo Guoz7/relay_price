@@ -107,7 +107,12 @@ python tools/build.py --serve 8790
 python tools/verify_dist.py --http http://127.0.0.1:8790
 ```
 
-### 运行 V2A 实测探针（本地，密钥不入库）
+### 运行 V2A 实测探针（本地或 GitHub Actions 全自动，密钥不入库）
+
+**方式 A（推荐 · GitHub Actions 每 2 小时全自动跑满 7 天）**：
+按 `data/probe-targets.example.json` 格式填好 5 个小号测试 Key，保存为 GitHub 仓库 Secret `PROBE_TARGETS_JSON`（**Settings → Secrets and variables → Actions**）。`.github/workflows/v2-probes.yml` 会每 2 小时自动执行连通/TTFT/TPOT、每 6 小时执行工具调用与账单实扣对账、每日 1 次 Prompt Cache 命中验证，并自动聚合提交 `data/probes.json`（仅含聚合统计，不含密钥），次日自动亮出 Stage 2（A/S 级）实测徽章。
+
+**方式 B（本机手动运行）**：
 
 ```bash
 cp data/probe-targets.example.json data/probe-targets.local.json

@@ -476,12 +476,19 @@ class Site:
         return f'<a class="ext" href="{E(href)}" rel="{rel}" target="_blank" data-out-domain="{E(domain)}"{tip}>{E(text or domain)}</a>{suffix}'
 
     def _analytics_tag(self) -> str:
+        tags: list[str] = []
+        cf_tok = str(self.cfg.get("cf_beacon_token") or "").strip()
+        if cf_tok:
+            tags.append(
+                f'<script defer src="https://static.cloudflareinsights.com/beacon.min.js" '
+                f'data-cf-beacon=\'{{"token":"{E(cf_tok)}"}}\'></script>\n'
+            )
         sc = str(self.cfg.get("analytics_script") or "").strip()
-        if not sc:
-            return ""
-        dom = str(self.cfg.get("analytics_domain") or "").strip()
-        dom_attr = f' data-domain="{E(dom)}"' if dom else ""
-        return f'<script defer{dom_attr} src="{E(sc)}"></script>\n'
+        if sc:
+            dom = str(self.cfg.get("analytics_domain") or "").strip()
+            dom_attr = f' data-domain="{E(dom)}"' if dom else ""
+            tags.append(f'<script defer{dom_attr} src="{E(sc)}"></script>\n')
+        return "".join(tags)
 
     def page(self, path: str, title: str, desc: str, body: str, *, crumbs=None, ld=None,
              lastmod: datetime | None = None, priority: float = 0.5, noindex: bool = False) -> None:

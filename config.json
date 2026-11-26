@@ -6,6 +6,7 @@
   "user_agent": "Mozilla/5.0 (compatible; RelayPriceBot/1.0; +https://agentied.work/about/)",
   "submit_url": "mailto:submit@agentied.work?subject=%E6%94%B6%E5%BD%95%2F%E7%BA%A0%E9%94%99",
   "github_issues_url": "https://github.com/Guoz7/relay_price/issues/new",
+  "cf_beacon_token": "bfd0a0ac81a344448a15948c87bd4f1f",
   "analytics_script": "",
   "analytics_domain": "",
   "min_stations_for_model_page": 3,
