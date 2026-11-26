@@ -17,5 +17,7 @@ data/mine-probe-progress.jsonl
 ROADMAP.md
 GITHUB_README.md
 CN_LAUNCH_POSTS.md
+EN_LAUNCH_KIT.md
+.wrangler/
 __pycache__/
 *.pyc

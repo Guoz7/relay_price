@@ -24,6 +24,7 @@
   "hide_after_days": 30,
   "mix_input_weight": 3,
   "mix_output_weight": 1,
+  "usd_cny_rate": 7.25,
   "cache_mix_weights": {"cache": 7, "input": 2, "output": 1},
   "hot_models_count": 24,
   "station_weights": {"stability": 30, "longevity": 25, "transparency": 20, "reputation": 15, "latency": 10},

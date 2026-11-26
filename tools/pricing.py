@@ -41,7 +41,7 @@ WELFARE_RE = re.compile(r"(?:公益|福利|免费|白嫖|体验|试用|测试|(?
 CAVEAT_RULES: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"(?:kiro|krio)", re.I), "自称Kiro"),
     (re.compile(r"cursor", re.I), "自称Cursor"),
-    (re.compile(r"(?:逆向|反代|反重力|antigravity)", re.I), "自称逆向/反代"),
+    (re.compile(r"(?:逆向|反代|反重力|antigravity|reverse)", re.I), "自称逆向/反代"),
     (re.compile(r"(?:特惠|特价|特供|限时|促销|超低价|低价|跑量|混池|活动|秒杀|(?<![a-z])promo(?![a-z]))", re.I), "特惠/限时分组"),
 ]
 

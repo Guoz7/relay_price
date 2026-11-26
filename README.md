@@ -4,53 +4,55 @@
 
 <!-- AUTO-RANK-START -->
 - **官网（每日自动更新）**：[https://agentied.work](https://agentied.work/)
-- **最近构建**：2026-11-27 06:26（北京时间）｜ 收录 **691** 家公开报价站 + **53** 家 Stage 0 仅建档闭源站，覆盖 **2876** 个型号
+- **最近构建**：2026-11-27 06:49（北京时间）｜ 收录 **764** 家公开报价站 + **54** 家 Stage 0 仅建档闭源站，覆盖 **3034** 个型号
 - **分层封顶**：未接入真金白银实测探针的站点统一 **Stage 1 封顶 B 级（74 分）**，绝不给未实测站点发 A/S 牌；常规推荐自动隔离自称 Kiro/Cursor/逆向/特惠及未核实极端低价分组。
 
-## 按使用场景选站
+## 按使用场景选站与算账工具
 
+- [月度成本算账器与主备选站助手（官方直连 vs 中转 vs 80/20 混合路由）](https://agentied.work/calc/)
 - [Claude Code 编程中转站推荐](https://agentied.work/scenes/claude-code/)（Anthropic 原生协议 + 7:2:1 缓存成本）
 - [DeepSeek API 中转与性价比对比](https://agentied.work/scenes/deepseek/)（缓存读价 + 分时高低峰提示）
 - [Codex / GPT-6 系列中转站推荐](https://agentied.work/scenes/codex-gpt/)（OpenAI Responses 协议 + 多分组价差）
 - [Gemini 与生图 / 视频 API 推荐](https://agentied.work/scenes/gemini-image/)（Gemini 原生 + 按次生图/视频）
+- [English Overview & USD Comparison](https://agentied.work/en/)
 
 ## 旗舰模型常规推荐速览
 
 | 模型 | 收录站数 | 常规推荐（仅常规按量组） | 推荐价（输入/输出 ¥/1M） | 全网常规中位输入 | 完整比价 |
 | --- | ---: | --- | ---: | ---: | --- |
-| `deepseek-v4.1-flash` | 411 | apipro.maynor1024.live (`B 74`) | ¥0.198 / ¥0.792 | ¥0.5 | [查看全部 →](https://agentied.work/model/deepseek-v4.1-flash/) |
-| `claude-sonnet-5-5` | 470 | apipro.maynor1024.live (`B 74`) | ¥0.7765 / ¥3.88 | ¥2.4 | [查看全部 →](https://agentied.work/model/claude-sonnet-5-5/) |
-| `claude-opus-5-5` | 512 | apipro.maynor1024.live (`B 74`) | ¥1.55 / ¥7.76 | ¥4.8 | [查看全部 →](https://agentied.work/model/claude-opus-5-5/) |
-| `claude-fable-5-2` | 400 | apipro.maynor1024.live (`B 74`) | ¥3.11 / ¥15.53 | ¥10.8 | [查看全部 →](https://agentied.work/model/claude-fable-5-2/) |
-| `gpt-6-astra` | 556 | apipro.maynor1024.live (`B 74`) | ¥0.8089 / ¥4.04 | ¥3 | [查看全部 →](https://agentied.work/model/gpt-6-astra/) |
-| `gpt-6.1-sol` | 539 | apipro.maynor1024.live (`B 74`) | ¥0.1618 / ¥0.8089 | ¥0.64 | [查看全部 →](https://agentied.work/model/gpt-6.1-sol/) |
-| `gemini-4-carbon` | 315 | JBB 金贝贝 (`B 74`) | ¥1 / ¥5 | ¥2.8 | [查看全部 →](https://agentied.work/model/gemini-4-carbon/) |
-| `gpt-image-2.6-flare` | 305 | PackyAPI (`B 74`) | ¥0.0247/次 | 按次计费 | [查看全部 →](https://agentied.work/model/gpt-image-2.6-flare/) |
+| `deepseek-v4.1-flash` | 468 | apipro.maynor1024.live (`B 74`) | ¥0.198 / ¥0.792 | ¥0.5 | [查看全部 →](https://agentied.work/model/deepseek-v4.1-flash/) |
+| `claude-sonnet-5-5` | 529 | JBB 金贝贝 (`B 74`) | ¥0.8 / ¥4 | ¥2.4 | [查看全部 →](https://agentied.work/model/claude-sonnet-5-5/) |
+| `claude-opus-5-5` | 575 | JBB 金贝贝 (`B 74`) | ¥1.6 / ¥8 | ¥4.8 | [查看全部 →](https://agentied.work/model/claude-opus-5-5/) |
+| `claude-fable-5-2` | 444 | apipro.maynor1024.live (`B 74`) | ¥3.11 / ¥15.53 | ¥10.88 | [查看全部 →](https://agentied.work/model/claude-fable-5-2/) |
+| `gpt-6-astra` | 619 | apipro.maynor1024.live (`B 74`) | ¥0.8089 / ¥4.04 | ¥3 | [查看全部 →](https://agentied.work/model/gpt-6-astra/) |
+| `gpt-6.1-sol` | 600 | apipro.maynor1024.live (`B 74`) | ¥0.1618 / ¥0.8089 | ¥0.6 | [查看全部 →](https://agentied.work/model/gpt-6.1-sol/) |
+| `gemini-4-carbon` | 343 | JBB 金贝贝 (`B 74`) | ¥1 / ¥5 | ¥2.8 | [查看全部 →](https://agentied.work/model/gemini-4-carbon/) |
+| `gpt-image-2.6-flare` | 347 | PackyAPI (`B 74`) | ¥0.0247/次 | 按次计费 | [查看全部 →](https://agentied.work/model/gpt-image-2.6-flare/) |
 
 ## 站点信誉排行 Top 20
 
 | # | 站点 | 认证阶段 | 评级 / 分数 | 充值比例 | 支持协议 | 档案 |
 | ---: | --- | --- | --- | ---: | --- | --- |
-| 1 | **JBB 金贝贝** (`jbbt.pages.dev`) | Stage 1 公开校验 | `B` 74 | ¥1/$1 | Anthropic, Gemini, OpenAI Chat, OpenAI Responses | [靠谱吗 →](https://agentied.work/site/jbbt.pages.dev/) |
-| 2 | **apipro.maynor1024.live** (`apipro.maynor1024.live`) | Stage 1 公开校验 | `B` 74 | ¥1/$1 | Anthropic, Embedding, Gemini, 生图 | [靠谱吗 →](https://agentied.work/site/apipro.maynor1024.live/) |
-| 3 | **钱多多 API** (`35.aigcbest.top`) | Stage 1 公开校验 | `B` 74 | ¥3.5/$1 | Anthropic, Embedding, Gemini, 生图 | [靠谱吗 →](https://agentied.work/site/35.aigcbest.top/) |
-| 4 | **APIYI** (`api.apiyi.com`) | Stage 1 公开校验 | `B` 74 | ¥7/$1 | Anthropic, Embedding, Gemini, 生图 | [靠谱吗 →](https://agentied.work/site/api.apiyi.com/) |
-| 5 | **Aiberm** (`aiberm.com`) | Stage 1 公开校验 | `B` 74 | ¥6.95/$1 | Anthropic, Gemini, 生图, OpenAI Chat | [靠谱吗 →](https://agentied.work/site/aiberm.com/) |
-| 6 | **KKSJ AI模型中转API** (`api.kksj.org`) | Stage 1 公开校验 | `B` 74 | ¥1/$1 | Anthropic, Gemini, 生图, OpenAI Chat | [靠谱吗 →](https://agentied.work/site/api.kksj.org/) |
-| 7 | **启源星⭐** (`chuan.sylu.cc`) | Stage 1 公开校验 | `B` 74 | ¥7.3/$1 | OpenAI Chat | [靠谱吗 →](https://agentied.work/site/chuan.sylu.cc/) |
-| 8 | **Apilio** (`api.bltcy.ai`) | Stage 1 公开校验 | `B` 74 | ¥1/$1 | Anthropic, Gemini, 生图, OpenAI Chat | [靠谱吗 →](https://agentied.work/site/api.bltcy.ai/) |
-| 9 | **LaoZhang API** (`api.laozhang.ai`) | Stage 1 公开校验 | `B` 74 | ¥7/$1 | Anthropic, Embedding, Gemini, 生图 | [靠谱吗 →](https://agentied.work/site/api.laozhang.ai/) |
-| 10 | **APIPRO** (`cloud.wenwen-ai.com`) | Stage 1 公开校验 | `B` 74 | ¥7/$1 | Anthropic, Gemini, 生图, OpenAI Chat | [靠谱吗 →](https://agentied.work/site/cloud.wenwen-ai.com/) |
-| 11 | **PackyAPI** (`packyapi.com`) | Stage 1 公开校验 | `B` 74 | ¥1/$1 | Anthropic, Gemini, 生图, OpenAI Chat | [靠谱吗 →](https://agentied.work/site/packyapi.com/) |
-| 12 | **接JieAPI** (`chatfire.cn`) | Stage 1 公开校验 | `B` 74 | ¥1/$1 | 生图, OpenAI Chat | [靠谱吗 →](https://agentied.work/site/chatfire.cn/) |
-| 13 | **4SAPI** (`4sapi.com`) | Stage 1 公开校验 | `B` 74 | ¥1/$1 | Anthropic, Gemini, 生图, OpenAI Chat | [靠谱吗 →](https://agentied.work/site/4sapi.com/) |
-| 14 | **兔子API** (`api.tu-zi.com`) | Stage 1 公开校验 | `B` 74 | ¥0.7/$1 | Anthropic, Embedding, Gemini, 生图 | [靠谱吗 →](https://agentied.work/site/api.tu-zi.com/) |
-| 15 | **PoloAPI** (`poloai.top`) | Stage 1 公开校验 | `B` 74 | ¥1/$1 | Anthropic, Gemini, 生图, OpenAI Chat | [靠谱吗 →](https://agentied.work/site/poloai.top/) |
-| 16 | **NekoAPI** (`api.nekoapi.com`) | Stage 1 公开校验 | `B` 74 | ¥2/$1 | Anthropic, Gemini, 生图, OpenAI Chat | [靠谱吗 →](https://agentied.work/site/api.nekoapi.com/) |
-| 17 | **AiCore API** (`oneapi.xty.app`) | Stage 1 公开校验 | `B` 74 | ¥0.8/$1 | — | [靠谱吗 →](https://agentied.work/site/oneapi.xty.app/) |
-| 18 | **Quanzil API** (`jeniya.top`) | Stage 1 公开校验 | `B` 74 | ¥1/$1 | Anthropic, Embedding, Gemini, 生图 | [靠谱吗 →](https://agentied.work/site/jeniya.top/) |
-| 19 | **熊猫API** (`api520.pro`) | Stage 1 公开校验 | `B` 74 | ¥7.3/$1 | Anthropic, OpenAI Chat | [靠谱吗 →](https://agentied.work/site/api520.pro/) |
-| 20 | **Ai实验室** (`openai-labs.com`) | Stage 1 公开校验 | `B` 74 | ¥1/$1 | Anthropic, Embedding, Gemini, 生图 | [靠谱吗 →](https://agentied.work/site/openai-labs.com/) |
+| 1 | **接JieAPI** (`chatfire.cn`) | Stage 1 公开校验 | `B` 74 | ¥1/$1 | 生图, OpenAI Chat | [靠谱吗 →](https://agentied.work/site/chatfire.cn/) |
+| 2 | **APIYI** (`api.apiyi.com`) | Stage 1 公开校验 | `B` 74 | ¥7/$1 | Anthropic, Embedding, Gemini, 生图 | [靠谱吗 →](https://agentied.work/site/api.apiyi.com/) |
+| 3 | **JBB 金贝贝** (`jbbt.pages.dev`) | Stage 1 公开校验 | `B` 74 | ¥1/$1 | Anthropic, Gemini, OpenAI Chat, OpenAI Responses | [靠谱吗 →](https://agentied.work/site/jbbt.pages.dev/) |
+| 4 | **KKSJ AI模型中转API** (`api.kksj.org`) | Stage 1 公开校验 | `B` 74 | ¥1/$1 | Anthropic, Gemini, 生图, OpenAI Chat | [靠谱吗 →](https://agentied.work/site/api.kksj.org/) |
+| 5 | **启源星⭐** (`chuan.sylu.cc`) | Stage 1 公开校验 | `B` 74 | ¥7.3/$1 | OpenAI Chat | [靠谱吗 →](https://agentied.work/site/chuan.sylu.cc/) |
+| 6 | **灵芽API** (`api.lingyaai.cn`) | Stage 1 公开校验 | `B` 74 | ¥1/$1 | OpenAI Chat, 视频 | [靠谱吗 →](https://agentied.work/site/api.lingyaai.cn/) |
+| 7 | **Aiberm** (`aiberm.com`) | Stage 1 公开校验 | `B` 74 | ¥6.95/$1 | Anthropic, Gemini, 生图, OpenAI Chat | [靠谱吗 →](https://agentied.work/site/aiberm.com/) |
+| 8 | **LaoZhang API** (`api.laozhang.ai`) | Stage 1 公开校验 | `B` 74 | ¥7/$1 | Anthropic, Embedding, Gemini, 生图 | [靠谱吗 →](https://agentied.work/site/api.laozhang.ai/) |
+| 9 | **钱多多 API** (`35.aigcbest.top`) | Stage 1 公开校验 | `B` 74 | ¥3.5/$1 | Anthropic, Embedding, Gemini, 生图 | [靠谱吗 →](https://agentied.work/site/35.aigcbest.top/) |
+| 10 | **apipro.maynor1024.live** (`apipro.maynor1024.live`) | Stage 1 公开校验 | `B` 74 | ¥1/$1 | Anthropic, Embedding, Gemini, 生图 | [靠谱吗 →](https://agentied.work/site/apipro.maynor1024.live/) |
+| 11 | **91claude** (`ai.bytonsec.com`) | Stage 1 公开校验 | `B` 74 | ¥1/$1 | Anthropic, Gemini, OpenAI Chat | [靠谱吗 →](https://agentied.work/site/ai.bytonsec.com/) |
+| 12 | **熊猫API** (`api520.pro`) | Stage 1 公开校验 | `B` 74 | ¥7.3/$1 | Anthropic, OpenAI Chat | [靠谱吗 →](https://agentied.work/site/api520.pro/) |
+| 13 | **Ai实验室** (`openai-labs.com`) | Stage 1 公开校验 | `B` 74 | ¥1/$1 | Anthropic, Embedding, Gemini, 生图 | [靠谱吗 →](https://agentied.work/site/openai-labs.com/) |
+| 14 | **NekoAPI** (`api.nekoapi.com`) | Stage 1 公开校验 | `B` 74 | ¥2/$1 | Anthropic, Gemini, 生图, OpenAI Chat | [靠谱吗 →](https://agentied.work/site/api.nekoapi.com/) |
+| 15 | **AiCore API** (`oneapi.xty.app`) | Stage 1 公开校验 | `B` 74 | ¥0.8/$1 | — | [靠谱吗 →](https://agentied.work/site/oneapi.xty.app/) |
+| 16 | **兔子API** (`api.tu-zi.com`) | Stage 1 公开校验 | `B` 74 | ¥0.7/$1 | Anthropic, Embedding, Gemini, 生图 | [靠谱吗 →](https://agentied.work/site/api.tu-zi.com/) |
+| 17 | **Ekan8 API** (`api.ekan8.com`) | Stage 1 公开校验 | `B` 74 | ¥1/$1 | Anthropic, Gemini, OpenAI Chat | [靠谱吗 →](https://agentied.work/site/api.ekan8.com/) |
+| 18 | **PoloAPI** (`poloai.top`) | Stage 1 公开校验 | `B` 74 | ¥1/$1 | Anthropic, Gemini, 生图, OpenAI Chat | [靠谱吗 →](https://agentied.work/site/poloai.top/) |
+| 19 | **聚合api服务** (`xeduapi.com`) | Stage 1 公开校验 | `B` 74 | ¥1/$1 | OpenAI Chat, OpenAI Responses | [靠谱吗 →](https://agentied.work/site/xeduapi.com/) |
+| 20 | **毫秒API** (`api.holdai.top`) | Stage 1 公开校验 | `B` 74 | ¥1.2/$1 | Anthropic, Gemini, 生图, OpenAI Chat | [靠谱吗 →](https://agentied.work/site/api.holdai.top/) |
 <!-- AUTO-RANK-END -->
 
 ---
@@ -83,12 +85,15 @@
 | `tools/refresh.py` | 并发只读抓取各站 `/api/status` 与 `/api/pricing`，快照写入 `data/raw/*.json.gz` |
 | `tools/adapters.py` | 兼容 New API、One API、VoAPI 与 `public-schema` 公开报价格式 |
 | `tools/pricing.py` | 多分组价格换算、缓存价、分时表达式解析与自认风险标签提取（纯函数） |
+| `tools/model_specs.py` | 同步 `anomalyco/models.dev` 与 `BerriAI/litellm` 官网参考价、上下文窗口与能力规格（`data/model-specs.json`） |
 | `tools/scoring.py` | Stage 0/1/2 分层信誉评分、非补偿封顶与报价综合评分（纯函数） |
 | `tools/probes.py` | V2A 低成本真实调用探针（连通/TTFT/TPOT/工具调用/缓存命中/账单实扣偏差）与 7 日聚合器 |
 | `tools/scenes.py` | 4 大场景导购页生成器（Claude Code / DeepSeek / Codex·GPT / Gemini·生图视频） |
+| `tools/calc_page.py` | `/calc/` 交互式月度总账、80/20 混合路由省钱与 1 主 + 1 备选站助手生成器 |
+| `tools/en_page.py` | `/en/` 海外开发者英文概览与美元官网折数对照页 |
 | `tools/build.py` | 静态多页站构建器（生成 `dist/`、Sitemap、RSS、`llms.txt` 并自动同步本 README 榜单） |
 | `tools/verify_dist.py` | 并发静态校验（JSON-LD、HTML 标签闭合、Sitemap `noindex` 隔离）与 HTTP 烟测 |
-| `tests/` | 单元测试（45+ 用例） |
+| `tests/` | 单元测试（52+ 用例） |
 | `.github/workflows/` | `ci.yml`（PR/Push 单测）与 `daily-refresh.yml`（每日定时刷新、更新 README 与可选 Cloudflare Pages 自动部署） |
 
 ### 本地命令

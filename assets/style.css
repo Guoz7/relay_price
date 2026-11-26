@@ -192,3 +192,16 @@ html[data-theme=dark] .btn.primary{color:#0b111b}
 @keyframes sub-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 @media (max-width:860px){.subform .row2{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){.btn,.btn:hover,.btn:active{transition:none;transform:none}.subform .out.show{animation:none}}
+
+/* official model specs strip & /calc/ interactive calculator */
+.spec-bar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--radius);padding:10px 14px;margin:12px 0;font-size:13.5px;box-shadow:var(--shadow)}
+.spec-pills{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.spec-price{display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--ink2);font-variant-numeric:tabular-nums}
+.spec-price b{color:var(--ink)}
+.calc-box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin:12px 0 18px;box-shadow:var(--shadow)}
+.calc-presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.calc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:12px}
+.calc-grid label{display:grid;gap:5px;font-size:13px;font-weight:600;color:var(--ink2)}
+.calc-grid input,.calc-grid select{font:inherit;font-weight:400;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line2);border-radius:8px;padding:7px 10px;width:100%}
+.calc-grid input:focus-visible,.calc-grid select:focus-visible{outline:none;box-shadow:0 0 0 3px var(--accent-bg);border-color:var(--accent)}
+@media (max-width:860px){.calc-grid{grid-template-columns:1fr}}

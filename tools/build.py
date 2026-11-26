@@ -34,7 +34,10 @@ from urllib.parse import quote
 TOOLS = Path(__file__).resolve().parent
 sys.path.insert(0, str(TOOLS))
 
+import calc_page  # noqa: E402
+import en_page  # noqa: E402
 import export_readme  # noqa: E402
+import model_specs as MS  # noqa: E402
 import pricing as P  # noqa: E402
 import probes  # noqa: E402
 import scenes  # noqa: E402
@@ -507,7 +510,8 @@ class Site:
         return "".join(tags)
 
     def page(self, path: str, title: str, desc: str, body: str, *, crumbs=None, ld=None,
-             lastmod: datetime | None = None, priority: float = 0.5, noindex: bool = False) -> None:
+             lastmod: datetime | None = None, priority: float = 0.5, noindex: bool = False,
+             lang: str = "zh-CN") -> None:
         canonical = self.url(path)
         crumbs_html = ""
         ld = list(ld or [])
@@ -524,7 +528,7 @@ class Site:
         full_title = f"{title} | {self.name}" if path != "/" else title
         robots = '<meta name="robots" content="noindex,follow">' if noindex else ""
         doc = f"""<!doctype html>
-<html lang="zh-CN">
+<html lang="{E(lang)}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -553,7 +557,7 @@ class Site:
       <div id="sug" class="sug" hidden></div>
     </div>
     <nav class="nav">
-      <a href="/scenes/">场景选站</a><a href="/stations/">站点排行</a><a href="/models/">模型</a><a href="/changes/">调价</a><a href="/about/">评分方法</a><a href="/submit/">提交收录</a>
+      <a href="/scenes/">场景选站</a><a href="/calc/">算账器</a><a href="/stations/">站点排行</a><a href="/models/">模型</a><a href="/changes/">调价</a><a href="/about/">方法</a><a href="/submit/">收录</a><a href="/en/" title="English Overview">EN</a>
       <button id="theme" class="ghost" type="button" title="切换深浅色" aria-label="切换深浅色">◐</button>
     </nav>
   </div>
@@ -565,7 +569,7 @@ class Site:
 <footer class="foot">
   <div class="wrap">
     <p>未接入真金白银探针实测的站点统一封顶 Stage 1（最高 B 级 74 分），仅实测达标站点解锁 A/S 认证。价格按站点公开只读接口、分组倍率与公开充值比例换算，未计入卡密折扣与活动；请以站点实时页面为准，大额充值前先小额测试。</p>
-    <p>本页生成于 {fmt_cst(self.now)}（北京时间）· <a href="/scenes/">场景选站</a> · <a href="/about/">评分方法与利益披露</a> · <a href="/submit/">提交收录 / 纠错</a> · <a href="/changes.xml">RSS</a> · <a href="/sitemap.xml">Sitemap</a></p>
+    <p>本页生成于 {fmt_cst(self.now)}（北京时间）· <a href="/scenes/">场景选站</a> · <a href="/calc/">月度算账器</a> · <a href="/about/">评分方法与利益披露</a> · <a href="/submit/">提交收录 / 纠错</a> · <a href="/en/">English</a> · <a href="/changes.xml">RSS</a> · <a href="/sitemap.xml">Sitemap</a></p>
   </div>
 </footer>
 <script src="/assets/app.js?v={self.asset_ver}" defer></script>
@@ -928,6 +932,7 @@ def build(cfg: dict[str, Any]) -> dict[str, Any]:
 
     intel = load_json(DATA / "intel.json", {})
     probe_map = probes.load_probe_summary(DATA)
+    specs = MS.load_model_specs(DATA)
     quotes = merge_mirrors(quotes, stations, intel)
     closed_stations = load_closed_stations(cfg, stations)
 
@@ -971,7 +976,7 @@ def build(cfg: dict[str, Any]) -> dict[str, Any]:
 
     changes = update_history(quotes, stations, now)
     _log(f"scored {len(model_pages)} models, starting page render")
-    build_model_pages(site, model_pages, stations, cfg)
+    build_model_pages(site, model_pages, stations, cfg, specs)
     build_station_pages(site, stations, by_station, intel, changes, cfg)
     build_closed_station_pages(site, closed_stations)
     fam_order, fam_models = build_indexes(site, model_pages, stations, by_station, closed_stations, cfg, min_st)
@@ -982,9 +987,11 @@ def build(cfg: dict[str, Any]) -> dict[str, Any]:
     helpers = {
         "money": money, "grade_badge": grade_badge, "rank_key": rank_key,
         "short_price": short_price, "cache_mix_cny": cache_mix_cny,
-        "is_reliable_rec": is_reliable_rec, "fmt_cst": fmt_cst,
+        "is_reliable_rec": is_reliable_rec, "is_stale": is_stale, "fmt_cst": fmt_cst,
     }
     scenes.build_scenes(site, model_pages, stations, helpers)
+    calc_page.build_calc(site, model_pages, stations, specs, helpers, DIST)
+    en_page.build_en(site, model_pages, stations, specs, len(closed_stations), helpers)
     build_home(site, cfg, model_pages, stations, closed_stations, fam_order, fam_models, changes)
     site.page("/404.html", "页面不存在", "页面不存在",
               '<section class="hero sm"><h1>页面不存在</h1><p class="lead">试试顶部搜索框，或 <a href="/scenes/">按场景选站</a> / <a href="/models/">浏览全部模型</a>。</p></section>', noindex=True)
@@ -1093,7 +1100,58 @@ def sync_tree(src: Path, dst: Path) -> None:
 
 
 # ---------------------------------------------------------------- model pages
-def build_model_pages(site: Site, model_pages, stations, cfg) -> None:
+def _spec_bar(sp: dict[str, Any] | None, ref_quote: P.Quote | None, cfg: dict[str, Any]) -> str:
+    if not sp:
+        return ""
+    usd_rate = float(cfg.get("usd_cny_rate", 7.25))
+    pills: list[str] = []
+    ctx_s = MS.fmt_ctx(sp.get("context"))
+    if ctx_s:
+        pills.append(f'<span class="badge ep">{E(ctx_s)} 上下文</span>')
+    out_s = MS.fmt_ctx(sp.get("max_output"))
+    if out_s:
+        pills.append(f'<span class="badge">{E(out_s)} 最大输出</span>')
+    if sp.get("reasoning"):
+        pills.append('<span class="badge info">深度思考</span>')
+    if sp.get("tool_call"):
+        pills.append('<span class="badge">工具调用</span>')
+    if sp.get("vision"):
+        pills.append('<span class="badge">多模态</span>')
+    if sp.get("long_tier"):
+        pills.append('<span class="badge warn" title="超过 200K/272K 长上下文时官网按高档加价">超长上下文加价</span>')
+
+    price_parts: list[str] = []
+    in_u, out_u, cache_u = sp.get("in_usd"), sp.get("out_usd"), sp.get("cache_usd")
+    if isinstance(in_u, (int, float)) and isinstance(out_u, (int, float)) and (in_u > 0 or out_u > 0):
+        in_c, out_c = in_u * usd_rate, out_u * usd_rate
+        p_txt = f'官网参考价 <b>{money(in_u, "$")} / {money(out_u, "$")}</b><small>（约 {money(in_c)} / {money(out_c)} 每百万 token）</small>'
+        if isinstance(cache_u, (int, float)) and cache_u > 0:
+            p_txt += f'<small>· 缓存读 {money(cache_u, "$")}</small>'
+        price_parts.append(p_txt)
+        if ref_quote and ref_quote.kind == "token":
+            rel_mix = mix(ref_quote, cfg, "cny")
+            wi, wo = float(cfg.get("mix_input_weight", 3)), float(cfg.get("mix_output_weight", 1))
+            off_mix = (in_c * wi + out_c * wo) / (wi + wo)
+            if rel_mix is not None and off_mix > 0:
+                ratio = rel_mix / off_mix
+                bcls = "warn" if (ratio < 0.15 or ratio > 1.05) else "ok"
+                price_parts.append(
+                    f'<span class="badge {bcls}" title="以 3:1 综合价对比官网直连估算（按 1 USD ≈ ¥{usd_rate:g}）">'
+                    f'常规推荐约官网 {ratio * 100:.0f}%（{ratio * 10:.1f}折）</span>'
+                )
+    if not pills and not price_parts:
+        return ""
+    price_parts.append('<a href="/calc/">算月度总账 →</a>')
+    return (
+        '<div class="spec-bar">'
+        f'<div class="spec-pills">{"".join(pills)}</div>'
+        f'<div class="spec-price">{"".join(price_parts)} <small class="muted">来源: models.dev / LiteLLM</small></div>'
+        '</div>'
+    )
+
+
+def build_model_pages(site: Site, model_pages, stations, cfg, specs: dict[str, dict[str, Any]] | None = None) -> None:
+    specs = specs or {}
     now = site.now
     date = fmt_cst(now, False)
     for canon, mp in model_pages.items():
@@ -1161,11 +1219,13 @@ def build_model_pages(site: Site, model_pages, stations, cfg) -> None:
                 f'{alt_tbl}</details>'
             )
         variants = sorted({q.model for q in rows})
+        spec_html = _spec_bar(specs.get(canon), rec or cheap, cfg)
         body = f"""
 <section class="hero sm">
   <p class="eyebrow">{E(fam_label)} · {mp['n']} 家站点 · 更新于 {E(fmt_cst(mp['lastmod']))}</p>
   <h1>{E(canon)} API 中转推荐与价格对比</h1>
   <p class="lead">常规按量最低价：<strong>{E(cheap_txt)}</strong>。推荐区已自动隔离自称 Kiro/逆向/特惠及低于中位价 0.25× 的未实测极低价分组。</p>
+  {spec_html}
   {('<h2 class="h-rec">常规按量推荐（未实测最高封顶 B 级）</h2><div class="recs">' + top_cards + '</div>') if top_cards else ''}
   {kpis}
 </section>
@@ -1621,7 +1681,7 @@ def build_home(site: Site, cfg, model_pages, stations, closed_stations, fam_orde
   <div class="chips">{fam_nav}</div>
 </section>
 <section>
-  <h2>按使用场景直接选站 <a class="more" href="/scenes/">全部场景 →</a></h2>
+  <h2>按使用场景直接选站 <a class="more" href="/scenes/">全部场景 →</a> <a class="more" href="/calc/">月度成本算账与主备选站 →</a></h2>
   <div class="cards scene-cards">{scene_cards}</div>
 </section>
 <section>
@@ -1673,11 +1733,13 @@ def build_seo_files(site: Site, model_pages, stations, n_stage0: int) -> None:
         lines.append(f"- [{sc['name']}]({site.url('/scenes/' + sc['slug'] + '/')})：{sc['tagline']}")
     lines += [
         "", "## 主要页面",
+        f"- [月度成本算账器与主备选站助手]({site.url('/calc/')})：官方直连 vs 常规中转 vs 80/20 混合路由，自动给出 1 主 + 1 备站点组合",
         f"- [中转站分层评分排行]({site.url('/stations/')})",
         f"- [全部模型]({site.url('/models/')})",
         f"- [调价动态]({site.url('/changes/')})",
         f"- [评分与计价方法及利益披露]({site.url('/about/')})",
         f"- [提交收录 / 纠错]({site.url('/submit/')})：收录标准、WAF 放行说明与邮箱/GitHub Issue 双通道提交",
+        f"- [English Overview]({site.url('/en/')})：Open-source AI API relay pricing & trust benchmark in USD",
         "", "## 站点信誉 Top 20",
     ]
     for i, (dom, st) in enumerate(sorted(stations.items(), key=lambda kv: (-kv[1]["score"].stage, -kv[1]["score"].total, -kv[1]["score"].raw_total))[:20], 1):
