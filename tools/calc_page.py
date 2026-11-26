@@ -163,7 +163,7 @@ def build_calc(
 (function(){{
   var PRESETS = {{
     code:  {{req:150,  inp:8000,  out:800,  cache:75, heavy:'claude-sonnet-5-5', light:'deepseek-v4.1-flash'}},
-    cs:    {{req:2000, inp:2000,  out:300,  cache:40, heavy:'gpt-6.1-sol',       light:'deepseek-v4.1-flash'}},
+    cs:    {{req:2000, inp:2000,  out:300,  cache:40, heavy:'gpt-5.4',           light:'deepseek-v4.1-flash'}},
     doc:   {{req:80,   inp:30000, out:2000, cache:20, heavy:'gemini-4-carbon',   light:'deepseek-v4-pro'}},
     batch: {{req:1000, inp:1500,  out:1500, cache:0,  heavy:'deepseek-v4-pro',   light:'deepseek-v4.1-flash'}}
   }};
@@ -220,7 +220,8 @@ def build_calc(
       var hyb  = (hRel!=null && lRel!=null) ? (0.2 * hRel + 0.8 * lRel) : null;
       document.getElementById('k-heavy-off').textContent = fmtY(hOff);
       document.getElementById('k-heavy-rel').textContent = fmtY(hRel);
-      var saveTxt = (hRel && hyb) ? '（省 '+Math.round((1-hyb/hRel)*100)+'%）' : '';
+      var savePct = (hRel && hyb != null) ? Math.round((1-hyb/hRel)*100) : null;
+      var saveTxt = savePct == null ? '' : (savePct > 0 ? '（省 '+savePct+'%）' : (savePct === 0 ? '（持平）' : '（当前主模型中转更便宜）'));
       document.getElementById('k-hybrid').textContent = fmtY(hyb) + saveTxt;
       document.getElementById('c-note').textContent = '模型官网参考价与上下文规格同步自开源仓库 models.dev / LiteLLM；中转价取常规按量推荐区（已剔除 Kiro/逆向/特惠与未核实极端低价）。';
     }}
