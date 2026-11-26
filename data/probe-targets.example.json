@@ -1,0 +1,74 @@
+{
+  "_comment": "复制本文件为 data/probe-targets.local.json（已加入 .gitignore，不会提交到 git），填入 5 个测试站小号 Key 即可运行：python tools/probes.py --mode all",
+  "targets": [
+    {
+      "domain": "agentied.top",
+      "enabled": true,
+      "base_url": "https://agentied.top/v1",
+      "api_key": "sk-REPLACE_ME",
+      "topup_cny": 1.0,
+      "quota_per_usd": 500000,
+      "balance_url": "https://agentied.top/api/user/self",
+      "balance_token": "",
+      "balance_user_id": "",
+      "routes": [
+        {"canonical": "deepseek-v4.1-flash", "model": "deepseek-v4.1-flash", "protocol": "openai", "group": "default"},
+        {"canonical": "claude-sonnet-5-5", "model": "claude-sonnet-5-5", "protocol": "anthropic", "group": "default"},
+        {"canonical": "claude-opus-5-5", "model": "claude-opus-5-5", "protocol": "anthropic", "group": "default"},
+        {"canonical": "gpt-6.1-sol", "model": "gpt-6.1-sol", "protocol": "openai", "group": "default"}
+      ]
+    },
+    {
+      "domain": "api.apiyi.com",
+      "enabled": true,
+      "base_url": "https://api.apiyi.com/v1",
+      "api_key": "sk-REPLACE_ME",
+      "routes": [
+        {"canonical": "deepseek-v4.1-flash", "model": "deepseek-v4.1-flash", "protocol": "openai"},
+        {"canonical": "claude-sonnet-5-5", "model": "claude-sonnet-5-5", "protocol": "anthropic"},
+        {"canonical": "claude-opus-5-5", "model": "claude-opus-5-5", "protocol": "anthropic"},
+        {"canonical": "gpt-6.1-sol", "model": "gpt-6.1-sol", "protocol": "openai"},
+        {"canonical": "gemini-4-carbon", "model": "gemini-4-carbon", "protocol": "openai"}
+      ]
+    },
+    {
+      "domain": "35.aigcbest.top",
+      "enabled": true,
+      "base_url": "https://35.aigcbest.top/v1",
+      "api_key": "sk-REPLACE_ME",
+      "routes": [
+        {"canonical": "deepseek-v4.1-flash", "model": "deepseek-v4.1-flash", "protocol": "openai"},
+        {"canonical": "claude-sonnet-5-5", "model": "claude-sonnet-5-5", "protocol": "anthropic"},
+        {"canonical": "claude-opus-5-5", "model": "claude-opus-5-5", "protocol": "anthropic"},
+        {"canonical": "gpt-6.1-sol", "model": "gpt-6.1-sol", "protocol": "openai"},
+        {"canonical": "gemini-4-carbon", "model": "gemini-4-carbon", "protocol": "openai"}
+      ]
+    },
+    {
+      "domain": "apipro.maynor1024.live",
+      "enabled": true,
+      "base_url": "https://apipro.maynor1024.live/v1",
+      "api_key": "sk-REPLACE_ME",
+      "routes": [
+        {"canonical": "deepseek-v4.1-flash", "model": "deepseek-v4.1-flash", "protocol": "openai"},
+        {"canonical": "claude-sonnet-5-5", "model": "claude-sonnet-5-5", "protocol": "anthropic"},
+        {"canonical": "claude-opus-5-5", "model": "claude-opus-5-5", "protocol": "anthropic"},
+        {"canonical": "gpt-6.1-sol", "model": "gpt-6.1-sol", "protocol": "openai"},
+        {"canonical": "gemini-4-carbon", "model": "gemini-4-carbon", "protocol": "openai"}
+      ]
+    },
+    {
+      "domain": "api.nekoapi.com",
+      "enabled": true,
+      "base_url": "https://api.nekoapi.com/v1",
+      "api_key": "sk-REPLACE_ME",
+      "routes": [
+        {"canonical": "deepseek-v4.1-flash", "model": "deepseek-v4.1-flash", "protocol": "openai"},
+        {"canonical": "claude-sonnet-5-5", "model": "claude-sonnet-5-5", "protocol": "anthropic"},
+        {"canonical": "claude-opus-5-5", "model": "claude-opus-5-5", "protocol": "anthropic"},
+        {"canonical": "gpt-6.1-sol", "model": "gpt-6.1-sol", "protocol": "openai"},
+        {"canonical": "gemini-4-carbon", "model": "gemini-4-carbon", "protocol": "openai"}
+      ]
+    }
+  ]
+}

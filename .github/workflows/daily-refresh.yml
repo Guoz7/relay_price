@@ -1,0 +1,78 @@
+name: Daily Refresh & Deploy
+
+on:
+  schedule:
+    - cron: "0 18 * * *" # 每日北京时间 02:00 自动刷新
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh-build-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Restore rolling snapshot & run history cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            data/raw
+            data/history
+            data/fetch-runs
+          key: snapshots-${{ github.run_id }}
+          restore-keys: |
+            snapshots-
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Refresh public station pricing (read-only)
+        run: python tools/refresh.py fetch
+
+      - name: Build static site & sync README rankings
+        run: python tools/build.py
+
+      - name: Verify generated dist/
+        run: python tools/verify_dist.py
+
+      - name: Commit refreshed metadata & README rankings
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md data/stations-state.json data/changes.json data/last-run.json data/intel.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: daily price refresh & README rankings [skip ci]"
+            git push
+          else
+            echo "No metadata or README changes to commit."
+          fi
+
+      - name: Upload built site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: relay-price-dist
+          path: dist
+          retention-days: 3
+
+      - name: Deploy dist/ to Cloudflare Pages (agentied.work)
+        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=relay-price --branch=main

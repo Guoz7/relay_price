@@ -1,0 +1,36 @@
+name: 数据纠错 / 异动复测 / 下架请求
+description: 反馈价格换算误差、分组标签异议、申请复测或站长要求下架
+title: "[纠错] "
+labels: ["correction"]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 请求类型
+      options:
+        - 价格 / 充值比例 / 分组换算纠错
+        - 实测异动申请 24 小时内复测
+        - 申请进入 V2 实测队列
+        - 站长要求下架
+    validations:
+      required: true
+  - type: input
+    id: domain
+    attributes:
+      label: 站点域名
+      placeholder: example.com
+    validations:
+      required: true
+  - type: input
+    id: page_url
+    attributes:
+      label: 对应比价页链接
+      placeholder: https://agentied.work/site/example.com/
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 客观证据（接口返回原文、型号与分组名、时间戳或下架公告验证链接）
+      description: 仅依据可复核的客观接口数据与时间戳进行核对与修正。
+      placeholder: 例如：/api/pricing 中某型号分组倍率已调整为 0.5，抓取时间为...
+    validations:
+      required: true

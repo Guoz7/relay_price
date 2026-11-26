@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 在线提交与 WAF 放行说明（agentied.work/submit）
+    url: https://agentied.work/submit/
+    about: 查看收录标准、public-schema 示例与一键生成提交模板
+  - name: 评分方法与利益披露（agentied.work/about）
+    url: https://agentied.work/about/
+    about: 了解 Stage 0/1/2 分层规则、7:2:1 缓存算法与零优待原则

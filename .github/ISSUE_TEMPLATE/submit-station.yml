@@ -1,0 +1,41 @@
+name: 申请收录 / 升级公开报价
+description: 提交新的 AI API 中转站，或通知已开放匿名只读价格接口以从 Stage 0 升级至 Stage 1
+title: "[收录] "
+labels: ["submission"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        收录不收费，也不接受付费改分。收录标准与支持的公开报价格式见 [https://agentied.work/submit/](https://agentied.work/submit/)。
+  - type: input
+    id: domain
+    attributes:
+      label: 站点域名
+      placeholder: example.com
+    validations:
+      required: true
+  - type: input
+    id: pricing_url
+    attributes:
+      label: 公开价格接口地址（需无需登录只读 GET）
+      placeholder: https://example.com/api/pricing
+  - type: input
+    id: ratio
+    attributes:
+      label: 公开充值比例（元 / 1 美元额度）
+      placeholder: 例如 1 或 7.2（以 /api/status 公开设置为准）
+  - type: dropdown
+    id: system
+    attributes:
+      label: 后端系统 / 报价格式
+      options:
+        - New API (/api/pricing)
+        - One API 旧版 (/api/pricing)
+        - VoAPI (/api/pricing)
+        - 自报 public-schema JSON
+        - 其他
+  - type: textarea
+    id: note
+    attributes:
+      label: 补充说明（如 WAF 放行状态、独立 API 域名、分组说明）
+      placeholder: 可留空

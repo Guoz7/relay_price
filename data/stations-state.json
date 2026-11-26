@@ -1,0 +1,5418 @@
+{
+ "0011.ai": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:24+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "123api.co": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:43+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:43+00:00"
+ },
+ "1pkapi.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:24+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 404
+ },
+ "1xm.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:41+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:41+00:00"
+ },
+ "1yuanapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:25+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:25+00:00"
+ },
+ "2coding.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:25+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:25+00:00"
+ },
+ "35.aigcbest.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:45+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:45+00:00"
+ },
+ "36niu.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:42+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:42+00:00"
+ },
+ "3aa.ai": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:24+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "4router.net": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:42+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:42+00:00"
+ },
+ "4sapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:43+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:43+00:00"
+ },
+ "4zapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:44+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:44+00:00"
+ },
+ "52ccl.net": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:25+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "537-ai.net": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:24+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:24+00:00"
+ },
+ "555codex.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:43+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:43+00:00"
+ },
+ "7891vip.cc.cd": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:24+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:24+00:00"
+ },
+ "78code.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:24+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:24+00:00"
+ },
+ "7api.st": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:24+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "88api.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:25+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:25+00:00"
+ },
+ "8s.hk": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:26+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:26+00:00"
+ },
+ "8yes.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:42+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:42+00:00"
+ },
+ "91kiro.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:25+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:25+00:00"
+ },
+ "91token.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:44+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:44+00:00"
+ },
+ "9527.codes": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:25+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:25+00:00"
+ },
+ "9527code.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:45+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:45+00:00"
+ },
+ "988665.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:44+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:44+00:00"
+ },
+ "999555999.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:27+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 404
+ },
+ "999code.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:44+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:44+00:00"
+ },
+ "aaaapi.fun": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:32+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "aaawinn.xyz": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:26+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "abcrelay.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:28+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:28+00:00"
+ },
+ "acf.xydaim.cn": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:21+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "acsgw.top": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:25+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "agentied.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:24+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:24+00:00"
+ },
+ "agentrouter.org": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:26+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:26+00:00"
+ },
+ "aggretoken.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:43+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:43+00:00"
+ },
+ "ai.070798.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:26+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:26+00:00"
+ },
+ "ai.112102.xyz": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:24+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "ai.1tim.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:26+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:26+00:00"
+ },
+ "ai.7code.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:30+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:30+00:00"
+ },
+ "ai.anna.tf": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:27+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "ai.apizn.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:27+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:27+00:00"
+ },
+ "ai.augmen.net": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:45+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:45+00:00"
+ },
+ "ai.bytonsec.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:25+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:25+00:00"
+ },
+ "ai.cangyuansuanli.cn": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:25+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "ai.centos.hk": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:45+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:45+00:00"
+ },
+ "ai.chuyel.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:47+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:47+00:00"
+ },
+ "ai.comfly.org": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:46+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:46+00:00"
+ },
+ "ai.dahanxingbang.dpdns.org": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:27+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "ai.daoyivip.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:28+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:28+00:00"
+ },
+ "ai.furry.vg": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:29+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:29+00:00"
+ },
+ "ai.huaibao.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:29+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:29+00:00"
+ },
+ "ai.huan666.de": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:28+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:28+00:00"
+ },
+ "ai.hybgzs.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:27+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "ai.hyper.nyc.mn": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:28+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "ai.kisekiremi.moe": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:29+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:29+00:00"
+ },
+ "ai.levolink.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:28+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "ai.lffm.cn": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:46+00:00",
+  "last_error": "TimeoutError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "ai.lt4net.org": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:45+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:45+00:00"
+ },
+ "ai.qunq.de": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:33+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:33+00:00"
+ },
+ "ai.sandboxai.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:45+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:45+00:00"
+ },
+ "ai.skill.wales": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:30+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:30+00:00"
+ },
+ "ai.songsongai.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:46+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:46+00:00"
+ },
+ "ai.songsongcard.shop": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:29+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:29+00:00"
+ },
+ "ai.txcxgzs.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:30+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:30+00:00"
+ },
+ "ai.wcapis.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:30+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:30+00:00"
+ },
+ "ai.wenmodel.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:30+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:30+00:00"
+ },
+ "ai.wxctf.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:27+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "ai.xem8k5.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:31+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:31+00:00"
+ },
+ "ai.xiaowumin.top": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:31+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "ai.xmiaom.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:29+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:29+00:00"
+ },
+ "aiaimark.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:32+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 404,
+  "last_success_at": "2026-11-26T12:16:32+00:00"
+ },
+ "aiapi.696988.xyz": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:33+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "aiapi.aixia.tech": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:43+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:43+00:00"
+ },
+ "aiberm.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:32+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:32+00:00"
+ },
+ "aicodewith.ai": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:31+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "aicost.me": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:31+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "aifast.site": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:47+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:47+00:00"
+ },
+ "aigateway.geekerone.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:32+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:32+00:00"
+ },
+ "aigs.cc": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:30+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "airouter.mxyhi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:32+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:32+00:00"
+ },
+ "airouter.service.itstudio.club": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:35+00:00",
+  "last_error": "HTTP 502",
+  "last_pricing_http": 502,
+  "last_status_http": 502
+ },
+ "aitoke.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:48+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:48+00:00"
+ },
+ "aiwble.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:32+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:32+00:00"
+ },
+ "aiwts.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:33+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:33+00:00"
+ },
+ "aiwuje.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:48+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:48+00:00"
+ },
+ "aixcks.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:32+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:32+00:00"
+ },
+ "aixlau.me": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:33+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 404
+ },
+ "aixoras.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:33+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "aiyiwei.vip": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:35+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:35+00:00"
+ },
+ "aizhongzhuan.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:46+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:46+00:00"
+ },
+ "akile.ai": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:33+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "aliuapi.top": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:37+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 404
+ },
+ "allrouter.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:36+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:36+00:00"
+ },
+ "alltokens.cc": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:34+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 404
+ },
+ "anyaigc.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:48+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:48+00:00"
+ },
+ "anyrouter.top": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:35+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "aokapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:35+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:35+00:00"
+ },
+ "aotera.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:36+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:36+00:00"
+ },
+ "api-models.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:47+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:47+00:00"
+ },
+ "api-top.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:36+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:36+00:00"
+ },
+ "api.033030.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:36+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:36+00:00"
+ },
+ "api.0elog.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:36+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:36+00:00"
+ },
+ "api.132999.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:37+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:37+00:00"
+ },
+ "api.1aicode.space": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:47+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:47+00:00"
+ },
+ "api.203236.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:36+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:36+00:00"
+ },
+ "api.319274.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:35+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:35+00:00"
+ },
+ "api.42x.shop": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:37+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "api.66o.uk": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:37+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "api.67.si": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:36+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:36+00:00"
+ },
+ "api.68886868.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:48+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:48+00:00"
+ },
+ "api.78code.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:48+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:48+00:00"
+ },
+ "api.996444.cn": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:34+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "api.aiaiai001.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:37+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "api.aigcbest.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:51+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:51+00:00"
+ },
+ "api.aipipe.io": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:48+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:48+00:00"
+ },
+ "api.aiskt.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:48+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:48+00:00"
+ },
+ "api.aisz.mom": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:48+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:48+00:00"
+ },
+ "api.akane.win": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:49+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:49+00:00"
+ },
+ "api.apimart.ai": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:37+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 200
+ },
+ "api.apiyi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:49+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:49+00:00"
+ },
+ "api.bianxie.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:49+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:49+00:00"
+ },
+ "api.bianxieai.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:47+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:47+00:00"
+ },
+ "api.biliksir.ggff.net": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:37+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "api.biubiu.best": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:37+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:37+00:00"
+ },
+ "api.bluesminds.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:38+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:38+00:00"
+ },
+ "api.boreara.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:38+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:38+00:00"
+ },
+ "api.camel-hub.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:38+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:38+00:00"
+ },
+ "api.careke.cn": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:36+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "api.catcat.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:39+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:39+00:00"
+ },
+ "api.ccmin.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:49+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:49+00:00"
+ },
+ "api.ccode.vip": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:50+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:50+00:00"
+ },
+ "api.celestiai.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:49+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:49+00:00"
+ },
+ "api.chaiquan.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:53+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:53+00:00"
+ },
+ "api.chatanywhere.tech": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:39+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "api.chatgptid.net": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:42+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:42+00:00"
+ },
+ "api.chengmo.cc.cd": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:40+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "api.chengtx.vip": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:39+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:39+00:00"
+ },
+ "api.ciyuanshen.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:50+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:50+00:00"
+ },
+ "api.clawsocket.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:50+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:50+00:00"
+ },
+ "api.cocoapi.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:41+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:41+00:00"
+ },
+ "api.code-relay.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:38+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:38+00:00"
+ },
+ "api.codemirror.codes": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:40+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:40+00:00"
+ },
+ "api.codexzh.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:50+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:50+00:00"
+ },
+ "api.cottoken.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:40+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "api.dddai.dev": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:51+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:51+00:00"
+ },
+ "api.deerapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:40+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:40+00:00"
+ },
+ "api.dli.li": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:57+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:57+00:00"
+ },
+ "api.duckcoding.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:52+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:52+00:00"
+ },
+ "api.duou.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:41+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:41+00:00"
+ },
+ "api.dzzi.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:41+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:41+00:00"
+ },
+ "api.ekan8.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:40+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:40+00:00"
+ },
+ "api.feng.cx": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:42+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:42+00:00"
+ },
+ "api.foodtomb.eu.org": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:50+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:50+00:00"
+ },
+ "api.fri5.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:40+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:40+00:00"
+ },
+ "api.fuka.win": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:40+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "api.furryforum.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:52+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:52+00:00"
+ },
+ "api.futureppo.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:52+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:52+00:00"
+ },
+ "api.gemai.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:52+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:52+00:00"
+ },
+ "api.gemapi.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:51+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:51+00:00"
+ },
+ "api.gpt.ge": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:41+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 200
+ },
+ "api.guaiyun.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:52+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:52+00:00"
+ },
+ "api.hakanaiktn.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:41+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:41+00:00"
+ },
+ "api.hcnsec.cn": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:38+00:00",
+  "last_error": "HTTP 500",
+  "last_pricing_http": 500,
+  "last_status_http": 500
+ },
+ "api.hlool.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:41+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:41+00:00"
+ },
+ "api.hohai.eu.org": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:41+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:41+00:00"
+ },
+ "api.hohocode.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:52+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:52+00:00"
+ },
+ "api.holdai.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:42+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:42+00:00"
+ },
+ "api.hubagi.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:52+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:52+00:00"
+ },
+ "api.hy88.my": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:53+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:53+00:00"
+ },
+ "api.ikuncode.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:53+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:53+00:00"
+ },
+ "api.jiushi.xin": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:43+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:43+00:00"
+ },
+ "api.jui87.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:53+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:53+00:00"
+ },
+ "api.jumengai.net": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:42+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "api.juziai.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:43+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:43+00:00"
+ },
+ "api.kbq.de5.net": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:54+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:54+00:00"
+ },
+ "api.kkrich.ltd": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:53+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:53+00:00"
+ },
+ "api.kksj.org": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:43+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:43+00:00"
+ },
+ "api.laozhang.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:43+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:43+00:00"
+ },
+ "api.layso.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:54+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:54+00:00"
+ },
+ "api.levogat.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:44+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:44+00:00"
+ },
+ "api.lhbxhxxt.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:54+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:54+00:00"
+ },
+ "api.liangrekui.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:54+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:54+00:00"
+ },
+ "api.lijiajiaai.it.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:54+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:54+00:00"
+ },
+ "api.lingyaai.cn": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:43+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:43+00:00"
+ },
+ "api.luccc.uk": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:54+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:54+00:00"
+ },
+ "api.lukyface.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:45+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:45+00:00"
+ },
+ "api.manai8.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:54+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:54+00:00"
+ },
+ "api.maxapi.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:45+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:45+00:00"
+ },
+ "api.meai.cloud": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:54+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:54+00:00"
+ },
+ "api.momoapi.icu": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:55+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:55+00:00"
+ },
+ "api.muskapi.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:55+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 404,
+  "last_success_at": "2026-11-26T12:17:55+00:00"
+ },
+ "api.muzeai.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:55+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:55+00:00"
+ },
+ "api.nekoapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:46+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:46+00:00"
+ },
+ "api.nf.video": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:44+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:44+00:00"
+ },
+ "api.novaeworld.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:55+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:55+00:00"
+ },
+ "api.novalyte.cn": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:42+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "api.openlux.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:45+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:45+00:00"
+ },
+ "api.openport.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:56+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:56+00:00"
+ },
+ "api.pie-xian.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:46+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:46+00:00"
+ },
+ "api.qlhazycoder.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:56+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:56+00:00"
+ },
+ "api.rainflowtb.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:44+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "api.rivoapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:57+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:57+00:00"
+ },
+ "api.rootflowai.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:56+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:56+00:00"
+ },
+ "api.router.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:46+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:46+00:00"
+ },
+ "api.rua.chat": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:46+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:46+00:00"
+ },
+ "api.sbbbbbbbbb.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:57+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:57+00:00"
+ },
+ "api.sharehub.club": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:57+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:57+00:00"
+ },
+ "api.shinycase.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:45+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:45+00:00"
+ },
+ "api.shqbb.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:56+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:56+00:00"
+ },
+ "api.shuaiapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:45+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:45+00:00"
+ },
+ "api.sqface.sbs": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:45+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:45+00:00"
+ },
+ "api.squarefaceicon.org": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:45+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:45+00:00"
+ },
+ "api.ssopen.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:57+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:57+00:00"
+ },
+ "api.suanniao.shop": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:56+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:56+00:00"
+ },
+ "api.sudocode.chat": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:56+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 403,
+  "last_success_at": "2026-11-26T12:17:56+00:00"
+ },
+ "api.supxh.xin": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:57+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:57+00:00"
+ },
+ "api.tallius.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:45+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:45+00:00"
+ },
+ "api.tu-zi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:47+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:47+00:00"
+ },
+ "api.uiuihao.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:00+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:00+00:00"
+ },
+ "api.uniprep.world": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:58+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:58+00:00"
+ },
+ "api.uu6.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:00+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:00+00:00"
+ },
+ "api.vectorengine.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:59+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:59+00:00"
+ },
+ "api.vllmproxy.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:58+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:58+00:00"
+ },
+ "api.webmart.tech": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:47+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:47+00:00"
+ },
+ "api.wentoken.si": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:45+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "api.winfull.cloud-ip.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:00+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:00+00:00"
+ },
+ "api.xcdw.us": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:59+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:59+00:00"
+ },
+ "api.xincloud.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:46+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:46+00:00"
+ },
+ "api.xistree.hk": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:00+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:00+00:00"
+ },
+ "api.xty.app": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:59+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:59+00:00"
+ },
+ "api.yescale.io": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:00+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:00+00:00"
+ },
+ "api.yisama.asia": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:47+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:47+00:00"
+ },
+ "api.yjs.im": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:48+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:48+00:00"
+ },
+ "api.yousebaby.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:49+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:49+00:00"
+ },
+ "api.yuboar.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:00+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:00+00:00"
+ },
+ "api.yunhe.one": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:00+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:00+00:00"
+ },
+ "api.yutou.fun": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:48+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:48+00:00"
+ },
+ "api.zectai.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:01+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:01+00:00"
+ },
+ "api.zetatechs.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:00+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:00+00:00"
+ },
+ "api.zxyxndc.top": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:49+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "api000.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:48+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:48+00:00"
+ },
+ "api456.me": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:48+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:48+00:00"
+ },
+ "api520.pro": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:52+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:52+00:00"
+ },
+ "api521.pro": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:49+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:49+00:00"
+ },
+ "api522.pro": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:49+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:49+00:00"
+ },
+ "apib.ai": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:49+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 200
+ },
+ "apibest.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:01+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:01+00:00"
+ },
+ "apibrg.duoyuanx.net": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:49+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:49+00:00"
+ },
+ "apichat.budsin.dev": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:49+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "apiddt.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:53+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:53+00:00"
+ },
+ "apiloop.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:49+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:49+00:00"
+ },
+ "apinebula.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:49+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:49+00:00"
+ },
+ "apipaths.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:01+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:01+00:00"
+ },
+ "apipro.maynor1024.live": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:54+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:54+00:00"
+ },
+ "apirouter.chat": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:02+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:02+00:00"
+ },
+ "apiv3.52codeflow.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:50+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:50+00:00"
+ },
+ "arityflow.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:07+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:07+00:00"
+ },
+ "aruhub.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:50+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:50+00:00"
+ },
+ "atomflow.vip": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:02+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:02+00:00"
+ },
+ "axoai.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:49+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:49+00:00"
+ },
+ "b.ai": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:50+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "bailili.top": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:54+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "bb-api.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:58+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "bc.sn.cn": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:48+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "bearlab.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:51+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:51+00:00"
+ },
+ "beefapi.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:50+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "beizhi.dedyn.io": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:51+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:51+00:00"
+ },
+ "bestmodel.dev": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:52+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 401
+ },
+ "bettertoken.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:54+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:54+00:00"
+ },
+ "bewild.ai": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:52+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "bin.4848478.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:54+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:54+00:00"
+ },
+ "boxying.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:56+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:56+00:00"
+ },
+ "bridge.pulseneko.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:02+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:02+00:00"
+ },
+ "buddybackend.cloud": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:57+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:57+00:00"
+ },
+ "buliangrenai.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:02+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:02+00:00"
+ },
+ "business.newcli.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:01+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:01+00:00"
+ },
+ "buzzai.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:02+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:02+00:00"
+ },
+ "callapi.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:53+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:53+00:00"
+ },
+ "callxyq.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:01+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:01+00:00"
+ },
+ "catpawrouter.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:52+00:00",
+  "last_error": "HTTP 525",
+  "last_pricing_http": 525,
+  "last_status_http": 525
+ },
+ "catrouter.io": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:53+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:53+00:00"
+ },
+ "cc.nightsoil.cn": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:51+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:51+00:00"
+ },
+ "cc.onbb.top": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:51+00:00",
+  "last_error": "HTTP 410",
+  "last_pricing_http": 410,
+  "last_status_http": 410
+ },
+ "cc.yzzt.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:03+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:03+00:00"
+ },
+ "ccapi.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:54+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:54+00:00"
+ },
+ "ccapi.us": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:02+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:02+00:00"
+ },
+ "ccb.180txt.cn": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:51+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "cctq.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:53+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:53+00:00"
+ },
+ "cdn.sta1n.cn": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:52+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "ces.ddddai.xyz": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:01+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "chat.ekti.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:04+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:04+00:00"
+ },
+ "chatapi.nloli.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:54+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:54+00:00"
+ },
+ "chatfire.cn": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:00+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:00+00:00"
+ },
+ "cheapai.info": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:04+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:04+00:00"
+ },
+ "chenyiapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:07+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:07+00:00"
+ },
+ "chintao.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:55+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:55+00:00"
+ },
+ "chuan.sylu.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:55+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:55+00:00"
+ },
+ "chuanapi.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:55+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "chunfeng.mentalout.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:04+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:04+00:00"
+ },
+ "clauddy.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:04+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:04+00:00"
+ },
+ "claude.proai.love": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:03+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:03+00:00"
+ },
+ "claudecn.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:56+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:56+00:00"
+ },
+ "clawrouter.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:55+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:55+00:00"
+ },
+ "cli.999554.xyz": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:56+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "closedai.kylenqaq.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:58+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:58+00:00"
+ },
+ "cn.aiapi.bot": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:56+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 200
+ },
+ "cn.chrouter.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:01+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:01+00:00"
+ },
+ "cn.meta-api.vip": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:58+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:58+00:00"
+ },
+ "cnapi.kksj.org": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:57+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:57+00:00"
+ },
+ "code.ddsst.online": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:05+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:05+00:00"
+ },
+ "code.leessmin.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:03+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:03+00:00"
+ },
+ "code.oai1.online": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:05+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:05+00:00"
+ },
+ "code.ppchat.vip": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:04+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:04+00:00"
+ },
+ "code0.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:57+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:57+00:00"
+ },
+ "code28.ccwu.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:05+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:05+00:00"
+ },
+ "coderplan.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:58+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:58+00:00"
+ },
+ "codeworksta.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:06+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:06+00:00"
+ },
+ "codex-relay.codes": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:58+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:58+00:00"
+ },
+ "codex666ai.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:57+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 404
+ },
+ "codexhub.ai": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:57+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "codez.zwenooo.link": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:05+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:05+00:00"
+ },
+ "codiz.dev": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:07+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:07+00:00"
+ },
+ "comeu.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:07+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:07+00:00"
+ },
+ "comput.chat": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:05+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:05+00:00"
+ },
+ "console.claudeapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:08+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:08+00:00"
+ },
+ "console.lqapi.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:05+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:05+00:00"
+ },
+ "console.youpai.de": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:58+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:58+00:00"
+ },
+ "constreet.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:06+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:06+00:00"
+ },
+ "corecode.live": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:59+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:59+00:00"
+ },
+ "crazyrouter.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:00+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:00+00:00"
+ },
+ "dapicloud.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:08+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:08+00:00"
+ },
+ "dashboard.x-aio.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:55+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "dasuapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:08+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:08+00:00"
+ },
+ "dawclaudecode.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:00+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:00+00:00"
+ },
+ "dawcode.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:09+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:09+00:00"
+ },
+ "dayueai.fun": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:09+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:09+00:00"
+ },
+ "dddai.dev": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:07+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:07+00:00"
+ },
+ "ddtnew.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:07+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:07+00:00"
+ },
+ "deepkey.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:08+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:08+00:00"
+ },
+ "deepsy.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:09+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:09+00:00"
+ },
+ "diegeai.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:58+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "dmc.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:59+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:59+00:00"
+ },
+ "docode.cc": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:00+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "docs.anyrouter.top": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:16:58+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "doro.lol": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:59+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:59+00:00"
+ },
+ "dragtokens.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:00+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:00+00:00"
+ },
+ "duoduoai.vip": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:16:59+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:16:59+00:00"
+ },
+ "easyrouter.io": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:07+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:07+00:00"
+ },
+ "eazydata.org": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:00+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:00+00:00"
+ },
+ "elysiver.h-e.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:08+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:08+00:00"
+ },
+ "ergouapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:00+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:00+00:00"
+ },
+ "ergouzi.life": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:08+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:08+00:00"
+ },
+ "eriri.ink": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:00+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "familypro.io": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:00+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 401
+ },
+ "faroapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:10+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:10+00:00"
+ },
+ "fast.qianxing.pro": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:01+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:01+00:00"
+ },
+ "fast.sbbbbbbbbb.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:10+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:10+00:00"
+ },
+ "feiai.chat": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:02+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:02+00:00"
+ },
+ "flushapi.fun": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:03+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:03+00:00"
+ },
+ "flymux.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:02+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:02+00:00"
+ },
+ "fnuu.net": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:08+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:08+00:00"
+ },
+ "folkbench.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:01+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 200
+ },
+ "foxapi.chat": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:03+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:03+00:00"
+ },
+ "foxrouter.org": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:02+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:02+00:00"
+ },
+ "free-llm.cups.moe": {
+  "consecutive_failures": 1,
+  "last_attempt_at": "2026-11-26T12:17:03+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T11:27:42+00:00"
+ },
+ "free.camila.qzz.io": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:03+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:03+00:00"
+ },
+ "free.v36.cm": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:02+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 200
+ },
+ "freeapi.dgbmc.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:04+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:04+00:00"
+ },
+ "freeapi.tingfengai.art": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:04+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:04+00:00"
+ },
+ "freegg.app": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:02+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "fumin.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:10+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:10+00:00"
+ },
+ "fushengyunsuan.cn": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:02+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "fushengyunsuan.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:10+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:10+00:00"
+ },
+ "gaccode.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:05+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "gcmod.bond": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:05+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:05+00:00"
+ },
+ "gemai.huchan.cn": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:04+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:04+00:00"
+ },
+ "gerlant.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:09+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:09+00:00"
+ },
+ "getgoapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:10+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:10+00:00"
+ },
+ "getunikey.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:08+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:08+00:00"
+ },
+ "ggbond-api.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:06+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:06+00:00"
+ },
+ "go.sbgpt.site": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:04+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:04+00:00"
+ },
+ "go.toter.me": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:04+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 200
+ },
+ "goapi.gptnb.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:04+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:04+00:00"
+ },
+ "gogotoken.org": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:10+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:10+00:00"
+ },
+ "gorouter.app": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:03+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "gpt-agent.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:11+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:11+00:00"
+ },
+ "gpt.qinnaonao.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:05+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:05+00:00"
+ },
+ "greatwalllink.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:06+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:06+00:00"
+ },
+ "guaihub.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:11+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:11+00:00"
+ },
+ "gw.claudeapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:10+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:10+00:00"
+ },
+ "gwlink.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:12+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:12+00:00"
+ },
+ "gzxsy.vip": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:12+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:12+00:00"
+ },
+ "harogo.ai": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:06+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "haxiaiplus.cn": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:04+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:04+00:00"
+ },
+ "hejuapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:08+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:08+00:00"
+ },
+ "helpcoder.cc": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:05+00:00",
+  "last_error": "HTTP 502",
+  "last_pricing_http": 502,
+  "last_status_http": 502
+ },
+ "hjmapi.923578.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:07+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:07+00:00"
+ },
+ "hk.apitoken.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:11+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:11+00:00"
+ },
+ "hk.rootflowai.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:11+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:11+00:00"
+ },
+ "huanapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:15+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:15+00:00"
+ },
+ "huskyapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:12+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:12+00:00"
+ },
+ "hyperapi.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:11+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:11+00:00"
+ },
+ "i.orangepie.org": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:07+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:07+00:00"
+ },
+ "ideastead.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:12+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:12+00:00"
+ },
+ "infai.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:12+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:12+00:00"
+ },
+ "infistar.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:18+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:18+00:00"
+ },
+ "itkk.lol": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:06+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:06+00:00"
+ },
+ "jbbt.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:10+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:10+00:00"
+ },
+ "jeniya.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:11+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:11+00:00"
+ },
+ "jianzhile.vip": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:06+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:06+00:00"
+ },
+ "jishuya.net": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:15+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:15+00:00"
+ },
+ "jiuguan.cloud": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:07+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "jiugx.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:14+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:14+00:00"
+ },
+ "jojatoken.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:08+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:08+00:00"
+ },
+ "jojocode.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:13+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:13+00:00"
+ },
+ "jucodex.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:07+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:07+00:00"
+ },
+ "juxingai.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:08+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:08+00:00"
+ },
+ "juziqishui.net": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:07+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:07+00:00"
+ },
+ "kapibala.asia": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:09+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:09+00:00"
+ },
+ "kfcv50.link": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:13+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:13+00:00"
+ },
+ "khala.online": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:09+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 404
+ },
+ "kiosapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:08+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:08+00:00"
+ },
+ "kiroforge.cloud": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:09+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:09+00:00"
+ },
+ "kivocat.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:14+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:14+00:00"
+ },
+ "kkaiapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:10+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:10+00:00"
+ },
+ "kktoken.cc": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:10+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "kssapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:06+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:06+00:00"
+ },
+ "kuaipao.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:15+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:15+00:00"
+ },
+ "kuaipao.pro": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:07+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:07+00:00"
+ },
+ "la-api.vxvxvx.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:15+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:15+00:00"
+ },
+ "lanbuff.app": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:09+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:09+00:00"
+ },
+ "lancerouter.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:14+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:14+00:00"
+ },
+ "lantapi.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:11+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:11+00:00"
+ },
+ "lanyiapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:15+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:15+00:00"
+ },
+ "last-api.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:11+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:11+00:00"
+ },
+ "laysoai.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:14+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:14+00:00"
+ },
+ "leetai.store": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:14+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:14+00:00"
+ },
+ "lemondata.cc": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:13+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 200
+ },
+ "liangxinapi.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:14+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:14+00:00"
+ },
+ "limao-api.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:10+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "lingshuapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:15+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:15+00:00"
+ },
+ "linkapi.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:15+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:15+00:00"
+ },
+ "linoroute.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:16+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:16+00:00"
+ },
+ "linux.sb": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:10+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "llm-all.pro": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:16+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:16+00:00"
+ },
+ "llm.mathmodel.tech": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:15+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:15+00:00"
+ },
+ "llmhub.ltd": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:16+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:16+00:00"
+ },
+ "lnapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:15+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:15+00:00"
+ },
+ "longjinapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:16+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:16+00:00"
+ },
+ "lxooxlai.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:16+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:16+00:00"
+ },
+ "lztoken.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:16+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:16+00:00"
+ },
+ "macode.cloud": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:17+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:17+00:00"
+ },
+ "magic666.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:12+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:12+00:00"
+ },
+ "makerend.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:19+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:19+00:00"
+ },
+ "maolaoapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:17+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:17+00:00"
+ },
+ "maxapi.hanyue.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:12+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:12+00:00"
+ },
+ "maxtopai.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:18+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:18+00:00"
+ },
+ "megallm.io": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:12+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 401
+ },
+ "mfttai.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:10+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 404
+ },
+ "mi-to-ai.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:12+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "micuapi.ai": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:14+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "mirasim.ai": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:12+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 200
+ },
+ "mjj.boluoapi.cn": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:09+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "mnapi.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:15+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "modelflare.dev": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:19+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:19+00:00"
+ },
+ "modelsell.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:12+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:12+00:00"
+ },
+ "modelslab.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:16+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "moeapi.cloud": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:19+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:19+00:00"
+ },
+ "momoapi.xin": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:18+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:18+00:00"
+ },
+ "monkeyapi.apimonkey.online": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:14+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "monotoo.shop": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:19+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:19+00:00"
+ },
+ "motoapi.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:13+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "moyuu.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:18+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:18+00:00"
+ },
+ "muskapi.cc": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:20+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "mxdapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:21+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:21+00:00"
+ },
+ "myapi.creitingameplays.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:13+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:13+00:00"
+ },
+ "mydamoxing.cn": {
+  "consecutive_failures": 1,
+  "last_attempt_at": "2026-11-26T12:18:20+00:00",
+  "last_error": "HTTP 522",
+  "last_pricing_http": 522,
+  "last_status_http": 200
+ },
+ "mzlone.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:19+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:19+00:00"
+ },
+ "n1n.ai": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:14+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "nai.rinko.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:13+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:13+00:00"
+ },
+ "napi.kid1412.qzz.io": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:13+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "nbility.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:15+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:15+00:00"
+ },
+ "nbility.dev": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:19+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:19+00:00"
+ },
+ "ncncapi.top": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:13+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 404
+ },
+ "new-api.xt-url.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:15+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:15+00:00"
+ },
+ "new.12ai.org": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:16+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:16+00:00"
+ },
+ "new.ai.hinswu.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:15+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:15+00:00"
+ },
+ "new.aicode.us.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:19+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:19+00:00"
+ },
+ "new.fluapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:19+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:19+00:00"
+ },
+ "new.lingyicai.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:16+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:16+00:00"
+ },
+ "new.sharedchat.cc": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:15+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "new.xinjianya.top": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:15+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "new.xjai.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:16+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:16+00:00"
+ },
+ "newapi-hk.qianye.host": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:21+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:21+00:00"
+ },
+ "newapi.777358.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:16+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:16+00:00"
+ },
+ "newapi.chat": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:16+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:16+00:00"
+ },
+ "newapi.dragon3api.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:18+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:18+00:00"
+ },
+ "newapi.hkkkj.qzz.io": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:16+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "newapi.hpa888.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:14+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:14+00:00"
+ },
+ "newapi.makelove.cloud": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:24+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "newapi.prorisehub.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:20+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:20+00:00"
+ },
+ "newapi.qwqtao.one": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:19+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:19+00:00"
+ },
+ "nexaxis.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:20+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:20+00:00"
+ },
+ "nexotoken.net": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:20+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:20+00:00"
+ },
+ "nikoapi.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:20+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:20+00:00"
+ },
+ "nodapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:23+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:23+00:00"
+ },
+ "noonoo.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:20+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:20+00:00"
+ },
+ "nova.vcrauo.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:21+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:21+00:00"
+ },
+ "novaapi.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:18+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:18+00:00"
+ },
+ "nowcoding.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:20+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:20+00:00"
+ },
+ "officesai.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:21+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:21+00:00"
+ },
+ "omnixai.cn": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:18+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:18+00:00"
+ },
+ "once.novai.su": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:17+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:17+00:00"
+ },
+ "one-api.aiporters.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:18+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 200
+ },
+ "one.ocoolai.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:20+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:20+00:00"
+ },
+ "one.ooo.cool": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:21+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:21+00:00"
+ },
+ "oneapi.xty.app": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:19+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:19+00:00"
+ },
+ "oojj.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:21+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:21+00:00"
+ },
+ "open.selart.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:24+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:24+00:00"
+ },
+ "open.taikoapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:20+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:20+00:00"
+ },
+ "open.xiaojingai.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:23+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:23+00:00"
+ },
+ "openai-labs.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:19+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:19+00:00"
+ },
+ "openkun.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:23+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:23+00:00"
+ },
+ "opus.qzz.io": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:18+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:18+00:00"
+ },
+ "orange-ai.online": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:22+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:22+00:00"
+ },
+ "orevx.ai": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:19+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "origin.modelflare.dev": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:21+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:21+00:00"
+ },
+ "otterl.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:21+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:21+00:00"
+ },
+ "ovoapi.cn": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:17+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "packyapi.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:26+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:26+00:00"
+ },
+ "packyapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:22+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:22+00:00"
+ },
+ "pandasrouter.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:24+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:24+00:00"
+ },
+ "passion8.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:22+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:22+00:00"
+ },
+ "pdhlzy.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:21+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:21+00:00"
+ },
+ "ping0.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:20+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:20+00:00"
+ },
+ "pipio.io": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:20+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:20+00:00"
+ },
+ "piu.du4s.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:23+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "platform.xiaomimimo.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:17+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "platform.yeta.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:22+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:22+00:00"
+ },
+ "poixe.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:20+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "poloai.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:23+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:23+00:00"
+ },
+ "poloapi.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:24+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:24+00:00"
+ },
+ "privnode.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:22+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "pro.auroai.icu": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:23+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:23+00:00"
+ },
+ "proaiapi.tech": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:24+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:24+00:00"
+ },
+ "ps.air-outer.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:24+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:24+00:00"
+ },
+ "qianjuai.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:28+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "qiudaoy.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:22+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "qiuqiutoken.net": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:24+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:24+00:00"
+ },
+ "quanzil.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:24+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:24+00:00"
+ },
+ "queqiaoapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:24+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:24+00:00"
+ },
+ "qunaapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:24+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:24+00:00"
+ },
+ "qweapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:23+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:23+00:00"
+ },
+ "readray.ai": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:24+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "realmrouter.cn": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:20+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:20+00:00"
+ },
+ "relaybases.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:26+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:26+00:00"
+ },
+ "relaycore.cn": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:22+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "relaydance.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:23+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:23+00:00"
+ },
+ "rivora.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:24+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:24+00:00"
+ },
+ "router.xiu.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:24+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:24+00:00"
+ },
+ "routerapi.net": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:25+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:25+00:00"
+ },
+ "routerhub.si": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:24+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 200
+ },
+ "routerra.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:27+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:27+00:00"
+ },
+ "runapi.co": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:24+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:24+00:00"
+ },
+ "runapi.host": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:24+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:24+00:00"
+ },
+ "s.lconai.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:30+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:30+00:00"
+ },
+ "s3.ink": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:26+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:26+00:00"
+ },
+ "sakura886.site": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:24+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:24+00:00"
+ },
+ "sandbase.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:25+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 404,
+  "last_success_at": "2026-11-26T12:18:25+00:00"
+ },
+ "seedance.nz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:27+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:27+00:00"
+ },
+ "seekai.cc": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:24+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "shaoshiyuan.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:26+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:26+00:00"
+ },
+ "share.hkai25.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:25+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:25+00:00"
+ },
+ "sharellm.net": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:25+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 200
+ },
+ "shareyour.cc": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:26+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "sheapi.top": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:25+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "shufulei.net": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:27+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:27+00:00"
+ },
+ "shushutoken.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:26+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:26+00:00"
+ },
+ "sinytra.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:27+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:27+00:00"
+ },
+ "site.whyapi.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:29+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:29+00:00"
+ },
+ "sparkcode.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:29+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:29+00:00"
+ },
+ "ssnaiyun.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:25+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:25+00:00"
+ },
+ "sssaiapi.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:29+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "sssaicodeapi.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:28+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "straitapi.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:27+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "suanzhou.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:25+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:25+00:00"
+ },
+ "sub.callai.one": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:28+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 404
+ },
+ "sub2ai.vip": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:28+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "subrouter.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:27+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:27+00:00"
+ },
+ "sucloud.vip": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:29+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:29+00:00"
+ },
+ "sudocode.chat": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:28+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 403,
+  "last_success_at": "2026-11-26T12:17:28+00:00"
+ },
+ "sudoflow.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:24+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:24+00:00"
+ },
+ "sunapi.5201201314.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:28+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:28+00:00"
+ },
+ "superapi.buzz": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:28+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "susu.wiki": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:30+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:30+00:00"
+ },
+ "tabitoken.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:29+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "taijiai.online": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:28+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:28+00:00"
+ },
+ "tbai.xin": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:33+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "tdyun.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:26+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:26+00:00"
+ },
+ "teapotrouter.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:31+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "test-api.apiqik.online": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:26+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:26+00:00"
+ },
+ "thinkai.tv": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:26+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:26+00:00"
+ },
+ "tian-shu.org": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:31+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:31+00:00"
+ },
+ "tiantianai.pro": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:26+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:26+00:00"
+ },
+ "tierflow.cn": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:27+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 200
+ },
+ "tm-token.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:27+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:27+00:00"
+ },
+ "tokenage.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:32+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:32+00:00"
+ },
+ "tokenbox.cloud": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:32+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:32+00:00"
+ },
+ "tokeness.cn": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:24+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:24+00:00"
+ },
+ "tokeness.io": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:37+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "tokenflux.cloud": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:31+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:31+00:00"
+ },
+ "tokenforge.ai.studio": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:33+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "tokenhub.icu": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:29+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:29+00:00"
+ },
+ "tokenking.cc.cd": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:27+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:27+00:00"
+ },
+ "tokenmetro.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:32+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:32+00:00"
+ },
+ "tokenra.io": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:33+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:33+00:00"
+ },
+ "tokenshengsheng.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:27+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:27+00:00"
+ },
+ "tokensmind.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:32+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:32+00:00"
+ },
+ "tokenus.net": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:33+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:33+00:00"
+ },
+ "tokenwenwen.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:31+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:31+00:00"
+ },
+ "topapi.io": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:32+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:32+00:00"
+ },
+ "torchai.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:32+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:32+00:00"
+ },
+ "trae.cn": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:29+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 404
+ },
+ "tzlapi.qzz.io": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:28+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:28+00:00"
+ },
+ "tzpp.us.ci": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:28+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:28+00:00"
+ },
+ "ultrarouter.org": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:32+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "umapis.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:40+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "uo.mentoe.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:29+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:29+00:00"
+ },
+ "us-3.nianhuaapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:33+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:33+00:00"
+ },
+ "us-ai.twskyhope.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:29+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:29+00:00"
+ },
+ "us.ai.easyart.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:28+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:28+00:00"
+ },
+ "us.ziyelian.site": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:33+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:33+00:00"
+ },
+ "us1.tonbirds.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:28+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:28+00:00"
+ },
+ "us2.nikoapi.xyz": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:34+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:34+00:00"
+ },
+ "user.tocodex.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:33+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:33+00:00"
+ },
+ "v-api.de5.net": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:33+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "v6k.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:39+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:39+00:00"
+ },
+ "vectorengine.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:29+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:29+00:00"
+ },
+ "velunqi.asia": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:35+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:35+00:00"
+ },
+ "vibecodingapi.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:35+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:35+00:00"
+ },
+ "vip.aipro.love": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:28+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:28+00:00"
+ },
+ "vip.muling.store": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:36+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:36+00:00"
+ },
+ "vsllm.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:35+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:35+00:00"
+ },
+ "vsllm.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:28+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:28+00:00"
+ },
+ "wanmoapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:40+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:40+00:00"
+ },
+ "weelinking.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:38+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "wentoken.si": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:35+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "wkapi.pro": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:28+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:28+00:00"
+ },
+ "wochirou.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:30+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:30+00:00"
+ },
+ "wolfai.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:29+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:29+00:00"
+ },
+ "wqdsjhaoai.site": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:30+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:30+00:00"
+ },
+ "wukong.support": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:36+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:36+00:00"
+ },
+ "wuyouai.online": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:35+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 404
+ },
+ "x-llm.net": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:30+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:30+00:00"
+ },
+ "x1.ninijoker-api.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:36+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "x666.me": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:36+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:36+00:00"
+ },
+ "xcode.best": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:36+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:36+00:00"
+ },
+ "xdcn.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:38+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:38+00:00"
+ },
+ "xeduapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:37+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:37+00:00"
+ },
+ "xiaohumini.site": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:39+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:39+00:00"
+ },
+ "xinggangai.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:30+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:30+00:00"
+ },
+ "xingqiao.chat": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:37+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:37+00:00"
+ },
+ "xingwan.store": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:30+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:30+00:00"
+ },
+ "xingya.site": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:37+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:37+00:00"
+ },
+ "xingyi888.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:37+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 404
+ },
+ "xinsuanai.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:31+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:31+00:00"
+ },
+ "xkrelay.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:38+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:38+00:00"
+ },
+ "xn--ai-xg4e312c.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:34+00:00",
+  "last_error": "HTTP 404",
+  "last_pricing_http": 404,
+  "last_status_http": 404
+ },
+ "xn--vduyey89e.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:40+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:40+00:00"
+ },
+ "xrok.dev": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:31+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:31+00:00"
+ },
+ "xxs.l.cd": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:36+00:00",
+  "last_error": "HTTP 401",
+  "last_pricing_http": 401,
+  "last_status_http": 200
+ },
+ "xy.poloapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:31+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:31+00:00"
+ },
+ "yancc.cloud": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:27+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:27+00:00"
+ },
+ "ycyapi.cn": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:36+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "yeschoy.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:38+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:38+00:00"
+ },
+ "yibuapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:31+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:31+00:00"
+ },
+ "yomiapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:31+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:31+00:00"
+ },
+ "yourapi.cn": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:36+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "yuanqiaoyun.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:41+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:41+00:00"
+ },
+ "yujianwudi.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:39+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:39+00:00"
+ },
+ "yunai.chat": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:41+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:41+00:00"
+ },
+ "yundu.lol": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:39+00:00",
+  "last_error": "HTTP 403",
+  "last_pricing_http": 403,
+  "last_status_http": 403
+ },
+ "yunqiaoapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:31+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:31+00:00"
+ },
+ "yunshuapi.site": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:42+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:42+00:00"
+ },
+ "yunwu.ai": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:41+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:41+00:00"
+ },
+ "yunwuai.cc": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:44+00:00",
+  "last_error": "非 New API 价格格式",
+  "last_pricing_http": 200,
+  "last_status_http": 200
+ },
+ "yunzhuhub.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:31+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:31+00:00"
+ },
+ "yyapi.cloud": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:41+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:41+00:00"
+ },
+ "zen-ai.top": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:43+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:43+00:00"
+ },
+ "zerocode.sbs": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:40+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:40+00:00"
+ },
+ "zhiqiapi.com": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:41+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:41+00:00"
+ },
+ "zhiyunapi.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:17:40+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:17:40+00:00"
+ },
+ "zooapi.gfkfqtcx.com": {
+  "consecutive_failures": 2,
+  "last_attempt_at": "2026-11-26T12:17:48+00:00",
+  "last_error": "URLError",
+  "last_pricing_http": null,
+  "last_status_http": null
+ },
+ "zz1cc.cc.cd": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:31+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:31+00:00"
+ },
+ "zzshu.cc": {
+  "consecutive_failures": 0,
+  "last_attempt_at": "2026-11-26T12:18:31+00:00",
+  "last_error": null,
+  "last_pricing_http": 200,
+  "last_status_http": 200,
+  "last_success_at": "2026-11-26T12:18:31+00:00"
+ }
+}
