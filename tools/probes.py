@@ -292,11 +292,12 @@ def _stream_check_anthropic(base_url: str, api_key: str, model: str, timeout: fl
 def _tool_and_billing_probe(target: dict[str, Any], route: dict[str, Any]) -> dict[str, Any]:
     proto = route.get("protocol", "openai")
     model = route["model"]
+    api_key = route.get("api_key") or target["api_key"]
     before_cny = _fetch_quota_cny(target)
     if proto == "anthropic":
         url = target["base_url"].rstrip("/") + "/messages"
         headers = {
-            "x-api-key": target["api_key"],
+            "x-api-key": api_key,
             "anthropic-version": "2023-06-01",
             "Content-Type": "application/json",
             "User-Agent": "RelayPriceProbe/1.0",
@@ -323,7 +324,7 @@ def _tool_and_billing_probe(target: dict[str, Any], route: dict[str, Any]) -> di
     else:
         url = target["base_url"].rstrip("/") + "/chat/completions"
         headers = {
-            "Authorization": f"Bearer {target['api_key']}",
+            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
             "User-Agent": "RelayPriceProbe/1.0",
         }
@@ -379,12 +380,13 @@ def _tool_and_billing_probe(target: dict[str, Any], route: dict[str, Any]) -> di
 def _cache_probe(target: dict[str, Any], route: dict[str, Any]) -> dict[str, Any]:
     proto = route.get("protocol", "openai")
     model = route["model"]
+    api_key = route.get("api_key") or target["api_key"]
 
     def turn(q: str) -> tuple[int, Any, float]:
         if proto == "anthropic":
             url = target["base_url"].rstrip("/") + "/messages"
             headers = {
-                "x-api-key": target["api_key"],
+                "x-api-key": api_key,
                 "anthropic-version": "2023-06-01",
                 "Content-Type": "application/json",
                 "User-Agent": "RelayPriceProbe/1.0",
@@ -398,7 +400,7 @@ def _cache_probe(target: dict[str, Any], route: dict[str, Any]) -> dict[str, Any
             return _http_json(url, headers, payload)
         url = target["base_url"].rstrip("/") + "/chat/completions"
         headers = {
-            "Authorization": f"Bearer {target['api_key']}",
+            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
             "User-Agent": "RelayPriceProbe/1.0",
         }
@@ -455,10 +457,11 @@ def run_probes(config_path: Path, mode: str, dry_run: bool = False, runs_dir: Pa
                     })
                     continue
                 if m == "check":
+                    rk = rt.get("api_key") or tgt["api_key"]
                     res = (
-                        _stream_check_anthropic(tgt["base_url"], tgt["api_key"], rt["model"])
+                        _stream_check_anthropic(tgt["base_url"], rk, rt["model"])
                         if proto == "anthropic"
-                        else _stream_check_openai(tgt["base_url"], tgt["api_key"], rt["model"])
+                        else _stream_check_openai(tgt["base_url"], rk, rt["model"])
                     )
                 elif m == "tool":
                     res = _tool_and_billing_probe(tgt, rt)
