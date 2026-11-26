@@ -476,13 +476,19 @@ class Site:
         return f'<a class="ext" href="{E(href)}" rel="{rel}" target="_blank" data-out-domain="{E(domain)}"{tip}>{E(text or domain)}</a>{suffix}'
 
     def _verification_tags(self) -> str:
+        mapping = [
+            ("google_site_verification", "google-site-verification"),
+            ("bing_site_verification", "msvalidate.01"),
+            ("baidu_site_verification", "baidu-site-verification"),
+            ("so360_site_verification", "360-site-verification"),
+            ("sogou_site_verification", "sogou_site_verification"),
+            ("toutiao_site_verification", "bytedance-verification-code"),
+        ]
         tags: list[str] = []
-        g = str(self.cfg.get("google_site_verification") or "").strip()
-        if g:
-            tags.append(f'<meta name="google-site-verification" content="{E(g)}">\n')
-        b = str(self.cfg.get("bing_site_verification") or "").strip()
-        if b:
-            tags.append(f'<meta name="msvalidate.01" content="{E(b)}">\n')
+        for cfg_key, meta_name in mapping:
+            v = str(self.cfg.get(cfg_key) or "").strip()
+            if v:
+                tags.append(f'<meta name="{meta_name}" content="{E(v)}">\n')
         return "".join(tags)
 
     def _analytics_tag(self) -> str:
@@ -1014,6 +1020,9 @@ def build(cfg: dict[str, Any]) -> dict[str, Any]:
         readme_path=ROOT / "README.md",
     )
     write(DIST / "favicon.svg", '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="28" fill="#1456d4"/><circle cx="32" cy="32" r="16" fill="none" stroke="#fff" stroke-width="5"/><circle cx="32" cy="32" r="5" fill="#fff"/></svg>')
+    inow = str(cfg.get("indexnow_key") or "").strip()
+    if inow:
+        write(DIST / f"{inow}.txt", inow + "\n")
     write(DIST / "_headers", "/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n/data/*\n  Cache-Control: public, max-age=600\n/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n")
     site.flush()
     _log("flushed HTML, swapping dist")

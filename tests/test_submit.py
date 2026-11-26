@@ -79,7 +79,8 @@ class SwapDistTests(unittest.TestCase):
 
         site = B.Site({
             "base_url": "https://agentied.work", "site_name": "T",
-            "cf_beacon_token": "tok123", "google_site_verification": "gver", "bing_site_verification": "bver",
+            "cf_beacon_token": "tok123", "google_site_verification": "gver",
+            "bing_site_verification": "bver", "baidu_site_verification": "bdver",
         }, datetime.now(timezone.utc), "v1")
         tag = site._analytics_tag()
         self.assertIn("static.cloudflareinsights.com/beacon.min.js", tag)
@@ -87,6 +88,7 @@ class SwapDistTests(unittest.TestCase):
         vtag = site._verification_tags()
         self.assertIn('name="google-site-verification" content="gver"', vtag)
         self.assertIn('name="msvalidate.01" content="bver"', vtag)
+        self.assertIn('name="baidu-site-verification" content="bdver"', vtag)
 
         tmp = Path(tempfile.mkdtemp())
         try:

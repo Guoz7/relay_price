@@ -16,5 +16,6 @@ data/mine-last.json
 data/mine-probe-progress.jsonl
 ROADMAP.md
 GITHUB_README.md
+CN_LAUNCH_POSTS.md
 __pycache__/
 *.pyc

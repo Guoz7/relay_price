@@ -79,3 +79,8 @@ jobs:
           else
             echo "Cloudflare secrets not configured; skipping Pages deploy."
           fi
+
+      - name: Push fresh URLs to IndexNow (Bing / cn.bing.com) & Baidu
+        env:
+          BAIDU_PUSH_TOKEN: ${{ secrets.BAIDU_PUSH_TOKEN }}
+        run: python tools/push_urls.py --all --limit 50 --indexnow-limit 300 || true
