@@ -224,7 +224,9 @@ class DashboardCardTests(unittest.TestCase):
     def test_step_svg_flat_and_zero_series(self):
         flat = [(f"2026-11-2{d}T00:00Z", 5.0) for d in range(1, 8)]
         svg = CH.price_step_svg(flat, [(t, 5.0) for t, _ in flat])
-        ET.fromstring(svg)
+        root_el = ET.fromstring(svg)
+        hit_rects = [el for g in root_el.iter("g") if g.attrib.get("class") == "ps-hit" for el in g if el.tag == "rect"]
+        self.assertTrue(hit_rects and all(r.attrib.get("fill") == "transparent" for r in hit_rects))
         self.assertIsNone(BAD_NUM.search(svg))
         self.assertEqual(CH.price_step_svg([(t, 0.0) for t, _ in flat]), "")  # free / zero prices are never plotted
         self.assertEqual(CH.price_step_svg(flat[:1]), "")
@@ -236,6 +238,8 @@ class DashboardCardTests(unittest.TestCase):
         rising = DB.price_trend_card([{"model": "m", "label": "M", "points": mixed, "mine": 10.0}])
         self.assertIn("chart-box", rising)
         self.assertIn("上涨 100%", rising)
+        self.assertNotIn("近 30 天暂无调价波动", rising)
+        self.assertIn("时序监测：较期初上涨 100%", rising)
         self.assertEqual(B.BAR_LABELS["gpt-6.1-sol"], "GPT-6.1 Sol")
         self.assertTrue(all(m in B.BAR_LABELS for m in B.BAR_MODELS))
 

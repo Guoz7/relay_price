@@ -138,7 +138,11 @@ def price_trend_card(models: Sequence[dict[str, Any]], tracked_labels: Iterable[
         if svg:
             pos = [v for _, v in pts if _fin(v) and v > 0]
             first, last = pos[0], pos[-1]
-            moved = "持平" if abs(last - first) < 1e-9 else (f"下降 {(1 - last / first) * 100:.0f}%" if last < first else f"上涨 {(last / first - 1) * 100:.0f}%")
+            pct = (last / first - 1) * 100
+            moved = "持平" if abs(last - first) < 1e-9 else (f"下降 {-pct:.0f}%" if last < first else f"上涨 {pct:.0f}%")
+            if not evs and abs(pct) >= 2:
+                cls = "warn" if pct > 0 else "ok"
+                ev_html = f'<span class="badge {cls}">时序监测：较期初{"上涨" if pct > 0 else "下降"} {abs(pct):.0f}%</span>'
             body = (f'<div class="chart-box" data-tipbox>{svg}</div>'
                     f'<p class="dash-kpi">近 {len(pts)} 次快照：{E(money(first))} → <b>{E(money(last))}</b>（{E(moved)}）</p>'
                     f'<div class="bd">{ev_html}</div>')

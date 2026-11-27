@@ -430,7 +430,7 @@ def price_step_svg(points: Sequence[Sequence[Any]], ref: Sequence[Sequence[Any]]
         if r:
             d = (v / r - 1) * 100
             tip += f" · {ref_label} {fmt_price(r, unit)} · " + ("和同行差不多" if abs(d) < 3 else (f"比同行便宜 {-d:.0f}%" if d < 0 else f"比同行贵 {d:.0f}%"))
-        hits.append(f'<rect x="{_n(X(ts))}" y="{y0}" width="{_n(max(2.0, nx - X(ts)))}" height="{y1 - y0}" data-tip="{_e(tip)}"/>')
+        hits.append(f'<rect x="{_n(X(ts))}" y="{y0}" width="{_n(max(2.0, nx - X(ts)))}" height="{y1 - y0}" fill="transparent" data-tip="{_e(tip)}"/>')
         if i == 0 or v != pts[i - 1][1]:
             hits.append(f'<circle class="ps-pt" cx="{_n(X(ts))}" cy="{_n(Y(v))}" r="3"/>')
     body += f'<g class="ps-hit">{"".join(hits)}</g>'
