@@ -1,6 +1,16 @@
 name: Daily Refresh & Deploy
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/**"
+      - "assets/**"
+      - "functions/**"
+      - "config.json"
+      - "seeds.txt"
+      - "data/intel.json"
+      - ".github/workflows/daily-refresh.yml"
   schedule:
     - cron: "0 */6 * * *" # 每 6 小时自动刷新（北京时间 02/08/14/20 点）
   workflow_dispatch:
