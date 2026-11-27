@@ -74,6 +74,57 @@ class ScoringTests(unittest.TestCase):
         self.assertEqual(sc.grade, "C")
         self.assertIn("降级", sc.cap_reason)
 
+    @staticmethod
+    def _top_dims():
+        return [S.Dim("stability", 99, ""), S.Dim("longevity", 99, ""), S.Dim("transparency", 99, ""),
+                S.Dim("reputation", 99, ""), S.Dim("latency", 99, "")]
+
+    @staticmethod
+    def _perfect_probe(**kw):
+        probe = {"window_days": 7, "total_samples": 60, "success_rate": 1.0, "avg_ttft_ms": 200.0,
+                 "tool_call_pass_rate": 1.0, "cache_hit_rate": 1.0, "billing_drift_pct": 0.0, "passed_stage2": True,
+                 "auth_pass_rate": 1.0, "iq_pass_rate": 1.0, "context_pass_rate": 1.0, "tamper_accepted_count": 0,
+                 "verified_tier": "L3"}
+        probe.update(kw)
+        return probe
+
+    def test_authenticity_iq_pass_keeps_grade_s(self):
+        sc = S.station_score(self._top_dims(), S.DEFAULT_STATION_WEIGHTS, attempts=12, probe=self._perfect_probe())
+        self.assertEqual((sc.stage, sc.grade, sc.cap_reason), (2, "S", ""))
+        self.assertIn("已验证 L3", sc.dims["probe"].evidence)
+        self.assertIn("智商抽检通过 100%", sc.dims["probe"].evidence)
+
+    def test_authenticity_iq_veto_overrides_perfect_latency_and_uptime(self):
+        cases = {
+            "tamper": {"tamper_accepted_count": 1, "verified_tier": "L0"},
+            "auth": {"auth_pass_rate": 0.80, "verified_tier": "L0"},
+            "iq": {"iq_pass_rate": 0.5, "verified_tier": "L1"},
+            "alert": {"downgrade_alert": True, "downgrade_reasons": ["近 24h 智商通过率 0%（低于 65%）"]},
+        }
+        for name, kw in cases.items():
+            with self.subTest(name):
+                sc = S.station_score(self._top_dims(), S.DEFAULT_STATION_WEIGHTS, attempts=12,
+                                     probe=self._perfect_probe(passed_stage2=False, **kw))
+                self.assertEqual(sc.stage, 2)
+                self.assertLessEqual(sc.total, S.STAGE2_FAIL_CAP)
+                self.assertEqual(sc.grade, "C")
+                self.assertIn("实测触发真伪/智商否决，强制降级封顶 C 级", sc.cap_reason)
+
+    def test_boundary_rates_do_not_veto(self):
+        probe = self._perfect_probe(auth_pass_rate=0.85, iq_pass_rate=0.65)
+        _, stage, cap = S.score_probe(probe)
+        self.assertEqual((stage, cap), (2, ""))
+
+    def test_authenticity_and_iq_outweigh_latency(self):
+        slow_honest = S.score_probe(self._perfect_probe(avg_ttft_ms=9000.0))[0].score
+        fast_downgraded = S.score_probe(self._perfect_probe(iq_pass_rate=0.7, auth_pass_rate=0.86))[0].score
+        self.assertGreater(slow_honest, fast_downgraded)
+        legacy = S.score_probe({"window_days": 7, "total_samples": 40, "success_rate": 0.99, "avg_ttft_ms": 750.0,
+                                "tool_call_pass_rate": 1.0, "cache_hit_rate": 1.0, "billing_drift_pct": 1.2,
+                                "passed_stage2": True})
+        self.assertNotIn("真伪", legacy[0].evidence)
+        self.assertEqual(legacy[2], "")
+
 
 if __name__ == "__main__":
     unittest.main()

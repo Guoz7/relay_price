@@ -72,7 +72,7 @@
 
 1. **Stage 0 · 仅建档**：接口返回 `401 / 403`（需登录或 WAF 拦截），只保留档案页，不参与评分与比价。
 2. **Stage 1 · 公开校验（最高封顶 B 级 / 74 分）**：基于公开只读接口计算稳定（30%）、资历（25%）、透明（20%）、口碑（15%）、响应（10%）五维信誉分，未接入真金白银实测前一律封顶 `B / 74`。
-3. **Stage 2 · 实测认证（解锁 A / S 级）**：使用独立小号连续 7 天运行 [tools/probes.py](tools/probes.py)（连通性、TTFT/TPOT、Tool-calling、两轮 Prompt Cache 命中、余额前后实扣偏差对账）。达标（样本 ≥ 20、成功率 ≥ 90%、实扣偏差 ≤ ±15%）解锁 A/S；不达标触发非补偿否决降级至 C 级（64 分）。
+3. **Stage 2 · 实测认证（解锁 A / S 级）**：使用独立小号连续 7 天运行 [tools/probes.py](tools/probes.py)（连通性、TTFT/TPOT、Tool-calling、两轮 Prompt Cache 命中、余额前后实扣偏差对账）。达标（样本 ≥ 20、成功率 ≥ 90%、实扣偏差 ≤ ±15%）解锁 A/S；不达标触发非补偿否决降级至 C 级（64 分）。另设真伪/智商否决：篡改签名被接受 > 0 次、真伪通过率 < 85% 或智商抽检通过率 < 65%（含近 24h 双窗口骤降告警）时，即使首字 200ms、可用率 100% 也封顶 C 级；聚合结果给出已验证档位 L0–L3。
 4. **防踩雷多分组规则**：绝不依据营销词自动认证“官转/高稳”；仅展示客观协议标签与自认提醒标签（`自称Kiro` / `自称Cursor` / `自称逆向/反代` / `特惠/限时分组`），并隔离常规按量区与特惠/逆向/福利区；支持「对话 3:1」与「编程缓存 7:2:1」一键切换。
 
 ---
@@ -88,11 +88,11 @@
 | `tools/pricing.py` | 多分组价格换算、缓存价、分时表达式解析与自认风险标签提取（纯函数） |
 | `tools/model_specs.py` | 同步 `anomalyco/models.dev` 与 `BerriAI/litellm` 官网参考价、上下文窗口与能力规格（`data/model-specs.json`） |
 | `tools/scoring.py` | Stage 0/1/2 分层信誉评分、非补偿封顶与报价综合评分（纯函数） |
-| `tools/probes.py` | V2A 低成本真实调用探针（连通/TTFT/TPOT/工具调用/缓存命中/账单实扣偏差）与 7 日聚合器 |
+| `tools/probes.py` | V2A 低成本真实调用探针（连通/TTFT/TPOT/工具调用/缓存命中/账单实扣偏差）+ 复用 verify_model 的 `auth`/`iq`/`context` 真伪与智商抽检模式、预算熔断（`--max-calls`、每站 `daily_call_cap`）与 24h/7d 双窗口聚合器 |
 | `tools/scenes.py` | 4 大场景导购页生成器（Claude Code / DeepSeek / Codex·GPT / Gemini·生图视频） |
 | `tools/calc_page.py` | `/calc/` 交互式月度总账、80/20 混合路由省钱与 1 主 + 1 备选站助手生成器 |
 | `tools/verify_page.py` | `/verify/` LLM 模型真伪鉴别页（支持在线边缘无状态验真与本机开源脚本双模式） |
-| `tools/verify_model.py` | 本机零依赖 LLM 真伪校验 CLI（协议指纹 / Thinking 加密签名回传 / Tool-Calling / 缓存命中） |
+| `tools/verify_model.py` | 本机零依赖 LLM 真伪与智商抽检 CLI：Mulberry32 动态种子出题，`--tier l1_auth/l2_iq/l3_deep`，输出真伪特征分 `auth_score` 与智商保真分 `iq_score`，可用 `--reference-url` 同种子差分比对官方端点；与 `functions/api/verify.js` 1:1 对齐 |
 | `functions/api/verify.js` | Cloudflare Pages 无状态边缘验真接口（`POST /api/verify`，严格 SSRF 防护、绝不落盘 API Key） |
 | `tools/station_insights.py` | 站点 30 日价格稳定性、域名注册时长档案与结构化社区评价（`data/reviews.json`）聚合器 |
 | `tools/en_page.py` | `/en/` 海外开发者英文概览与美元官网折数对照页 |
@@ -129,6 +129,8 @@ cp data/probe-targets.example.json data/probe-targets.local.json
 # 编辑 data/probe-targets.local.json 填入测试小号 API Key（已在 .gitignore 中忽略）
 python tools/probes.py --mode all --dry-run   # 预检探测计划
 python tools/probes.py --mode all             # 执行探针并生成 data/probes.json
+python tools/probes.py --mode auth --max-calls 120   # L1 真伪抽检（带本轮预算熔断）
+python tools/probes.py --mode iq              # 智商抽检；--mode context 为长文多跳防截断
 ```
 
 ### GitHub Actions 自动部署到 Cloudflare Pages

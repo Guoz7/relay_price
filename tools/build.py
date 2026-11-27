@@ -847,7 +847,32 @@ def probe_panel(sc: S.StationScore) -> str:
         f'<div><b>{drift_txt}</b><span>余额实扣 vs 公开标价偏差</span></div>'
         f'</div>'
         + (f'<div class="probe-bars" aria-label="近 7 日每日成功率">{"".join(bars)}</div>' if bars else "")
+        + fidelity_kpis(pr)
         + "</section>"
+    )
+
+
+def _pct(v: Any) -> str:
+    return f"{float(v):.0%}" if isinstance(v, (int, float)) else "—"
+
+
+def fidelity_kpis(pr: dict[str, Any]) -> str:
+    """Stage 2 authenticity / IQ evidence row: verified tier, pass rates, tamper count and 24h downgrade alert."""
+    if not any(pr.get(k) is not None for k in ("auth_pass_rate", "iq_pass_rate", "context_pass_rate")):
+        return ""
+    tier = str(pr.get("verified_tier") or "L0")
+    tamper = int(pr.get("tamper_accepted_count") or 0)
+    alert = ""
+    if pr.get("downgrade_alert"):
+        alert = f'<p class="badge danger">近 24h 降级告警：{E("；".join(str(x) for x in pr.get("downgrade_reasons") or []))}</p>'
+    return (
+        '<div class="kpis">'
+        f'<div><b>{E(tier)}</b><span>已验证档位（L1 真伪 · L2 智商 · L3 长文）</span></div>'
+        f'<div><b>{_pct(pr.get("auth_pass_rate"))}</b><span>真伪通过率（{int(pr.get("auth_samples") or 0)} 次，否决线 85%）</span></div>'
+        f'<div><b>{_pct(pr.get("iq_pass_rate"))} / {_pct(pr.get("context_pass_rate"))}</b><span>智商抽检 / 长文多跳通过率（否决线 65%）</span></div>'
+        f'<div><b>{tamper}</b><span>篡改签名被接受次数（大于 0 直接否决）</span></div>'
+        '</div>'
+        + alert
     )
 
 
@@ -1374,7 +1399,13 @@ def _station_bento(
     pr = sc.probe
     if pr:
         auth_badge = f'<span class="badge {"danger" if sc.cap_reason else "ok"}">Stage 2 探针已接入</span>'
-        auth_dl = (
+        fid_dl = (
+            f'<dt>已验证档位</dt><dd>{E(str(pr.get("verified_tier") or "L0"))} · 真伪 {_pct(pr.get("auth_pass_rate"))} · '
+            f'智商 {_pct(pr.get("iq_pass_rate"))} · 篡改被接受 {int(pr.get("tamper_accepted_count") or 0)} 次</dd>'
+            if any(pr.get(k) is not None for k in ("auth_pass_rate", "iq_pass_rate", "context_pass_rate")) else
+            '<dt>真伪 / 智商</dt><dd>尚无 L1–L3 抽检样本（已验证档位 L0）</dd>'
+        )
+        auth_dl = fid_dl + (
             f'<dt>真实调用率</dt><dd>{pr.get("success_rate", 0):.1%}（{pr.get("total_samples", 0)} 次样本）</dd>'
             f'<dt>工具 / 缓存</dt><dd>工具 {pr["tool_call_pass_rate"]:.0%} · 缓存 {pr["cache_hit_rate"]:.0%}</dd>'
             if (pr.get("tool_call_pass_rate") is not None and pr.get("cache_hit_rate") is not None) else
@@ -1383,14 +1414,14 @@ def _station_bento(
     else:
         auth_badge = '<span class="badge">Stage 1 未官测</span>'
         auth_dl = (
-            '<dt>真伪验真状态</dt><dd>尚未纳入 7 日官测探针池（评级封顶 B 级 74 分）</dd>'
-            '<dt>自带 Key 自测</dt><dd>支持一键检验 Thinking 签名回传与篡改负检、Tool-Calling、缓存命中与用量一致性</dd>'
+            '<dt>真伪验真状态</dt><dd>尚未纳入 7 日官测探针池（已验证档位 L0，评级封顶 B 级 74 分）</dd>'
+            '<dt>自带 Key 自测</dt><dd>L1 签名回传与篡改负检、动态工具与缓存；L2 加测状态机追踪、逻辑推理与复合指令；L3 加测长文多跳防截断</dd>'
         )
     card_auth = (
         '<div class="bcard">'
-        f'<div class="bcard-h"><h3>LLM 模型真伪鉴别</h3>{auth_badge}</div>'
+        f'<div class="bcard-h"><h3>LLM 模型真伪与智商抽检</h3>{auth_badge}</div>'
         f'<dl class="bkv">{auth_dl}</dl>'
-        f'<div><a class="btn sm primary" href="{verify_href}">现场鉴别这家站模型真伪 →</a></div>'
+        f'<div><a class="btn sm primary" href="{verify_href}">现场抽检这家站的真伪与智商 →</a></div>'
         '</div>'
     )
 
@@ -1825,8 +1856,25 @@ def build_about(site: Site, cfg: dict[str, Any]) -> None:
 <tbody>
 <tr><td><b>Stage 0 · 仅建档</b></td><td>不评分</td><td>接口返回 401/403（需登录或 WAF 拦截），仅保留基础档案页，不参与评分与比价。</td></tr>
 <tr><td><b>Stage 1 · 公开校验</b></td><td><b>最高 B 级（74 分）</b></td><td>仅凭公开元数据（稳定、资历、透明、口碑、响应）无法验证真实调用质量，因此无论公开信号分多高，未接入真实探针的站点与报价一律封顶 74 分（B 级）。</td></tr>
-<tr><td><b>Stage 2 · 实测认证</b></td><td><b>解锁 A / S 级</b></td><td>独立匿名小号连续 7 天真金白银探针（≥20 次样本，含连通/TTFT/TPOT、Tool-calling、Prompt Cache 命中与余额实扣对账）。实测分占 35%、公开分占 65%；若实测成功率 &lt; 90% 或账单实扣偏差超过 ±15%，触发非补偿否决，强制降级封顶 C 级（64 分）。</td></tr>
+<tr><td><b>Stage 2 · 实测认证</b></td><td><b>解锁 A / S 级</b></td><td>独立匿名小号连续 7 天真金白银探针（≥20 次样本，含连通/TTFT/TPOT、Tool-calling、Prompt Cache 命中与余额实扣对账）。实测分占 35%、公开分占 65%；若实测成功率 &lt; 90% 或账单实扣偏差超过 ±15%，触发非补偿否决，强制降级封顶 C 级（64 分）。另有真伪/智商否决，见下表。</td></tr>
 </tbody></table>
+
+<h3>真伪 + 智商验证分级（L0–L3）与双分否决</h3>
+<p>延迟和可用率在多数中转站上已经够用；买家看不到、劣质中转最常作弊的是<b>模型真伪</b>（假模型、静默替换、伪造签名、剥离缓存）和<b>智商保真</b>（静默降级到弱档或量化模型、剥离推理档、静默截断上下文）。因此每次抽检都用一个新的随机种子（Mulberry32）现场生成题目，开源代码里没有可供正则识别的固定提示词；同一种子可完整复现，所有判分都是确定性的标准答案比对，不使用大模型当裁判。</p>
+<table class="plain">
+<thead><tr><th>档位</th><th>包含检测</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td><b>L0 · 未验证</b></td><td>—</td><td>没有真伪抽检样本，或真伪通过率低于 85%，或出现过篡改签名被接受。</td></tr>
+<tr><td><b>L1 · 快速真伪</b></td><td>协议指纹、Thinking 签名回传与篡改负检、动态工具调用、动态缓存命中</td><td>7 天真伪通过率 ≥ 85%，且篡改签名被接受 0 次。</td></tr>
+<tr><td><b>L2 · 真伪 + 智商抽检</b></td><td>L1 + 6 步状态机追踪、4×3 逻辑推理（内置求解器保证唯一解）、4 条复合指令约束</td><td>在 L1 基础上，7 天智商抽检通过率 ≥ 65%。</td></tr>
+<tr><td><b>L3 · 深度防降级</b></td><td>L2 + 长上下文 3 跳指针追踪（15% / 52% / 87% 深度）</td><td>在 L2 基础上，长文多跳通过率 ≥ 65%；同时比对上游 prompt_tokens 与估算值，标记静默截断或 token 虚增。</td></tr>
+</tbody></table>
+<ul>
+<li><b>双分不互相抵消</b>：单次抽检分别给出<b>真伪特征分</b>与<b>智商保真分</b>（0–100）。篡改签名被接受、真伪分 &lt; 55 或智商分 &lt; 55 时，结论直接判为异常，不会被其他项目的高分平均掉。</li>
+<li><b>Stage 2 真伪/智商否决</b>：7 天窗口内篡改签名被接受次数 &gt; 0、真伪通过率 &lt; 85% 或智商抽检通过率 &lt; 65%，即使首字 200ms、可用率 100%，也强制降级封顶 C 级（64 分）。存在真伪与智商样本时，实测分中真伪、智商的权重高于延迟。</li>
+<li><b>双窗口</b>：同时统计近 24 小时与 7 天滚动窗口。近 24 小时通过率跌破否决线，或较 7 天均值骤降 25 个百分点以上，立即触发降级告警，防止站点在第 6 天悄悄切换到降级池。</li>
+<li><b>预算熔断</b>：自动探针按单轮调用上限与每站每日调用上限执行，超出即跳过并记录原因，不会超支。</li>
+</ul>
 
 <h2>二、公开信号五维评分（0–100）</h2>
 <table class="plain">
@@ -1907,7 +1955,7 @@ def build_home(site: Site, cfg, model_pages, stations, closed_stations, fam_orde
     <div id="sug2" class="sug" hidden></div>
   </div>
   <div class="tool-strip">
-    <a class="tool-card info" href="/verify/"><b>LLM 模型真伪鉴别 →</b><span>现场检验 Thinking 加密签名回传、Tool-Calling 与两轮 Prompt Cache 真命中（支持本机脚本）</span></a>
+    <a class="tool-card info" href="/verify/"><b>LLM 模型真伪与智商抽检 →</b><span>动态种子现场出题：签名回传与篡改负检、工具与缓存真伪，加测状态机、逻辑推理、复合指令与长文多跳（支持本机脚本）</span></a>
     <a class="tool-card ok" href="/calc/"><b>月度成本算账与主备选站 →</b><span>对比官网直连 vs 常规中转 vs 80/20 混合路由，自动搭配 1 主 + 1 备独立站点</span></a>
     <a class="tool-card" href="/stations/"><b>站点高级档案与排行 →</b><span>查看 30 日价格稳定性、域名注册时长、全球流量榜排名与 GitHub 实测评价</span></a>
   </div>
@@ -1967,7 +2015,7 @@ def build_seo_files(site: Site, model_pages, stations, n_stage0: int) -> None:
     lines += [
         "", "## 主要页面",
         f"- [月度成本算账器与主备选站助手]({site.url('/calc/')})：官方直连 vs 常规中转 vs 80/20 混合路由，自动给出 1 主 + 1 备站点组合",
-        f"- [LLM 模型真伪鉴别与协议自测工具]({site.url('/verify/')})：支持在线无状态边缘接口（POST /api/verify）与本机脚本，校验 Thinking 签名、Tool-Calling 与两轮缓存命中",
+        f"- [LLM 模型真伪鉴别与协议自测工具]({site.url('/verify/')})：支持在线无状态边缘接口（POST /api/verify）与本机脚本，L1/L2/L3 三档动态种子抽检，分别给出真伪特征分与智商保真分",
         f"- [中转站分层评分排行]({site.url('/stations/')})",
         f"- [全部模型]({site.url('/models/')})",
         f"- [调价动态]({site.url('/changes/')})",

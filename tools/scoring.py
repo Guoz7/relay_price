@@ -178,6 +178,9 @@ def score_probe(probe: dict[str, Any] | None) -> tuple[Dim, int, str]:
     - No probe / insufficient samples -> stage 1 (capped at B / 74)
     - Probed and passed gates -> stage 2 (unlocks A / S)
     - Probed and failed reliability (<90%) or billing drift (>15%) -> stage 2 with veto cap (C / 64)
+    - Non-compensatory authenticity / IQ veto -> stage 2 with veto cap (C / 64), regardless of TTFT or uptime:
+      tampered signature accepted, auth_pass_rate < 0.85, iq_pass_rate < 0.65, or a 24h dual-window downgrade alert
+    - When authenticity / IQ rates are present they outweigh latency in the probe score
     """
     if not probe or not isinstance(probe, dict) or (probe.get("total_samples") or 0) < 5:
         return (
@@ -191,13 +194,30 @@ def score_probe(probe: dict[str, Any] | None) -> tuple[Dim, int, str]:
     tool_r = probe.get("tool_call_pass_rate")
     cache_r = probe.get("cache_hit_rate")
     drift = probe.get("billing_drift_pct")
+    auth_r = probe.get("auth_pass_rate")
+    iq_r = probe.get("iq_pass_rate")
+    ctx_r = probe.get("context_pass_rate")
+    tamper_n = int(probe.get("tamper_accepted_count") or 0)
+    v_tier = probe.get("verified_tier")
 
     s_sr = interp(sr * 100, [(50, 0), (80, 35), (90, 65), (95, 82), (99, 96), (100, 100)])
     s_drift = 80.0 if drift is None else interp(abs(float(drift)), [(0, 100), (5, 92), (10, 78), (15, 60), (30, 15), (50, 0)])
     s_tool = 75.0 if tool_r is None else clamp(float(tool_r) * 100)
     s_cache = 70.0 if cache_r is None else clamp(float(cache_r) * 100)
     s_ttft = 75.0 if ttft is None else interp(float(ttft), [(600, 100), (1500, 88), (3000, 68), (6000, 35), (10000, 10)])
-    p_score = clamp(0.45 * s_sr + 0.25 * s_drift + 0.15 * s_tool + 0.10 * s_cache + 0.05 * s_ttft)
+    if auth_r is None and iq_r is None:
+        p_score = clamp(0.45 * s_sr + 0.25 * s_drift + 0.15 * s_tool + 0.10 * s_cache + 0.05 * s_ttft)
+    else:
+        s_auth = 70.0 if auth_r is None else clamp(float(auth_r) * 100)
+        s_iq = 70.0 if iq_r is None else clamp(float(iq_r) * 100)
+        if ctx_r is not None:
+            s_iq = 0.75 * s_iq + 0.25 * clamp(float(ctx_r) * 100)
+        if tamper_n > 0:
+            s_auth = 0.0
+        p_score = clamp(
+            0.25 * s_auth + 0.25 * s_iq + 0.20 * s_sr + 0.15 * s_drift
+            + 0.07 * s_tool + 0.05 * s_cache + 0.03 * s_ttft
+        )
 
     parts = [f"近 {probe.get('window_days', 7)} 天 {samples} 次实测", f"成功率 {sr:.1%}"]
     if ttft is not None:
@@ -208,12 +228,32 @@ def score_probe(probe: dict[str, Any] | None) -> tuple[Dim, int, str]:
         parts.append(f"缓存命中 {float(cache_r):.0%}")
     if drift is not None:
         parts.append(f"实扣偏差 {float(drift):+.1f}%")
+    if auth_r is not None:
+        parts.append(f"真伪通过 {float(auth_r):.0%}")
+    if iq_r is not None:
+        parts.append(f"智商抽检通过 {float(iq_r):.0%}")
+    if ctx_r is not None:
+        parts.append(f"长文多跳 {float(ctx_r):.0%}")
+    if v_tier:
+        parts.append(f"已验证 {v_tier}")
 
     veto_reasons = []
     if sr < 0.90:
         veto_reasons.append(f"实测成功率仅 {sr:.1%}（低于 90%）")
     if drift is not None and abs(float(drift)) > 15.0:
         veto_reasons.append(f"账单实扣偏差 {float(drift):+.1f}%（超过 ±15%）")
+    fid_reasons = []
+    if tamper_n > 0:
+        fid_reasons.append(f"篡改签名被接受 {tamper_n} 次")
+    if auth_r is not None and float(auth_r) < 0.85:
+        fid_reasons.append(f"真伪通过率仅 {float(auth_r):.0%}（低于 85%）")
+    if iq_r is not None and float(iq_r) < 0.65:
+        fid_reasons.append(f"智商抽检通过率仅 {float(iq_r):.0%}（低于 65%）")
+    if probe.get("downgrade_alert"):
+        fid_reasons.extend(str(x) for x in (probe.get("downgrade_reasons") or ["近 24h 真伪/智商骤降"]))
+    if fid_reasons:
+        reason = "；".join(fid_reasons + veto_reasons) + "，实测触发真伪/智商否决，强制降级封顶 C 级"
+        return Dim("probe", p_score, "，".join(parts), known=True), 2, reason
     if veto_reasons:
         return Dim("probe", p_score, "，".join(parts), known=True), 2, "；".join(veto_reasons) + "，触发降级封顶 C 级"
     if not probe.get("passed_stage2", samples >= 20):

@@ -43,6 +43,16 @@ class VerifyAndInsightsTests(unittest.TestCase):
         self.assertIn('id="verify-app"', body)
         self.assertIn("/api/verify", body)
         self.assertIn("verify_model.py", body)
+        for tier in ("l1_auth", "l2_iq", "l3_deep"):
+            self.assertIn(f'data-vtier="{tier}"', body)
+        for label in ("L1 快速真伪", "L2 真伪 + 智商抽检", "L3 深度防降级", "推荐", "真伪特征分", "智商保真分"):
+            self.assertIn(label, body)
+        self.assertIn('id="v-gauges"', body)
+        self.assertIn("--tier", body)
+        self.assertIn("--reference-url", body)
+        self.assertIn('id="v-seed"', body)
+        for cid in VM.ALL_CHECKS:
+            self.assertIn(f'value="{cid}"', body)
         scripts = re.findall(r"<script>(.*?)</script>", body, re.S)
         self.assertTrue(scripts)
         with tempfile.NamedTemporaryFile("w", suffix=".js", encoding="utf-8", delete=False) as tf:
@@ -100,6 +110,39 @@ class VerifyAndInsightsTests(unittest.TestCase):
             self.assertIn("/verify/?base_url=https%3A%2F%2Fdemo.test", html)
             self.assertIn("★ 5.0 / 5", html)
             self.assertIn("@alice", html)
+            self.assertIn("LLM 模型真伪与智商抽检", html)
+            self.assertIn("L0", html)
+            self.assertEqual(html.count("<div"), html.count("</div>"))
+
+    def test_probe_panel_and_bento_render_authenticity_iq_tiers(self):
+        probe = {"window_days": 7, "total_samples": 30, "ok_samples": 30, "success_rate": 1.0, "avg_ttft_ms": 200.0,
+                 "tool_call_pass_rate": 1.0, "cache_hit_rate": 1.0, "billing_drift_pct": 0.5, "passed_stage2": False,
+                 "auth_samples": 8, "auth_pass_rate": 0.875, "iq_samples": 6, "iq_pass_rate": 0.5,
+                 "context_samples": 0, "context_pass_rate": None, "tamper_accepted_count": 1, "verified_tier": "L0",
+                 "downgrade_alert": True, "downgrade_reasons": ["近 24h 智商通过率 0%（低于 65%）"],
+                 "last_probed_at": "2026-11-26T10:00:00+00:00", "daily": [["2026-11-26", 30, 30]]}
+        dims = [S.Dim("stability", 95, ""), S.Dim("longevity", 95, ""), S.Dim("transparency", 95, ""),
+                S.Dim("reputation", 95, ""), S.Dim("latency", 95, "")]
+        sc = S.station_score(dims, S.DEFAULT_STATION_WEIGHTS, attempts=12, probe=probe)
+        self.assertLessEqual(sc.total, S.STAGE2_FAIL_CAP)
+        panel = B.probe_panel(sc)
+        for txt in ("已验证档位", "真伪通过率", "智商抽检 / 长文多跳", "篡改签名被接受次数", "88%", "50% / —", "近 24h 降级告警"):
+            self.assertIn(txt, panel)
+        self.assertEqual(panel.count("<div"), panel.count("</div>"))
+        html = B._station_bento("demo.test", {"display_name": "Demo", "score": sc}, [], {}, {}, None, [])
+        self.assertIn("LLM 模型真伪与智商抽检", html)
+        self.assertIn("篡改被接受 1 次", html)
+        self.assertEqual(html.count("<div"), html.count("</div>"))
+
+    def test_about_page_explains_tiers_and_veto(self):
+        site = DummySite()
+        B.build_about(site, {})
+        body = site.pages["/about/"]["body"]
+        for txt in ("L0 · 未验证", "L1 · 快速真伪", "L2 · 真伪 + 智商抽检", "L3 · 深度防降级", "真伪特征分", "智商保真分",
+                    "真伪/智商否决", "双窗口", "预算熔断", "Mulberry32"):
+            self.assertIn(txt, body)
+        for tag in ("table", "tr", "ul", "li", "p", "section"):
+            self.assertEqual(body.count(f"<{tag}>") + body.count(f"<{tag} "), body.count(f"</{tag}>"), tag)
 
 
     # ---- stability score / volatility
@@ -263,6 +306,13 @@ class VerifyAndInsightsTests(unittest.TestCase):
         self.assertIn('class="sbar ok" style="--v:100%">100<', html)
         self.assertNotIn("30日价格", html)
         self.assertEqual(html.count("<tr>"), html.count("</tr>"))
+
+    def test_app_js_passes_node_check(self):
+        import subprocess
+        root = Path(__file__).resolve().parent.parent
+        for rel in ("assets/app.js", "functions/api/verify.js"):
+            r = subprocess.run(["node", "--check", str(root / rel)], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, msg=f"{rel}: {r.stderr}")
 
     def test_app_js_sort_first_desc_and_unknown_last(self):
         import re, subprocess

@@ -5,9 +5,21 @@ Implements the exact Experiment 4 low-cost probe specification:
 - tool  (~350 in + 120 out): function-calling JSON conformance + optional pre/post quota billing drift
 - cache (2-turn ~1,200-token prefix): verifies actual prompt cache hit tokens
 
+Authenticity & intelligence modes reuse tools/verify_model.py directly (fresh seeded challenges per run):
+- auth    (tier l1_auth): fingerprint + thinking signature round-trip/tamper + dynamic tool + dynamic cache
+- iq      (iq_trace + iq_logic + iq_constraints): deterministic, programmatically graded anti-downgrade checks
+- context (context_hop): RULER-style 3-hop chain at 15% / 52% / 87% depth, flags silent truncation
+
+Budget circuit breaker: --max-calls caps upstream calls per run; each target's daily_call_cap (default
+DEFAULT_DAILY_CALL_CAP) caps calls per station per UTC day, counting calls already logged in today's jsonl.
+Dual window: every bucket reports a recent 24h window next to the rolling 7d window, so a station that swaps
+to a downgraded pool late in the window raises downgrade_alert immediately.
+
 Usage:
   python tools/probes.py --config data/probe-targets.local.json --mode check
   python tools/probes.py --config data/probe-targets.local.json --mode all --dry-run
+  python tools/probes.py --config data/probe-targets.local.json --mode auth --max-calls 120
+  python tools/probes.py --config data/probe-targets.local.json --mode iq
   python tools/probes.py --aggregate
 """
 
@@ -31,9 +43,30 @@ DATA = ROOT / "data"
 RUNS_DIR = DATA / "probe-runs"
 OUT_PATH = DATA / "probes.json"
 
+if str(TOOLS) not in sys.path:
+    sys.path.insert(0, str(TOOLS))
+import verify_model as VM  # noqa: E402
+
 STAGE2_MIN_SAMPLES = 20
 STAGE2_MIN_SUCCESS = 0.90
 STAGE2_MAX_DRIFT_PCT = 15.0
+
+AUTH_MIN_PASS = 0.85
+IQ_MIN_PASS = 0.65
+CONTEXT_MIN_PASS = 0.65
+DUAL_WINDOW_HOURS = 24
+DUAL_WINDOW_MIN_SAMPLES = 2
+DUAL_WINDOW_MAX_DROP = 0.25
+DEFAULT_DAILY_CALL_CAP = 200
+
+LEGACY_MODES = ["check", "tool", "cache"]
+SUITE_MODES: dict[str, dict[str, Any]] = {
+    "auth": {"tier": "l1_auth", "checks": None},
+    "iq": {"tier": None, "checks": ["iq_trace", "iq_logic", "iq_constraints"]},
+    "context": {"tier": None, "checks": ["context_hop"]},
+}
+ALL_MODES = LEGACY_MODES + list(SUITE_MODES) + ["all"]
+EST_CALLS = {"check": 1, "tool": 1, "cache": 2, "auth": 7, "iq": 3, "context": 1}
 
 # ~1,200-token deterministic prompt prefix used for 2-turn prompt cache hit probes.
 CACHE_PREFIX = (
@@ -434,29 +467,143 @@ def _cache_probe(target: dict[str, Any], route: dict[str, Any]) -> dict[str, Any
     }
 
 
-def run_probes(config_path: Path, mode: str, dry_run: bool = False, runs_dir: Path | None = None) -> list[dict[str, Any]]:
+def _suite_probe(target: dict[str, Any], route: dict[str, Any], mode: str, seed: Any = None) -> dict[str, Any]:
+    """Run an authenticity / IQ / context suite through verify_model.run_suite (zero duplicated logic)."""
+    spec = SUITE_MODES[mode]
+    ctx_tokens = route.get("context_tokens") or target.get("context_tokens") or VM.CLI_CONTEXT_TOKENS["def"]
+    try:
+        rep = VM.run_suite(
+            target["base_url"], route.get("api_key") or target["api_key"], route["model"],
+            protocol=route.get("protocol", "openai"), checks=spec["checks"], tier=spec["tier"],
+            seed=seed, context_tokens=ctx_tokens,
+        )
+    except ValueError as e:
+        return {"ok": False, "calls": 0, "error": f"ValueError: {e}"}
+    return suite_record(mode, rep)
+
+
+def suite_record(mode: str, rep: dict[str, Any]) -> dict[str, Any]:
+    """Flatten a run_suite report into one probe-run record (no prompts, no keys, no raw upstream text)."""
+    results = rep.get("results") or []
+    by_id = {x.get("id"): x.get("status") for x in results}
+    auth_st = [by_id[c] for c in VM.AUTH_CHECKS if c in by_id]
+    iq_st = [by_id[c] for c in ("iq_trace", "iq_logic", "iq_constraints") if c in by_id]
+    tamper = bool(rep.get("tamper_accepted"))
+    ff = rep.get("fail_fast")
+    rec: dict[str, Any] = {
+        "ok": not ff and bool(results) and not all(
+            isinstance(x.get("evidence"), dict) and "error" in x["evidence"] for x in results),
+        "calls": int(rep.get("upstream_calls") or 0),
+        "seed": rep.get("seed"),
+        "tier": rep.get("tier"),
+        "checks": rep.get("checks"),
+        "score": rep.get("score"),
+        "auth_score": rep.get("auth_score"),
+        "iq_score": rep.get("iq_score"),
+        "level": rep.get("level"),
+        "veto": rep.get("veto") or [],
+        "tamper_accepted": tamper,
+        "statuses": by_id,
+        "error": ff,
+    }
+    if auth_st:
+        rec["auth_pass"] = (not tamper) and all(st != "fail" for st in auth_st)
+    if iq_st:
+        rec["iq_pass"] = all(st != "fail" for st in iq_st)
+    if "context_hop" in by_id:
+        rec["context_ok"] = by_id["context_hop"] == "pass"
+        ev = next((x.get("evidence") for x in results if x.get("id") == "context_hop"), None)
+        if isinstance(ev, dict):
+            for k in ("prompt_tokens", "est_tokens", "token_ratio_pct", "token_flag"):
+                if k in ev:
+                    rec[k] = ev[k]
+    rec["verified_tier"] = record_tier(mode, rec)
+    return rec
+
+
+def record_tier(mode: str, rec: dict[str, Any]) -> str:
+    if mode == "auth":
+        return "L1" if rec.get("auth_pass") else "L0"
+    if mode == "iq":
+        return "L2" if rec.get("iq_pass") else "L0"
+    if mode == "context":
+        return "L3" if rec.get("context_ok") else "L0"
+    return "L0"
+
+
+def calls_logged_today(runs_dir: Path, day: str) -> dict[str, int]:
+    """Upstream calls already spent per station in today's jsonl (budget circuit breaker input)."""
+    spent: dict[str, int] = defaultdict(int)
+    f = runs_dir / f"{day}.jsonl"
+    if not f.exists():
+        return spent
+    for line in f.read_text(encoding="utf-8").splitlines():
+        try:
+            rec = json.loads(line)
+        except ValueError:
+            continue
+        if not isinstance(rec, dict) or rec.get("dry_run") or not rec.get("domain"):
+            continue
+        n = rec.get("calls")
+        spent[rec["domain"]] += int(n) if isinstance(n, int) and n >= 0 else EST_CALLS.get(str(rec.get("mode")), 1)
+    return spent
+
+
+def run_probes(
+    config_path: Path,
+    mode: str,
+    dry_run: bool = False,
+    runs_dir: Path | None = None,
+    max_calls: int | None = None,
+) -> list[dict[str, Any]]:
     cfg = json.loads(config_path.read_text(encoding="utf-8"))
     targets = cfg.get("targets") or []
-    modes = ["check", "tool", "cache"] if mode == "all" else [mode]
+    if mode not in ALL_MODES:
+        raise ValueError(f"mode 仅支持 {' / '.join(ALL_MODES)}")
+    modes = list(LEGACY_MODES) if mode == "all" else [mode]
     now = datetime.now(timezone.utc)
     out_dir = runs_dir or RUNS_DIR
     records: list[dict[str, Any]] = []
+    spent_today = calls_logged_today(out_dir, now.strftime("%Y-%m-%d"))
+    default_cap = int(cfg.get("daily_call_cap") or DEFAULT_DAILY_CALL_CAP)
+    run_calls = 0
 
     for tgt in targets:
         if not tgt.get("enabled", True):
             continue
         dom = tgt["domain"]
+        cap = int(tgt.get("daily_call_cap") or default_cap)
         for rt in tgt.get("routes") or []:
             canon = rt.get("canonical") or rt["model"]
             proto = rt.get("protocol", "openai")
             for m in modes:
-                if dry_run:
+                est = EST_CALLS.get(m, 1)
+                skip = None
+                if max_calls is not None and run_calls + est > max_calls:
+                    skip = f"本轮预算 --max-calls={max_calls} 已用尽"
+                elif spent_today[dom] + est > cap:
+                    skip = f"站点当日调用上限 daily_call_cap={cap} 已用尽"
+                if skip:
                     records.append({
-                        "ts": now.isoformat(), "domain": dom, "canonical": canon,
-                        "model": rt["model"], "protocol": proto, "mode": m, "dry_run": True,
+                        "ts": now.isoformat(), "domain": dom, "canonical": canon, "model": rt["model"],
+                        "protocol": proto, "mode": m, "ok": False, "budget_skipped": True, "skip_reason": skip,
+                        **({"dry_run": True} if dry_run else {}),
                     })
                     continue
-                if m == "check":
+                if dry_run:
+                    run_calls += est
+                    spent_today[dom] += est
+                    planned: dict[str, Any] = {
+                        "ts": now.isoformat(), "domain": dom, "canonical": canon,
+                        "model": rt["model"], "protocol": proto, "mode": m, "dry_run": True, "est_calls": est,
+                    }
+                    if m in SUITE_MODES:
+                        planned["planned_checks"] = VM.parse_checks(SUITE_MODES[m]["checks"], SUITE_MODES[m]["tier"] or VM.DEFAULT_TIER)
+                    records.append(planned)
+                    continue
+                if m in SUITE_MODES:
+                    res = _suite_probe(tgt, rt, m)
+                elif m == "check":
                     rk = rt.get("api_key") or tgt["api_key"]
                     res = (
                         _stream_check_anthropic(tgt["base_url"], rk, rt["model"])
@@ -467,6 +614,10 @@ def run_probes(config_path: Path, mode: str, dry_run: bool = False, runs_dir: Pa
                     res = _tool_and_billing_probe(tgt, rt)
                 else:
                     res = _cache_probe(tgt, rt)
+                if not isinstance(res.get("calls"), int):
+                    res["calls"] = 2 if (m == "cache" and res.get("ok")) else 1
+                run_calls += res["calls"]
+                spent_today[dom] += res["calls"]
                 rec = {
                     "ts": datetime.now(timezone.utc).isoformat(),
                     "domain": dom,
@@ -479,16 +630,69 @@ def run_probes(config_path: Path, mode: str, dry_run: bool = False, runs_dir: Pa
                 }
                 records.append(rec)
 
-    if not dry_run and records:
+    to_write = [r for r in records if not r.get("budget_skipped")]
+    if not dry_run and to_write:
         out_dir.mkdir(parents=True, exist_ok=True)
         day_file = out_dir / f"{now.strftime('%Y-%m-%d')}.jsonl"
         with day_file.open("a", encoding="utf-8") as fh:
-            for rec in records:
+            for rec in to_write:
                 fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
     return records
 
 
-def _summarize_bucket(rows: list[dict[str, Any]], window_days: int) -> dict[str, Any]:
+def _rate(flags: list[bool]) -> float | None:
+    return round(sum(flags) / len(flags), 4) if flags else None
+
+
+def _fidelity(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    auth = [bool(r["auth_pass"]) for r in rows if isinstance(r.get("auth_pass"), bool)]
+    iq = [bool(r["iq_pass"]) for r in rows if isinstance(r.get("iq_pass"), bool)]
+    ctx = [bool(r["context_ok"]) for r in rows if isinstance(r.get("context_ok"), bool)]
+    return {
+        "auth_samples": len(auth),
+        "auth_pass_rate": _rate(auth),
+        "iq_samples": len(iq),
+        "iq_pass_rate": _rate(iq),
+        "context_samples": len(ctx),
+        "context_pass_rate": _rate(ctx),
+        "tamper_accepted_count": sum(1 for r in rows if r.get("tamper_accepted") is True),
+    }
+
+
+def verified_tier(f: dict[str, Any]) -> str:
+    """Highest verification tier the bucket currently holds: L0 (none) / L1 auth / L2 +IQ / L3 +long context."""
+    a, q, c = f.get("auth_pass_rate"), f.get("iq_pass_rate"), f.get("context_pass_rate")
+    if f.get("tamper_accepted_count") or a is None or a < AUTH_MIN_PASS:
+        return "L0"
+    if q is None or q < IQ_MIN_PASS:
+        return "L1"
+    if c is None or c < CONTEXT_MIN_PASS:
+        return "L2"
+    return "L3"
+
+
+def downgrade_signals(week: dict[str, Any], recent: dict[str, Any]) -> list[str]:
+    """Dual-window check: a sudden pool swap in the last 24h must surface even if the 7d average still looks fine."""
+    reasons: list[str] = []
+    if recent.get("tamper_accepted_count"):
+        reasons.append(f"近 {DUAL_WINDOW_HOURS}h 篡改签名被接受 {recent['tamper_accepted_count']} 次")
+    for key, n_key, floor, label in (
+        ("auth_pass_rate", "auth_samples", AUTH_MIN_PASS, "真伪"),
+        ("iq_pass_rate", "iq_samples", IQ_MIN_PASS, "智商"),
+        ("context_pass_rate", "context_samples", CONTEXT_MIN_PASS, "长文多跳"),
+    ):
+        r = recent.get(key)
+        if r is None or recent.get(n_key, 0) < DUAL_WINDOW_MIN_SAMPLES:
+            continue
+        w = week.get(key)
+        if r < floor:
+            reasons.append(f"近 {DUAL_WINDOW_HOURS}h {label}通过率 {r:.0%}（低于 {floor:.0%}）")
+        elif w is not None and w - r >= DUAL_WINDOW_MAX_DROP:
+            reasons.append(f"近 {DUAL_WINDOW_HOURS}h {label}通过率 {r:.0%}，较 7 天均值 {w:.0%} 骤降")
+    return reasons
+
+
+def _summarize_bucket(rows: list[dict[str, Any]], window_days: int, now: datetime | None = None) -> dict[str, Any]:
     total = len(rows)
     ok_n = sum(1 for r in rows if r.get("ok"))
     sr = ok_n / total if total else 0.0
@@ -506,10 +710,24 @@ def _summarize_bucket(rows: list[dict[str, Any]], window_days: int) -> dict[str,
     daily = [[d, sum(v), len(v)] for d, v in sorted(by_day.items())[-window_days:]]
 
     med_drift = round(statistics.median(drifts), 2) if drifts else None
+    fid = _fidelity(rows)
+    ref_now = now or datetime.now(timezone.utc)
+    recent_cut = (ref_now - timedelta(hours=DUAL_WINDOW_HOURS)).isoformat()
+    recent_rows = [r for r in rows if str(r.get("ts") or "") >= recent_cut]
+    recent = _fidelity(recent_rows)
+    recent["samples"] = len(recent_rows)
+    alerts = downgrade_signals(fid, recent)
+    fidelity_ok = (
+        not fid["tamper_accepted_count"]
+        and (fid["auth_pass_rate"] is None or fid["auth_pass_rate"] >= AUTH_MIN_PASS)
+        and (fid["iq_pass_rate"] is None or fid["iq_pass_rate"] >= IQ_MIN_PASS)
+        and not alerts
+    )
     passed = (
         total >= STAGE2_MIN_SAMPLES
         and sr >= STAGE2_MIN_SUCCESS
         and (med_drift is None or abs(med_drift) <= STAGE2_MAX_DRIFT_PCT)
+        and fidelity_ok
     )
     return {
         "window_days": window_days,
@@ -523,6 +741,11 @@ def _summarize_bucket(rows: list[dict[str, Any]], window_days: int) -> dict[str,
         "cache_hit_rate": round(sum(caches) / len(caches), 4) if caches else None,
         "billing_drift_pct": med_drift,
         "billing_samples": len(drifts),
+        **fid,
+        "verified_tier": verified_tier(fid),
+        "window_24h": recent,
+        "downgrade_alert": bool(alerts),
+        "downgrade_reasons": alerts,
         "passed_stage2": passed,
         "last_probed_at": max((str(r.get("ts") or "") for r in rows), default=""),
         "daily": daily,
@@ -546,7 +769,7 @@ def aggregate_runs(runs_dir: Path | None = None, out_path: Path | None = None, w
                     rec = json.loads(line)
                 except ValueError:
                     continue
-                if rec.get("dry_run") or str(rec.get("ts") or "") < cutoff:
+                if rec.get("dry_run") or rec.get("budget_skipped") or str(rec.get("ts") or "") < cutoff:
                     continue
                 dom = rec.get("domain")
                 canon = rec.get("canonical") or rec.get("model")
@@ -558,11 +781,11 @@ def aggregate_runs(runs_dir: Path | None = None, out_path: Path | None = None, w
 
     stations_out: dict[str, Any] = {}
     for dom, rows in sorted(by_station.items()):
-        s_sum = _summarize_bucket(rows, window_days)
+        s_sum = _summarize_bucket(rows, window_days, now)
         routes_out = {}
         for (d, canon), r_rows in sorted(by_route.items()):
             if d == dom:
-                routes_out[canon] = _summarize_bucket(r_rows, window_days)
+                routes_out[canon] = _summarize_bucket(r_rows, window_days, now)
         s_sum["routes"] = routes_out
         stations_out[dom] = s_sum
 
@@ -580,7 +803,9 @@ def aggregate_runs(runs_dir: Path | None = None, out_path: Path | None = None, w
 def main() -> None:
     ap = argparse.ArgumentParser(description="V2A micro-probe runner & Stage 2 aggregator")
     ap.add_argument("--config", type=Path, default=DATA / "probe-targets.local.json")
-    ap.add_argument("--mode", choices=["check", "tool", "cache", "all"], default="check")
+    ap.add_argument("--mode", choices=ALL_MODES, default="check",
+                    help="check/tool/cache/all = 连通与计费; auth = L1 真伪; iq = 智商抽检; context = 长文多跳防截断")
+    ap.add_argument("--max-calls", type=int, default=None, help="Budget circuit breaker: max upstream calls this run")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--aggregate", action="store_true", help="Only aggregate existing probe-runs/*.jsonl -> data/probes.json")
     ap.add_argument("--window-days", type=int, default=7)
@@ -593,13 +818,15 @@ def main() -> None:
 
     if not args.config.exists():
         sys.exit(f"probe target config not found: {args.config} (copy data/probe-targets.example.json first)")
-    recs = run_probes(args.config, args.mode, dry_run=args.dry_run)
+    recs = run_probes(args.config, args.mode, dry_run=args.dry_run, max_calls=args.max_calls)
+    skipped = sum(1 for r in recs if r.get("budget_skipped"))
     if args.dry_run:
         print(json.dumps({"dry_run_planned": len(recs), "sample": recs[:5]}, ensure_ascii=False, indent=2))
         return
     doc = aggregate_runs(window_days=args.window_days)
     ok_n = sum(1 for r in recs if r.get("ok"))
-    print(json.dumps({"probed": len(recs), "ok": ok_n, "stations_aggregated": len(doc["stations"])}, ensure_ascii=False))
+    print(json.dumps({"probed": len(recs) - skipped, "budget_skipped": skipped, "ok": ok_n,
+                      "stations_aggregated": len(doc["stations"])}, ensure_ascii=False))
 
 
 if __name__ == "__main__":
