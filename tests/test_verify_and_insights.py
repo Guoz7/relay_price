@@ -14,6 +14,11 @@ import verify_model as VM  # noqa: E402
 import verify_page as VP  # noqa: E402
 
 
+def _deep(*args, **kwargs) -> str:
+    """Section 03 trust card + Section 04 raw evidence cards, joined (replaces the retired 4-card bento)."""
+    return "".join(B.station_deep_dive(*args, **kwargs))
+
+
 class DummySite:
     def __init__(self):
         self.cfg = {"site_name": "API 比价雷达", "base_url": "https://agentied.work"}
@@ -103,7 +108,7 @@ class VerifyAndInsightsTests(unittest.TestCase):
                         kind="token", group="default", group_ratio=1.0, group_desc=None)
             it = {"domain_age_days": 730, "domain_registered_at": "2024-11-27", "domain_expires_at": "2027-11-27",
                   "registrar": "Cloudflare", "tranco_rank": 120000, "sources": ["linux.do"]}
-            html = B._station_bento("demo.test", st, [q], it, {"attempts": 10, "successes": 10, "ms": [420]}, None, revs["demo.test"])
+            html = _deep("demo.test", st, [q], it, {"attempts": 10, "successes": 10, "ms": [420]}, None, revs["demo.test"])
             self.assertIn("防暗涨记录", html)
             self.assertIn("Cloudflare", html)
             self.assertIn("Tranco #120,000", html)
@@ -130,7 +135,7 @@ class VerifyAndInsightsTests(unittest.TestCase):
         for txt in ("已验证档位", "真伪通过率", "智商抽检 / 长文多跳", "篡改签名被接受次数", "88%", "50% / —", "近 24h 降级告警"):
             self.assertIn(txt, panel)
         self.assertEqual(panel.count("<div"), panel.count("</div>"))
-        html = B._station_bento("demo.test", {"display_name": "Demo", "score": sc}, [], {}, {}, None, [])
+        html = _deep("demo.test", {"display_name": "Demo", "score": sc}, [], {}, {}, None, [])
         self.assertIn("模型真伪与降智抽检", html)
         self.assertIn("篡改被接受 1 次", html)
         self.assertEqual(html.count("<div"), html.count("</div>"))
@@ -272,7 +277,7 @@ class VerifyAndInsightsTests(unittest.TestCase):
         revs = [{"domain": "demo.test", "rating": 4, "author": "bob", "date": "2026-11-20", "model": "gpt-6-astra",
                  "summary": "ok", "signals": ["verified", "price_hike"]}]
         now = datetime(2026, 11, 27, tzinfo=timezone.utc)
-        html = B._station_bento("demo.test", st, [], it, {}, stab, revs, now=now)
+        html = _deep("demo.test", st, [], it, {}, stab, revs, now=now)
         self.assertIn(f'<b class="danger">{stab["stability_score"]}</b>', html)
         self.assertIn('class="meter danger"', html)
         self.assertIn("近期有大幅涨价", html)
@@ -286,12 +291,12 @@ class VerifyAndInsightsTests(unittest.TestCase):
         self.assertIn("暗涨预警 ×1", html)
         self.assertIn("★ 4.0 / 5", html)
         self.assertIn("template=station-review.yml", html)
-        expired = B._station_bento("demo.test", st, [], {"domain_expires_at": "2026-01-01"}, {}, None, [], now=now)
+        expired = _deep("demo.test", st, [], {"domain_expires_at": "2026-01-01"}, {}, None, [], now=now)
         self.assertIn("域名已过期", expired)
         self.assertIn('<b class="ok">100</b>', expired)
         self.assertIn("暂无站内实评", expired)
-        self.assertNotIn("天后到期", B._station_bento("demo.test", st, [], {"domain_expires_at": "bad"}, {}, None, [], now=now))
-        self.assertNotIn("天后到期", B._station_bento("demo.test", st, [], it, {}, None, []))
+        self.assertNotIn("天后到期", _deep("demo.test", st, [], {"domain_expires_at": "bad"}, {}, None, [], now=now))
+        self.assertNotIn("天后到期", _deep("demo.test", st, [], it, {}, None, []))
 
     def test_station_rank_table_stability_and_sort_hints(self):
         stations = {"a.test": self._station("a.test"), "b.test": self._station("b.test")}
@@ -354,10 +359,10 @@ class VerifyAndInsightsTests(unittest.TestCase):
         st = self._station()
         stab = SI.compute_price_stability([self._chg("demo.test", "up", 1.0, 1.8, run="2026-11-25T00:00:00Z")])["demo.test"]
         now = datetime(2026, 11, 27, tzinfo=timezone.utc)
-        html = B._station_bento("demo.test", st, [], {}, {}, stab, [], now=now)
+        html = _deep("demo.test", st, [], {}, {}, stab, [], now=now)
         self.assertIn('class="ch imp"', html)
         self.assertIn('class="hk"', html)
-        self.assertIn("无调价事件", B._station_bento("demo.test", st, [], {}, {}, None, [], now=now))
+        self.assertIn("无调价事件", _deep("demo.test", st, [], {}, {}, None, [], now=now))
         self.assertEqual(html.count("<div"), html.count("</div>"))
 
     def _q(self, dom, model, lane, inp, eps=None, cache=None, caveats=None, group="default"):

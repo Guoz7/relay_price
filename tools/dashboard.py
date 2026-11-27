@@ -52,7 +52,28 @@ def tabs(prefix: str, items: Sequence[tuple[str, str]], label: str) -> str:
             + "".join(panels) + "</div>")
 
 
+# ---------------------------------------------------------------- 0. editorial section headers & jump bar
+def section_head(num: str, title: str, sub: str = "", sid: str = "", more: str = "") -> str:
+    """Chapter header that sits outside every card: monospace number pill + the page-level <h2> + a 66ch subtitle.
+
+    `more` is trusted, pre-escaped HTML (e.g. 「全部 →」 links) rendered at the right edge of the header.
+    """
+    id_attr = f' id="{E(sid)}"' if sid else ""
+    return (f'<header class="sec-head"{id_attr}><span class="sec-num" aria-hidden="true">{E(num)}</span>'
+            f'<div class="sec-t"><h2>{E(title)}</h2>' + (f'<p class="sec-sub">{E(sub)}</p>' if sub else "") + '</div>'
+            + (f'<div class="sec-more">{more}</div>' if more else "") + '</header>')
+
+
+def toc_bar(items: Iterable[tuple[str, str, str]], label: str = "本页目录") -> str:
+    """Sticky lightweight jump bar. items = [(section id, number, short label)]."""
+    links = "".join(f'<a href="#{E(sid)}" data-toc="{E(sid)}"><span class="toc-n">{E(num)}</span>{E(lbl)}</a>' for sid, num, lbl in items)
+    return f'<nav class="toc-bar" aria-label="{E(label)}"><div class="toc-in">{links}</div></nav>' if links else ""
+
+
 # ---------------------------------------------------------------- 1. verdict strip
+VD_TAG_LIMIT = 4
+
+
 def tag_pills(tags: Iterable[dict[str, str]]) -> str:
     return "".join(f'<span class="ptag {E(t.get("cls") or "info")}" data-tip="{E(t.get("tip") or "")}" tabindex="0">{E(t["label"])}</span>'
                    for t in tags or () if t.get("label"))
@@ -60,21 +81,28 @@ def tag_pills(tags: Iterable[dict[str, str]]) -> str:
 
 def verdict_card(*, grade_html: str, score: float, headline: str, greens: Iterable[str], warns: Iterable[tuple[str, str]],
                  chips: Iterable[tuple[str, str]], cap_note: str = "", tags: Iterable[dict[str, str]] = ()) -> str:
-    t_html = tag_pills(tags)
-    g_html = "".join(f'<span class="lt ok">{E(t)}</span>' for t in greens)
-    w_html = "".join(f'<li class="lt {E(cls)}">{E(t)}</li>' for t, cls in warns)
-    c_html = "".join(f'<span class="app-chip" data-tip="{E(tip)}" tabindex="0">{E(lbl)}</span>' for lbl, tip in chips)
+    """Single focal verdict: grade + score on the left; price headline, dot-led verdict points and a restrained tag line on the right.
+
+    At most VD_TAG_LIMIT practical tags stay visible; the rest fold into a `+N` disclosure so the hero never turns into a pill wall.
+    """
+    tag_list = [t for t in tags or () if t.get("label")]
+    shown, extra = tag_list[:VD_TAG_LIMIT], tag_list[VD_TAG_LIMIT:]
+    points = ([f'<li class="vp ok">{E(t)}</li>' for t in greens]
+              + [f'<li class="vp {E(cls)}">{E(t)}</li>' for t, cls in warns])
+    more = (f'<details class="vd-more"><summary>+{len(extra)} 个</summary><div class="vd-more-in">{tag_pills(extra)}</div></details>'
+            if extra else "")
+    apps = '<span class="sep" aria-hidden="true">·</span>'.join(
+        f'<span class="app-name" data-tip="{E(tip)}" tabindex="0">{E(lbl)}</span>' for lbl, tip in chips)
     return (
         '<section class="verdict" aria-label="体检结论">'
         f'<div class="vd-main">{grade_html}<b class="vd-score">{score:.0f}</b><span class="vd-sub">综合靠谱分</span>'
         + (f'<small class="vd-cap">{E(cap_note)}</small>' if cap_note else "") + '</div>'
         '<div class="vd-body">'
         f'<p class="vd-price">{E(headline)}</p>'
-        + (f'<div class="vd-tags">{g_html}</div>' if g_html else "")
-        + (f'<div class="vd-ptags"><span class="muted">实用标签</span>{t_html}</div>' if t_html else "")
-        + (f'<ul class="vd-warn">{w_html}</ul>' if w_html else "")
-        + (f'<div class="vd-apps"><span class="muted">能直接用在</span>{c_html}</div>' if c_html else
-           '<div class="vd-apps"><span class="muted">站点未声明支持的接口类型，接入前请先看站点文档</span></div>')
+        + (f'<ul class="vd-points">{"".join(points)}</ul>' if points else "")
+        + (f'<div class="vd-ptags"><span class="vd-k">实用标签</span>{tag_pills(shown)}{more}</div>' if shown else "")
+        + (f'<p class="vd-apps"><span class="vd-k">能直接用在</span>{apps}</p>' if apps else
+           '<p class="vd-apps"><span class="vd-k">站点未声明支持的接口类型，接入前请先看站点文档</span></p>')
         + '</div></section>'
     )
 
@@ -143,7 +171,7 @@ def setup_card(dom: str, st: dict[str, Any] | None) -> str:
     src += "。令牌在站点后台「令牌」页创建，复制配置后把 sk-换成你的令牌 替换成真实令牌"
     return (
         '<section class="setup-card" aria-labelledby="su-h">'
-        '<h2 id="su-h">30 秒接进我的软件 <small>选你在用的软件，复制地址和配置即可</small></h2>'
+        '<h3 id="su-h">30 秒接进我的软件 <small>选你在用的软件，复制地址和配置即可</small></h3>'
         + tabs("su", items, "选择你的软件")
         + note
         + f'<p class="muted su-src">{E(src)}；令牌只填在你自己的软件里，本站不会收集。</p></section>'
@@ -156,19 +184,18 @@ GROUP_BADGE_CLS = {"逆向线路": "danger", "工具特惠线": "warn", "特惠�
 
 
 def group_legend(groups: Iterable[dict[str, Any]]) -> str:
-    """「线路类型一眼看懂」 when the station sells two or more distinct line types; empty string otherwise."""
+    """Quiet inline 「线路类型一眼看懂」 strip above the quote table when the station sells 2+ line types; "" otherwise."""
     rows = C.group_type_summary(groups)
     if len(rows) < 2:
         return ""
     lis = "".join(
-        f'<li><span class="{" ".join(c for c in ("badge", GROUP_BADGE_CLS.get(r["badge"], "")) if c)}">{E(r["badge"])}</span>'
+        f'<li><span class="gl-k {E(GROUP_BADGE_CLS.get(r["badge"], "") or "std")}">{E(r["badge"])}</span>'
         f'<span class="gl-t">{E(r["text"])}</span><small>如 {E("、".join(r["names"]))}</small></li>'
         for r in rows
     )
-    return ('<section class="gl-card" aria-labelledby="gl-h">'
-            f'<h2 id="gl-h">线路类型一眼看懂 <small>本站分组共 {len(rows)} 类，选分组前先看这里</small></h2>'
-            f'<ul class="gl-list">{lis}</ul>'
-            '<p class="muted">按分组名称和站点自己的说明归类，只用来帮你读懂分组，不代表本站实测过这些线路。</p></section>')
+    return ('<aside class="gl-strip" aria-label="线路类型一眼看懂">'
+            f'<p class="gl-h"><b>线路类型一眼看懂</b><small>本站分组共 {len(rows)} 类；按分组名称和站点说明归类，只帮你读懂分组，不代表本站实测过这些线路</small></p>'
+            f'<ul class="gl-list">{lis}</ul></aside>')
 
 
 # ---------------------------------------------------------------- 1d. local favourites (localStorage, zero login)
@@ -268,8 +295,7 @@ def price_trend_card(models: Sequence[dict[str, Any]], tracked_labels: Iterable[
 
 
 def dashboard(heartbeat_html: str, trend_html: str) -> str:
-    return (f'<section class="dash" aria-label="近 30 天动态"><h2 class="dash-title">近 30 天动态</h2>'
-            f'<div class="dash-grid">{heartbeat_html}{trend_html}</div></section>')
+    return f'<div class="dash-grid" role="group" aria-label="近 30 天动态">{heartbeat_html}{trend_html}</div>'
 
 
 # ---------------------------------------------------------------- 3. peer comparison
@@ -292,13 +318,13 @@ def peer_pk(rows: Sequence[dict[str, Any]], *, cheaper: dict[str, Any] | None = 
         me = r.get("me")
         up = r.get("uptime")
         up_txt = f"在线 {up:.0f}%" if _fin(up) else "在线率累积中"
-        name = (f'<b>{E(r["name"])}</b><span class="badge info">本站</span>' if me
+        name = (f'<b>{E(r["name"])}</b><span class="pk-me">本站</span>' if me
                 else f'<a href="/site/{E(r["dom"])}/">{E(r["name"])}</a>')
         out.append(
             f'<div class="pk-row{" me" if me else ""}">'
             f'<div class="pk-name">{name}<small>{E(r["dom"])}</small></div>'
             + _bar(r.get("score"), "sc", f'{r.get("grade_html", "")} <b>{r.get("score", 0):.0f}</b>', f'综合靠谱分 {r.get("score", 0):.1f} / 100')
-            + f'<div class="pk-m pk-price"><span class="badge">{E(r.get("disc") or "—")}</span>'
+            + f'<div class="pk-m pk-price"><b class="pk-disc">{E(r.get("disc") or "—")}</b>'
             + ("" if me else f'<small class="{E(r.get("delta_cls") or "")}">{E(r.get("delta") or "")}</small>') + '</div>'
             + _bar(r.get("age_pct"), "age", E(r.get("age_txt") or "未知"), "满格 = 开站 3 年以上")
             + _bar(r.get("stab"), "stab", f'防暗涨 {int(r.get("stab") or 0)} · {E(up_txt)}', "防暗涨分 0–100：近 30 天涨价次数越多、幅度越大，分越低")
@@ -310,7 +336,7 @@ def peer_pk(rows: Sequence[dict[str, Any]], *, cheaper: dict[str, Any] | None = 
             alts.append(f'<a class="pk-alt" href="/site/{E(a["dom"])}/"><span class="pk-alt-k">{E(kind)}</span>'
                         f'<b>{E(a["name"])}</b><small>{E(a["why"])}</small></a>')
     return (
-        '<section class="peer-pk" aria-labelledby="pk-h"><h2 id="pk-h">同级别同行直接对比 <small>帮你看清这家在同行里的位置</small></h2>'
+        '<section class="peer-pk" aria-labelledby="pk-h"><h3 id="pk-h">同级别同行直接对比 <small>帮你看清这家在同行里的位置</small></h3>'
         '<p class="muted">按“卖的型号重合度、价格水平、靠谱分”自动挑出 4–5 家相近的站，同一品牌的镜像站只保留一家。</p>'
         f'<div class="pk-list">{heads}{"".join(out)}</div>'
         + (f'<div class="pk-alts">{"".join(alts)}</div>' if alts else "")
@@ -334,9 +360,9 @@ def price_bars(rows: Sequence[dict[str, Any]]) -> str:
             if _fin(off) and off > 0:
                 pct = mine / off * 100
                 cls = "ok" if pct < 95 else ("" if pct <= 105 else "danger")
-                badge = f'<span class="badge {cls}">{E(C.fmt_official_discount(pct))}</span>'
+                badge = f'<span class="pb-off {cls}">{E(C.fmt_official_discount(pct))}</span>'
             elif mine == 0:
-                badge = '<span class="badge ok">免费</span>'
+                badge = '<span class="pb-off ok">免费</span>'
             parts.append(f'<div class="pbar-row"><div class="pbar-h"><b>{E(r["label"])}</b>{badge}</div>'
                          f'{_cmp_rows(mine, peer, off, r.get("peer_label") or "同行均价")}</div>')
         return ("".join(parts) or '<p class="muted">本站热门模型暂未公开这项价格。</p>')
@@ -344,7 +370,7 @@ def price_bars(rows: Sequence[dict[str, Any]]) -> str:
     chat = block("chat")
     cache = block("cache")
     return (
-        '<section class="chart-card price-bars" aria-labelledby="pb-h"><h2 id="pb-h">热门模型一眼比价 <small>本站价 vs 同行均价 vs 官方原价（¥ / 百万 token）</small></h2>'
+        '<section class="chart-card price-bars" aria-labelledby="pb-h"><h3 id="pb-h">热门模型一眼比价 <small>本站价 vs 同行均价 vs 官方原价（¥ / 百万 token）</small></h3>'
         + tabs("pb", [("日常聊天价", chat), ("长对话缓存价", cache)], "价格类型")
         + '<p class="muted">日常聊天价按“输入 3 : 输出 1”混合计算；长对话缓存价是重复内容命中缓存后的价格，写代码、长对话时最省钱。条形超过官方价 2 倍时截断并标出倍数。</p></section>'
     )
@@ -370,8 +396,7 @@ def bubble_payload(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
 def bubble_section(payload: dict[str, Any], n_total: int) -> str:
     n = len(payload.get("rows") or [])
     return (
-        '<section class="bubble-card" aria-labelledby="bb-h">'
-        '<h2 id="bb-h">省钱 vs 靠谱 分布图 <small>每个点是一家站，右上角最值得先看</small></h2>'
+        '<section class="bubble-card" aria-label="省钱 vs 靠谱 分布图">'
         '<div class="bubble-wrap" id="bubble-wrap">'
         '<svg id="bubble-chart" class="bubble" role="img" tabindex="0" viewBox="0 0 800 460" '
         f'aria-label="{n} 家有统一比价基线的站点：横轴是比全网多少同行便宜，纵轴是综合靠谱分。聚焦后用方向键浏览，回车打开站点"></svg>'

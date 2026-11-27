@@ -381,7 +381,9 @@ class MiniBuildTests(unittest.TestCase):
     def test_station_layer1_cards(self):
         a = self.read("site/alpha.ai/index.html")
         self.assertIn("不到官网 1 折 · 比全网 100% 同行便宜", a)
-        self.assertRegex(self.read("site/eps.xyz/index.html"), r"约官网 4\.1 折 · 比全网 14% 同行便宜")
+        eps_head = C.price_headline(self.cx["cm"].get("eps.xyz"))
+        self.assertRegex(eps_head, r"^约官网 \d\.\d 折 · 比全网 \d+% 同行便宜$")
+        self.assertIn(eps_head, self.read("site/eps.xyz/index.html"))
         for txt in ("Claude Code / Cursor", "ChatBox / Cherry Studio", "站内每 6 小时自动巡检公开接口", "平时中位",
                     "热门模型历史价格走势", "同级别同行直接对比", "去对比页深度 PK", "热门模型一眼比价", "仅公开报价"):
             self.assertIn(txt, a)

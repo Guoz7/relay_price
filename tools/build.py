@@ -725,6 +725,7 @@ class Site:
 <meta name="twitter:card" content="summary">
 <link rel="alternate" type="application/rss+xml" title="{E(self.name)} 价格变动" href="/changes.xml">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/assets/fonts/inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/style.css?v={self.asset_ver}">
 <script>try{{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;}}catch(e){{}}</script>
 {self._analytics_tag()}{''.join(jsonld(x) for x in ld)}
@@ -1011,7 +1012,7 @@ def quote_table(
                 f'{tail(q, st)}</tr>{sub_row(q, cls, eps_csv)}'
             )
         parts.append(
-            f'<h2 id="{table_id}-token">{E(title_prefix)}按 Token 计费 <small>每百万 token 人民币（小字为站内美元额度）· 可切 7:2:1 缓存视角</small></h2>'
+            f'<h3 class="qt-h" id="{table_id}-token">{E(title_prefix)}按 Token 计费 <small>每百万 token 人民币（小字为站内美元额度）· 可切 7:2:1 缓存视角</small></h3>'
             f'<div class="tbl-wrap"><table class="qt sortable" id="{table_id}-t"><thead><tr>'
             + head([("输入", "n", ""), ("输出", "n", cx), ("缓存读", "n", cx)]
                    + ([] if show_station else [("缓存写", "n", cx)])
@@ -1031,7 +1032,7 @@ def quote_table(
                 f'{price_cell(q.call_cny, q.call_usd, strong=True)}{ratio_cells(q, st)}{tail(q, st)}</tr>{sub_row(q, cls, eps_csv)}'
             )
         parts.append(
-            f'<h2 id="{table_id}-call">{E(title_prefix)}按次计费 <small>每次调用人民币</small></h2>'
+            f'<h3 class="qt-h" id="{table_id}-call">{E(title_prefix)}按次计费 <small>每次调用人民币</small></h3>'
             f'<div class="tbl-wrap"><table class="qt sortable" id="{table_id}-c"><thead><tr>'
             + head([("每次", "n", "")] + ([] if show_station else [(h, t, "ratio-col") for h, t in TOKEN_RATIO_HEADS[4:]]))
             + "</tr></thead><tbody>" + "".join(body) + "</tbody></table></div>"
@@ -1095,6 +1096,7 @@ def fidelity_kpis(pr: dict[str, Any]) -> str:
 
 
 def score_panel(st: dict[str, Any], cfg: dict[str, Any], market_dims: dict[str, float] | None = None) -> str:
+    """Section 03 card A 「七维评分拆解」: radar + per-dimension evidence. The grade and big score live only in the hero verdict."""
     sc: S.StationScore = st["score"]
     w = cfg.get("station_weights") or S.DEFAULT_STATION_WEIGHTS
     keys = [k for k in S.DIM_ORDER if k in sc.dims]
@@ -1136,10 +1138,11 @@ def score_panel(st: dict[str, Any], cfg: dict[str, Any], market_dims: dict[str, 
         name=str(st.get("display_name") or "本站")[:16],
     )
     return (
-        f'<section class="score-card"><div class="big">{grade_badge(sc.total)}<span class="num">{sc.total:.0f}</span>'
-        f'{stage_badge(sc.stage, bool(sc.cap_reason and sc.stage == 2))}'
-        f'<small>综合靠谱分 {sc.total:.1f} · 证据可信度{sc.confidence}</small>{pct_line}{cap_line}{radar}</div><ul class="dims">{"".join(lis)}</ul></section>'
-        + probe_panel(sc)
+        '<section class="deep-card score-break" aria-labelledby="sb-h">'
+        f'<div class="deep-h"><h3 id="sb-h">七维评分拆解</h3>{pct_line}</div>'
+        f'<p class="sb-note">综合 {sc.total:.1f} 分 · 证据可信度{E(sc.confidence)}{(" · " + cap_line) if cap_line else ""}</p>'
+        f'<div class="sb-grid"><div class="sb-radar">{radar}</div><ul class="dims">{"".join(lis)}</ul></div>'
+        '</section>'
     )
 
 
@@ -1184,6 +1187,32 @@ def who(q: P.Quote, stations) -> str:
     return f"{name}（{where}{q.group or 'default'} 分组）"
 
 
+def asset_tree(root: Path | None = None) -> list[Path]:
+    """Every file under assets/ (recursively, e.g. assets/fonts/*.woff2), in a stable order."""
+    root = root or ASSETS
+    return [f for f in sorted(root.rglob("*")) if f.is_file()]
+
+
+def asset_version(files: list[Path], root: Path | None = None) -> str:
+    """Cache-busting hash over relative paths + contents, so renames and nested files both bump the version."""
+    root = root or ASSETS
+    h = hashlib.sha1()
+    for f in files:
+        h.update(f.relative_to(root).as_posix().encode("utf-8") + b"\0" + f.read_bytes())
+    return h.hexdigest()[:8]
+
+
+def copy_assets(dist: Path, root: Path | None = None) -> list[Path]:
+    """Mirror assets/ into dist/assets/ keeping relative paths (fonts/ etc.); returns the source files copied."""
+    root = root or ASSETS
+    files = asset_tree(root)
+    for f in files:
+        out = dist / "assets" / f.relative_to(root)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(f, out)
+    return files
+
+
 def build(cfg: dict[str, Any]) -> dict[str, Any]:
     import time as _time
     _t0 = _time.perf_counter()
@@ -1202,9 +1231,8 @@ def build(cfg: dict[str, Any]) -> dict[str, Any]:
         shutil.rmtree(DIST, ignore_errors=True)
         _log("cleaned old dist.tmp")
     (DIST / "assets").mkdir(parents=True, exist_ok=True)
-    for f in ASSETS.iterdir():
-        shutil.copy2(f, DIST / "assets" / f.name)
-    asset_ver = hashlib.sha1(b"".join(f.read_bytes() for f in sorted(ASSETS.iterdir()))).hexdigest()[:8]
+    asset_files = copy_assets(DIST)
+    asset_ver = asset_version(asset_files)
     site = Site(cfg, now, asset_ver)
     min_st = int(cfg.get("min_stations_for_model_page", 3))
     index_min_st = int(cfg.get("index_min_stations", 10))
@@ -1540,13 +1568,15 @@ def build_model_pages(site: Site, model_pages, stations, cfg, specs: dict[str, d
   <h1>{E(canon)} API 中转推荐与价格对比</h1>
   <p class="lead">常规按量最低价：<strong>{E(cheap_txt)}</strong>。推荐区已自动隔离自称 Kiro/逆向/特惠及低于中位价 0.25× 的未实测极低价分组。</p>
   {spec_html}
-  {('<h2 class="h-rec">常规按量推荐（未实测最高封顶 B 级）</h2><div class="recs">' + top_cards + '</div>') if top_cards else ''}
   {kpis}
-  {dist_html}
 </section>
+{('<section class="sec-block">' + DB.section_head("01", "常规按量推荐", "未经过真实调用实测的站最高 B 级；已隔离自称逆向、特惠与未核实极低价分组", "sec-rec") + '<div class="recs">' + top_cards + '</div>' + dist_html + '</section>') if top_cards else dist_html}
+<section class="sec-block">
+{DB.section_head("02" if top_cards else "01", "全部站点报价", "按接口、计费方式筛选，点表头排序；点分组列可展开同站全部分组与原文说明", "sec-quotes")}
 {filter_bar("m", show_mode=bool(any(q.kind == "token" for q in rows)), show_ep=True)}
 {std_tbl or '<p class="muted">该型号暂无常规按量报价，请展开下方特惠/福利分组查看。</p>'}
 {alt_section}
+</section>
 <section class="note">
   <h2>怎么读这张表</h2>
   <ul>
@@ -1575,7 +1605,7 @@ def _meter(pct: int | None, cls: str, label: str) -> str:
     )
 
 
-def _station_bento(
+def station_deep_dive(
     dom: str,
     st: dict[str, Any],
     qs: list[P.Quote],
@@ -1584,7 +1614,12 @@ def _station_bento(
     stab: dict[str, Any] | None,
     revs: list[dict[str, Any]],
     now: datetime | None = None,
-) -> str:
+) -> tuple[str, str]:
+    """(Section 03 card B 「真伪抽检与社区口碑」, Section 04 raw 防暗涨 + 开站时长 evidence cards).
+
+    Card B merges the authenticity / IQ self-test CTA, a one-line domain summary and community reviews. The two raw evidence
+    cards keep every stability / registration detail but live in a collapsed drawer, so nothing duplicates the hero or peer table.
+    """
     sc: S.StationScore = st["score"]
     # 1. Price Stability card
     stab = {**SI.default_stability(), **(stab or {})}
@@ -1695,13 +1730,26 @@ def _station_bento(
             '<dt>真伪验真状态</dt><dd>还没有经过 7 天真实调用实测，所以最高只给 B 级（74 分）</dd>'
             '<dt>自己测一测</dt><dd>用你自己的 Key 在验真页抽检：是不是真模型、有没有降智、长文会不会被截断</dd>'
         )
-    card_auth = (
-        '<div class="bcard">'
-        f'<div class="bcard-h"><h3>模型真伪与降智抽检</h3>{auth_badge}</div>'
+    block_auth = (
+        '<div class="tc-block">'
+        '<h4>模型真伪与降智抽检</h4>'
         f'<dl class="bkv">{auth_dl}</dl>'
-        f'<div><a class="btn sm primary" href="{verify_href}">现场抽检这家站的真伪与智商 →</a></div>'
+        f'<div class="tc-cta"><a class="btn primary" href="{verify_href}">现场抽检这家站的真伪与智商 →</a></div>'
         '</div>'
     )
+    srcs_n = len(it.get("sources") or [])
+    if shared:
+        dom_cls, dom_line = "warn", f"托管二级域名（*.{shared}），无法通过域名核实建站年限"
+    elif days is not None:
+        dom_cls, dom_line = ("ok" if lpct and lpct >= 50 else ""), f"主域名注册于 {reg_at}（{age_long}）"
+        if risk and risk["level"] == "expired":
+            dom_cls, dom_line = "danger", dom_line + " · 域名已过期"
+        elif risk and risk["level"] == "soon":
+            dom_cls, dom_line = "warn", dom_line + f" · {risk['days_left']} 天后到期"
+    else:
+        dom_cls, dom_line = "", "域名注册信息暂未查到"
+    dom_line += f" · 外部社区收录 {srcs_n} 处" if srcs_n else " · 暂无外部社区收录"
+    line_dom = f'<p class="tc-dom {dom_cls}"><span class="dot" aria-hidden="true"></span>{E(dom_line)}</p>'
 
     # 4. Community Reviews & Reputation card
     srcs = it.get("sources") or []
@@ -1747,14 +1795,20 @@ def _station_bento(
             '<dt>站内实测评价</dt><dd>为防刷评，仅收录带 GitHub 账号与客观证据的实测评价</dd>'
             '</dl>'
         )
-    card_rev = (
-        '<div class="bcard">'
-        f'<div class="bcard-h"><h3>社区口碑与实测评价</h3>{rev_badge}</div>'
+    block_rev = (
+        '<div class="tc-block">'
+        f'<div class="tc-h"><h4>社区口碑与实测评价</h4>{rev_badge}</div>'
         f'{rev_body}'
         f'<div><a class="btn sm" href="{rev_issue_url}" target="_blank" rel="noopener">提交我的实测评价 / 避雷证据 →</a></div>'
         '</div>'
     )
-    return f'<section class="bento-4" aria-label="站点详情卡片">{card_price}{card_domain}{card_auth}{card_rev}</section>'
+    card_b = (
+        '<section class="deep-card trust-card" aria-labelledby="tc-h">'
+        f'<div class="deep-h"><h3 id="tc-h">真伪抽检与社区口碑</h3>{auth_badge}</div>'
+        f'{block_auth}{line_dom}{block_rev}'
+        '</section>'
+    )
+    return card_b, f'<div class="raw-grid">{card_price}{card_domain}</div>'
 
 
 def price_strip_section(rows: list[dict[str, Any]]) -> str:
@@ -1852,7 +1906,7 @@ def fact_sheet(dom: str, st: dict[str, Any], qs: list[P.Quote]) -> str:
     ]
     blocks = (("① 计费与汇率口径", b1), ("② 接入与官方入口", b2), ("③ 账号与风控门槛", b3), ("④ 协议与缓存覆盖", b4))
     return (
-        '<section class="factsheet" aria-labelledby="fs-h"><h2 id="fs-h">站点规格档案卡 <small>Fact Sheet · 只读 /api/status + /api/pricing 清洗结果，「未公开」不等于「免费」或「不支持」</small></h2>'
+        '<section class="factsheet" aria-labelledby="fs-h"><h3 id="fs-h">站点规格档案卡 <small>Fact Sheet · 只读 /api/status + /api/pricing 清洗结果，「未公开」不等于「免费」或「不支持」</small></h3>'
         '<div class="fs-grid">'
         + "".join(f'<div class="fs-card"><h3>{E(t)}</h3><dl class="fs-dl">{_fs_rows(rows)}</dl></div>' for t, rows in blocks)
         + '</div></section>'
@@ -1987,8 +2041,8 @@ def ensure_ctags(stations: dict[str, dict[str, Any]], by_station, intel: dict[st
             st["ctags"] = CM.station_tags(st, by_station.get(dom, []), intel.get(dom) or {})
 
 
-def consumer_layer1(dom: str, st: dict[str, Any], stations, cx: dict[str, Any]) -> tuple[str, str]:
-    """(verdict strip for the hero, dashboard + price bars + peer comparison) for one priced station."""
+def consumer_layer1(dom: str, st: dict[str, Any], stations, cx: dict[str, Any]) -> tuple[str, str, str]:
+    """(hero verdict, Section 01 dashboard + peer comparison, Section 02 flagship price bars) for one priced station."""
     sc: S.StationScore = st["score"]
     m = cx["cm"].get(dom) or {}
     pinfo = cx["peers"].get(dom) or {}
@@ -2026,7 +2080,7 @@ def consumer_layer1(dom: str, st: dict[str, Any], stations, cx: dict[str, Any]) 
 
     href = "/compare/?s=" + ",".join(quote(x, safe="") for x in [dom] + peers[:2])
     pk = DB.peer_pk(rows, cheaper=alt(pinfo.get("cheaper"), "cheaper"), safer=alt(pinfo.get("safer"), "safer"), compare_href=href)
-    return verdict, dash + bars + pk
+    return verdict, dash + pk, bars
 
 
 def build_station_pages(
@@ -2068,14 +2122,14 @@ def build_station_pages(
         for q in qs:
             fam_counts[q.family] += 1
         fam_txt = "、".join(f"{P.FAMILY_LABELS.get(f, f)} {n}" for f, n in sorted(fam_counts.items(), key=lambda x: -x[1])[:6])
-        ep_pills = "".join(f'<span class="badge ep">{E(PLAIN_EP.get(e, e))}</span>' for e in (st.get("endpoints") or []))
+        ep_txt = "、".join(PLAIN_EP.get(e, e) for e in (st.get("endpoints") or []))
         tbl = quote_table(site, qs, stations, show_model=True, show_station=False, table_id="s")
         tp = st.get("topup_price")
         aliases = st.get("aliases") or []
         fails = st.get("consecutive_failures") or 0
-        health = (
-            f'<span class="badge warn">最近 {fails} 次刷新失败（{E(str(st.get("last_error") or ""))}），展示 {E(ago(st["fetched_at"], now))} 的数据</span>'
-            if fails else '<span class="badge ok">最近一次公开接口刷新成功</span>'
+        live = (
+            f'<span class="live warn" role="status"><i class="dot" aria-hidden="true"></i>最近 {fails} 次刷新失败（{E(str(st.get("last_error") or ""))}），展示 {E(ago(st["fetched_at"], now))} 的数据</span>'
+            if fails else '<span class="live ok"><i class="dot" aria-hidden="true"></i>最近一次公开接口刷新成功</span>'
         )
         it = intel.get(dom) or {}
         srcs = it.get("sources") or []
@@ -2097,40 +2151,63 @@ def build_station_pages(
         if st.get("telegram_oauth"):
             oauth_tags.append("支持 Telegram 登录")
 
-        bento_html = _station_bento(dom, st, qs, it, run_stats.get(dom) or {}, stability_map.get(dom), reviews_map.get(dom) or [], now=now)
-        verdict_html, layer1_html = consumer_layer1(dom, st, stations, cx) if cx else ("", "")
+        trust_html, raw_cards = station_deep_dive(dom, st, qs, it, run_stats.get(dom) or {}, stability_map.get(dom),
+                                                  reviews_map.get(dom) or [], now=now)
+        verdict_html, trend_html, bars_html = consumer_layer1(dom, st, stations, cx) if cx else ("", "", "")
+        stage_short = ("已通过真实调用实测" if sc.stage == 2 and not sc.cap_reason else
+                       ("实测未达标" if sc.stage == 2 else "仅公开报价"))
+        summary = (f"收录 {st.get('parsed', len(qs))} 个型号 · {len(groups)} 个分组 · 更新于 {ago(st['fetched_at'], now)}"
+                   + (f" · {st.get('topup_note')}" if st.get("topup_note") else (f" · 充值 ¥{tp:g}" if tp is not None else "")))
+        raw_kv = [("访问站点", site.ext_link(dom))]
+        if aliases:
+            raw_kv.append(("镜像域名", "、".join(E(a) for a in aliases)))
+        if st.get("version"):
+            raw_kv.append(("系统版本", f'<code>{E(str(st.get("version")))}</code>'))
+        if oauth_tags:
+            raw_kv.append(("登录方式", E("、".join(oauth_tags))))
+        if ep_txt:
+            raw_kv.append(("接口类型", E(ep_txt)))
+        if fam_txt:
+            raw_kv.append(("型号分布", E(fam_txt)))
+        if srcs:
+            raw_kv.append(("收录来源", E("、".join(srcs[:8])) + ("…" if len(srcs) > 8 else "")))
+        raw_kv_html = '<dl class="raw-kv">' + "".join(f"<div><dt>{k}</dt><dd>{v}</dd></div>" for k, v in raw_kv) + "</dl>"
+        probe_html = probe_panel(sc)
+        sections = []
+        if trend_html:
+            sections.append(("sec-trend", "01", "动态与同行", "动态走势与同行对比",
+                             "近 30 天站内定时巡检在线率、热门模型调价阶梯，以及同级别同行横向位置", trend_html))
+        sections.append(("sec-pricing", "02", "比价与价目表", "模型比价与完整价目表",
+                         "先看热门模型相对同行与官网的价格，再在完整价目表里按分组、接口和计费方式筛选",
+                         bars_html + DB.group_legend(groups) + filter_bar("s", show_mode=True, show_ep=True, show_view=True) + tbl))
+        sections.append(("sec-setup", "03", "接入与验真口碑", "接入教程与深度核验",
+                         "决定试用后：复制配置接进你的软件，再看七维评分拆解、现场抽检真伪与社区实测口碑",
+                         DB.setup_card(dom, st)
+                         + f'<div class="deep-grid">{score_panel(st, cfg, market_dims)}{trust_html}</div>'))
+        sections.append(("sec-raw", "04", "原始参数", "原始参数与完整记录",
+                         "给进阶用户核对：站点基础信息、原始规格、全部分组倍率、调价记录与评分原始证据，默认收起",
+                         raw_kv_html
+                         + '<details class="adv-drawer"><summary>给进阶用户核对：站点原始规格参数（充值汇率、额度单位、API 地址、风控项）</summary>'
+                         + fact_sheet(dom, st, qs) + '</details>'
+                         + f'<details class="groups"><summary>全部分组倍率与自认标签（{len(groups)}）</summary>'
+                         '<div class="tbl-wrap"><table class="plain"><thead><tr><th>分组</th><th class="n">倍率</th><th>状态 / 提醒</th>'
+                         f'<th>通俗解释</th><th>站点原文说明</th></tr></thead><tbody>{g_rows}</tbody></table></div></details>'
+                         + chg_html
+                         + f'<details class="groups"><summary>近 30 天防暗涨与开站时长原始记录</summary>{raw_cards}</details>'
+                         + (f'<details class="groups"><summary>真实调用实测原始证据</summary>{probe_html}</details>' if probe_html else "")))
+        toc = DB.toc_bar([(sid, num, short) for sid, num, short, *_ in sections], "站点档案目录")
+        sec_html = "".join(f'<section class="sec-block">{DB.section_head(num, title, sub, sid)}{inner}</section>'
+                           for sid, num, _short, title, sub, inner in sections)
         body = f"""
-<section class="hero sm">
-  <p class="eyebrow">站点体检档案 · {E(plain_stage(sc))}</p>
-  <h1>{E(name)} 靠谱吗？ <small>{E(dom)}</small></h1>
-  <p class="lead">{health} {DB.fav_button(dom, name)}</p>
+<section class="hero sm st-hero">
+  <p class="eyebrow">站点体检档案 · {E(stage_short)}</p>
+  <h1>{E(name)} 靠谱吗？<span class="dom-tag">{E(dom)}</span></h1>
+  <div class="st-meta">{live}{site.ext_link(dom, "访问官网 →")}{DB.fav_button(dom, name)}</div>
+  <p class="st-sum">{E(summary)}</p>
   {verdict_html}
 </section>
-{DB.setup_card(dom, st)}
-{DB.group_legend(groups)}
-{layer1_html}
-<section class="detail-block" aria-label="评分明细与站点详情">
-  <h2>评分明细与站点详情</h2>
-  {score_panel(st, cfg, market_dims)}
-  {bento_html}
-  <div class="kpis">
-    <div><b>{E(f"¥{tp:g}" if tp is not None else "未知")}</b><span>{E(st.get("topup_note") or "")}</span></div>
-    <div><b>{st.get("parsed", len(qs))}</b><span>有效定价型号</span></div>
-    <div><b>{len(groups)}</b><span>公开分组</span></div>
-    <div><b>{E(ago(st["fetched_at"], now))}</b><span>数据更新</span></div>
-  </div>
-  <p>访问站点：{site.ext_link(dom)}{(' · 镜像域名：' + '、'.join(E(a) for a in aliases)) if aliases else ''}{(' · 系统版本：<code>' + E(str(st.get("version"))) + '</code>') if st.get("version") else ''}{(' · ' + ' · '.join(oauth_tags)) if oauth_tags else ''}</p>
-  {('<div class="bd">' + ep_pills + '</div>') if ep_pills else ''}
-  <p class="muted">型号分布：{E(fam_txt)}{('；收录来源：' + E('、'.join(srcs[:8])) + ('…' if len(srcs) > 8 else '')) if srcs else ''}</p>
-</section>
-<details class="adv-drawer"><summary>给进阶用户核对：站点原始规格参数（充值汇率、额度单位、API 地址、风控项）</summary>
-{fact_sheet(dom, st, qs)}
-</details>
-<details class="groups"><summary>全部分组倍率与自认标签（{len(groups)}）</summary>
-<div class="tbl-wrap"><table class="plain"><thead><tr><th>分组</th><th class="n">倍率</th><th>状态 / 提醒</th><th>通俗解释</th><th>站点原文说明</th></tr></thead><tbody>{g_rows}</tbody></table></div></details>
-{chg_html}
-{filter_bar("s", show_mode=True, show_ep=True, show_view=True)}
-{tbl}"""
+{toc}
+{sec_html}"""
         site.page(
             f"/site/{dom}/",
             f"{name}（{dom}）靠谱吗？评分 {sc.grade} 级 {sc.total:.0f} 分、域名时长、价格稳定性与真伪评测",
@@ -2400,15 +2477,20 @@ def build_indexes(
         "/stations/", "AI API 中转站分层评分排行榜",
         f"{len(stations)} 家 AI API 中转站分层信誉评分排行（实测认证 {n_stage2} 家，公开校验 {len(stations) - n_stage2} 家，另含 {len(closed_stations)} 家仅建档闭源站）：{gtxt}。",
         DB.fav_bar()
-        + f'<section class="hero sm"><h1>AI API 中转站靠谱度排行榜</h1>'
+        + f'<section class="hero sm"><p class="eyebrow">站点排行 · 共 {len(stations)} 家公开报价站</p><h1>AI API 中转站靠谱度排行榜</h1>'
         f'<p class="lead">先看图找到“既靠谱又便宜”的站，再用下面的场景按钮缩小范围。只抓取公开报价、还没人工实测的站最高只给 B 级（低于 74 分）；'
-        f'通过真实调用实测才可能拿到 A/S 级。当前分布：{gtxt}。<a href="/about/">评分方法 →</a></p>'
-        f'<p class="muted">「相对价格」是热门型号价格约为官网价的几折；「防暗涨」越高说明近 30 天越少偷偷涨价；「近 30 天在线」是站内定时巡检能打开接口的比例。数值列首次点击按从高到低排序，未知值始终排在末尾。</p></section>'
-        + bubble_html
+        f'通过真实调用实测才可能拿到 A/S 级。当前分布：{gtxt}。<a href="/about/">评分方法 →</a></p></section>'
+        + '<section class="sec-block">'
+        + DB.section_head("01", "省钱 vs 靠谱 分布图", "每个点是一家站，越靠右越省钱、越靠上越靠谱，右上角最值得先看", "sec-map")
+        + bubble_html + '</section>'
+        + '<section class="sec-block">'
+        + DB.section_head("02", "全部中转站排行榜", "用场景按钮缩小范围，勾选 2–4 家即可并排对比", "sec-rank")
+        + '<p class="sec-lead muted">「相对价格」是热门型号价格约为官网价的几折；「防暗涨」越高说明近 30 天越少偷偷涨价；「近 30 天在线」是站内定时巡检能打开接口的比例。数值列首次点击按从高到低排序，未知值始终排在末尾。</p>'
         + facet_bar(len(stations))
         + station_rank_table(stations, by_station, site.now, intel=intel, stability_map=stability_map, run_stats=run_stats)
         + compare_bar()
-        + closed_html,
+        + closed_html
+        + '</section>',
         crumbs=[("站点排行", "/stations/")], priority=0.9,
     )
     return fam_order, fam_models
@@ -2694,7 +2776,7 @@ def build_home(site: Site, cfg, model_pages, stations, closed_stations, fam_orde
         cards.append(f'<a class="card" href="/model/{mp["slug"]}/"><code>{E(canon)}</code>{rec}<div class="pr">{p}</div><div class="meta">{mp["n"]} 家站点</div></a>')
     fam_nav = " ".join(f'<a class="chip" href="/family/{f}/">{E(P.FAMILY_LABELS.get(f, f))} <small>{len(fam_models[f])}</small></a>' for f in fam_order)
     scene_cards = "".join(
-        f'<a class="card scene-card" href="/scenes/{sc["slug"]}/"><b>{E(sc["name"])}</b><p class="muted">{E(sc["tagline"])}</p></a>'
+        f'<a class="card scene-card" href="/scenes/{sc["slug"]}/"><b>{E(sc["name"])}</b><p class="muted">{E(sc.get("card") or sc["tagline"])}</p></a>'
         for sc in scenes.SCENES
     )
     recent = sorted([c for c in changes if c["type"] in ("down", "up", "new")], key=lambda x: x.get("run_at") or "", reverse=True)[:8]
@@ -2725,25 +2807,23 @@ def build_home(site: Site, cfg, model_pages, stations, closed_stations, fam_orde
   </div>
   <div class="chips">{fam_nav}</div>
 </section>
-<section>
-  <h2>按使用场景直接选站 <a class="more" href="/scenes/">全部场景 →</a> <a class="more" href="/calc/">月度成本算账与主备选站 →</a></h2>
-  <div class="cards scene-cards">{scene_cards}</div>
-</section>
-<section>
-  <h2>中转站分层信誉排行 Top 10 <a class="more" href="/stations/">完整排行 →</a></h2>
-  {station_rank_table(stations, {}, site.now, limit=10, compact=True)}
-</section>
-<section>
-  <h2>热门模型 <small>常规按量推荐 + 常规最低价（每百万 token · 人民币）</small></h2>
+<section class="sec-block">
+  {DB.section_head("01", "热门模型实时低价", "常规按量推荐 + 常规最低价（每百万 token · 人民币），已隔离逆向与特惠分组", "sec-hot", '<a class="more" href="/models/">全部模型 →</a>')}
   <div class="cards">{''.join(cards)}</div>
 </section>
-<section class="two">
-  <div>
-    <h2>最新调价 <a class="more" href="/changes/">全部 →</a></h2>
+<section class="sec-block">
+  {DB.section_head("02", "按你的场景选站", "写代码、日常聊天、Codex 还是生图？按你在用的软件直接看对应的常规推荐与真实缓存成本", "sec-scenes", '<a class="more" href="/scenes/">全部场景 →</a><a class="more" href="/calc/">月度成本算账 →</a>')}
+  <div class="cards scene-cards">{scene_cards}</div>
+</section>
+<section class="sec-block">
+  {DB.section_head("03", "近期调价动态", "每次刷新自动比对上一版公开价目，涨价、降价和上新一目了然", "sec-changes", '<a class="more" href="/changes/">全部调价 →</a>')}
+  <div class="two">
+  <div class="plain-card">
+    <h3>最新调价</h3>
     {('<ul class="chg">' + chg + '</ul>') if chg else '<p class="muted">已建立当前版本快照，下一次刷新后显示调价记录。</p>'}
   </div>
-  <div>
-    <h2>怎么避开低价坑站</h2>
+  <div class="plain-card">
+    <h3>怎么避开低价坑站</h3>
     <ul class="tips">
       <li><b>未实测不发 A/S 牌</b>：仅有公开数据的站点封顶 Stage 1（B 级 74 分），真金白银探针连续达标才解锁 A/S。</li>
       <li><b>常规区隔离逆向/特惠组</b>：自称 Kiro/Cursor/逆向/特惠及未核实极端低价不进常规 Top 3，展开行内分组可看全貌。</li>
@@ -2751,6 +2831,11 @@ def build_home(site: Site, cfg, model_pages, stations, closed_stations, fam_orde
     </ul>
     <p><a href="/about/">完整评分方法与利益披露 →</a></p>
   </div>
+  </div>
+</section>
+<section class="sec-block">
+  {DB.section_head("04", "综合靠谱 Top 10", "按在线、资历、价格透明、防暗涨等七维公开信号综合打分，未实测站最高 B 级", "sec-top", '<a class="more" href="/stations/">完整排行 →</a>')}
+  {station_rank_table(stations, {}, site.now, limit=10, compact=True)}
 </section>"""
     site.page(
         "/", f"{site.name} - {cfg.get('site_tagline', '')}", desc, body,

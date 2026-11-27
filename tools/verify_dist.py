@@ -164,6 +164,31 @@ def check_plain_language(dist: Path, sample: int = 40) -> list[str]:
     return errs
 
 
+FONT_FILE = "assets/fonts/inter-latin-var.woff2"
+FONT_CDN_HOSTS = ("fonts.googleapis.com", "fonts.gstatic.com")
+
+
+def check_fonts(dist: Path) -> list[str]:
+    """Self-hosted typography guard: bundled InterVar woff2 present, zero third-party font CDN references."""
+    errs: list[str] = []
+    font = dist / FONT_FILE
+    if not font.is_file():
+        errs.append(f"{FONT_FILE} missing")
+    elif font.read_bytes()[:4] != b"wOF2":
+        errs.append(f"{FONT_FILE}: not a woff2 file (bad magic)")
+    css = dist / "assets" / "style.css"
+    if css.is_file() and "/" + FONT_FILE not in css.read_text(encoding="utf-8"):
+        errs.append("assets/style.css: @font-face does not point to the bundled woff2")
+    for f in dist.rglob("*"):
+        if not f.is_file() or f.suffix not in (".html", ".css", ".js", ".txt", ".json", ".xml"):
+            continue
+        txt = f.read_text(encoding="utf-8", errors="ignore")
+        for host in FONT_CDN_HOSTS:
+            if host in txt:
+                errs.append(f"{f.relative_to(dist).as_posix()}: external font CDN {host}")
+    return errs
+
+
 def check_files() -> list[str]:
     errs: list[str] = []
     pages = list(DIST.rglob("*.html"))
@@ -200,6 +225,7 @@ def check_files() -> list[str]:
         errs.append("search-index.json missing")
     errs += check_zero_download(DIST)
     errs += check_plain_language(DIST)
+    errs += check_fonts(DIST)
     llms = (DIST / "llms.txt").read_text(encoding="utf-8")
     if "/compare/" not in llms:
         errs.append("llms.txt: /compare/ missing")

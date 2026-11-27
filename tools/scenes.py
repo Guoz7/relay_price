@@ -63,6 +63,7 @@ SCENES: list[dict[str, Any]] = [
         "name": "Codex / GPT-6 API 中转站推荐",
         "short": "Codex / GPT",
         "tagline": "聚焦支持 OpenAI Responses 与 GPT-6 / Codex 系列的常规按量中转站，区分常规组与特惠组。",
+        "card": "聚焦能直接接 Codex 等新版客户端、在卖 GPT-6 系列的常规按量中转站，区分常规组与特惠组。",
         "desc": "Codex CLI 与 GPT-6 API 中转站哪家稳定？按 OpenAI Responses 协议支持、缓存价与分层信誉对比 GPT-6 Astra / GPT-6.1 Sol / Codex。",
         "req_endpoints": ["openai-response", "openai"],
         "models": ["gpt-6-astra", "gpt-6.1-sol", "gpt-6.2-astra", "gpt-6.2-sol", "gpt-5.4", "o3"],

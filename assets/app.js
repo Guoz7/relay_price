@@ -353,6 +353,29 @@
     });
   });
 
+  // ---------- sticky jump bar: mark the chapter currently in view (aria-current), no scroll hijacking
+  var tocLinks = Array.prototype.slice.call(document.querySelectorAll(".toc-bar a[data-toc]"));
+  if (tocLinks.length && "IntersectionObserver" in window) {
+    var tocSeen = {};
+    var tocMark = function () {
+      var cur = null;
+      tocLinks.forEach(function (a) { if (tocSeen[a.dataset.toc]) cur = a; });
+      tocLinks.forEach(function (a) {
+        var on = a === cur;
+        a.classList.toggle("on", on);
+        if (on) a.setAttribute("aria-current", "true"); else a.removeAttribute("aria-current");
+      });
+    };
+    var tocObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { tocSeen[en.target.id] = en.boundingClientRect.top < window.innerHeight * 0.45; });
+      tocMark();
+    }, { rootMargin: "0px 0px -55% 0px", threshold: [0, 1] });
+    tocLinks.forEach(function (a) {
+      var h = document.getElementById(a.dataset.toc);
+      if (h) tocObs.observe(h);
+    });
+  }
+
   // ---------- generic accessible tabs ([data-tabs] > [role=tablist] > button[role=tab] + [role=tabpanel])
   Array.prototype.forEach.call(document.querySelectorAll("[data-tabs]"), function (box) {
     var tabs = Array.prototype.slice.call(box.querySelectorAll(':scope > .tab-list > [role="tab"]'));
