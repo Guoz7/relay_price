@@ -340,3 +340,31 @@ td.t.stale::after{content:"待刷新";display:block;font-size:11.5px;color:var(-
   .v-tier:hover,.v-tier:active{transform:none}
   .v-gauge{animation:none}
 }
+
+/* zero-dependency inline SVG charts (tools/charts.py): all colours resolve to theme variables */
+.ch{display:block;width:100%;height:auto;overflow:visible;font-family:var(--font)}
+.ch text{font-size:10px;fill:var(--ink2)}
+.ch .t2,.ch .t2 text{font-size:9px;fill:var(--ink3)}
+.ch .gl{fill:none;stroke:var(--line);stroke-width:1}
+.ch .mk{fill:none;stroke:var(--ink3);stroke-width:1.2;stroke-dasharray:3 3}
+.ch .me{fill:var(--accent);fill-opacity:.18;stroke:var(--accent);stroke-width:1.6;stroke-linejoin:round}
+.ch .da{fill:var(--accent)}.ch .dw{fill:var(--warn)}.ch .do{fill:var(--ok)}
+.ch .tw{fill:var(--warn);font-weight:600}.ch .tac{fill:var(--accent)}.ch .tok{fill:var(--ok)}.ch .tof{fill:var(--info)}.ch .tcl{fill:var(--danger);font-size:9px}
+.ch .bd{fill:var(--line)}.ch .iq{fill:var(--line2)}.ch .wk{stroke:var(--line2);stroke-width:3;stroke-linecap:round}
+.ch .md{stroke:var(--ink);stroke-width:1.6}.ch .of{stroke:var(--info);stroke-width:2}
+.ch .lk{stroke:var(--warn);stroke-width:1.5;stroke-dasharray:2 2}
+.ch .b0{stroke:var(--line2);stroke-width:1}
+.ch .hk,.ch .hm,.ch .dp{stroke-width:4;stroke-linecap:round;fill:none}
+.ch .hk{stroke:var(--danger)}.ch .hm{stroke:var(--warn)}.ch .dp{stroke:var(--ok)}
+.ch .ml{stroke:var(--ink2);stroke-width:1.2;stroke-dasharray:4 3}.ch .cl{stroke:var(--danger);stroke-width:1.2;stroke-dasharray:4 3}
+.ch .gS{fill:#7c3aed}.ch .gA{fill:#059669}.ch .gB{fill:#0284c7}.ch .gC{fill:#d97706}.ch .gD{fill:#dc2626}
+.ch.radar{max-width:280px}.ch.imp{max-height:76px}.ch.mdist{max-width:560px}
+.ch .me,.ch.hist path[class^=g]{animation:ch-in .45s ease-out both}
+@keyframes ch-in{from{opacity:0}}
+.score-card .big .ch.radar{margin-top:4px}
+.pct-line{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
+.chart-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px 10px;margin:12px 0;box-shadow:var(--shadow)}
+.chart-card h3{margin:0 0 6px;font-size:15px}.chart-card p{margin:4px 0 0;font-size:12.5px}
+.dims li.wl .dl{color:var(--warn)}
+@media (max-width:860px){.ch.radar{max-width:320px;margin:0 auto}}
+@media (prefers-reduced-motion:reduce){.ch .me,.ch.hist path[class^=g]{animation:none}}

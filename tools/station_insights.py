@@ -86,6 +86,7 @@ def default_stability() -> dict[str, Any]:
         "max_up_pct": 0.0, "max_down_pct": 0.0, "last_up_at": None,
         "stability_score": 100, "label": "价格平稳", "cls": "ok",
         "volatility_summary": "近 30 天未监测到公开报价变动",
+        "impulses": [],
     }
 
 
@@ -119,6 +120,7 @@ def compute_price_stability(changes: list[dict[str, Any]]) -> dict[str, dict[str
         s = default_stability()
         s["total"] = len(items)
         run_sev: dict[str, float] = {}
+        day_moves: dict[str, list[float]] = {}
         hike_models: set[str] = set()
         max_up = max_down = 0.0
         for c in items:
@@ -137,6 +139,10 @@ def compute_price_stability(changes: list[dict[str, Any]]) -> dict[str, dict[str
             if pct is not None:
                 max_up = max(max_up, pct)
                 max_down = min(max_down, pct)
+            day = str(c.get("run_at") or "")[:10]
+            if day and pct is not None and kind in ("drop", "minor_hike", "sharp_hike", "extreme_hike"):
+                dm = day_moves.setdefault(day, [0.0, 0.0])
+                dm[0], dm[1] = max(dm[0], pct), min(dm[1], pct)
             if kind == "rounding":
                 s["rounding"] += 1
             elif kind.endswith("_hike"):
@@ -146,6 +152,7 @@ def compute_price_stability(changes: list[dict[str, Any]]) -> dict[str, dict[str
                 if run > (s["last_up_at"] or ""):
                     s["last_up_at"] = run
                 hike_models.add(str(c.get("model") or ""))
+        s["impulses"] = [[d, round(v[0], 1), round(v[1], 1)] for d, v in sorted(day_moves.items())]
         s["price_moves"] = s["ups"] + s["downs"] + s["outs"]
         s["sharp_events"] = sum(1 for v in run_sev.values() if v >= SHARP_PCT)
         s["hike_events"] = len(run_sev)

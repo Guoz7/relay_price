@@ -35,6 +35,7 @@ TOOLS = Path(__file__).resolve().parent
 sys.path.insert(0, str(TOOLS))
 
 import calc_page  # noqa: E402
+import charts as CH  # noqa: E402
 import en_page  # noqa: E402
 import export_readme  # noqa: E402
 import model_specs as MS  # noqa: E402
@@ -385,34 +386,162 @@ def merge_mirrors(quotes: list[P.Quote], stations: dict[str, dict[str, Any]], in
 
 
 # ---------------------------------------------------------------- scoring
-def compute_station_scores(stations, by_station, intel, run_stats, cfg, probe_map: dict[str, Any] | None = None) -> None:
+FLAGSHIP_CACHE_FAMS = {"claude", "gpt", "gemini", "deepseek"}
+GPT_RESP_RE = re.compile(r"^gpt-(?:5|6)")
+EXTREME_SPREAD = 4.0
+
+
+def _lane_price(q: P.Quote, cfg: dict[str, Any]) -> float | None:
+    """Currency-agnostic main price (ratios within one station are identical in CNY and USD)."""
+    v = mix(q, cfg, "usd") if q.kind == "token" else q.call_usd
+    if v is None:
+        v = main_cny(q, cfg)
+    return v if (v is not None and v > 0) else None
+
+
+def purity_inputs(st: dict[str, Any], qs: list[P.Quote], cfg: dict[str, Any]) -> dict[str, Any]:
+    """Raw counts for scoring.score_purity_protocol: caveat lanes, std-vs-promo spreads, protocol & cache coverage."""
+    groups = [g for g in (st.get("groups") or []) if g.get("selectable") and not g.get("welfare")]
+    paid = [q for q in qs if not (q.free or q.welfare) and q.lane != "welfare"]
+    lanes: dict[tuple[str, str], dict[str, float]] = defaultdict(dict)
+    for q in paid:
+        v = _lane_price(q, cfg)
+        if v is None:
+            continue
+        cur = lanes[(q.canonical, q.kind)].get(q.lane)
+        if cur is None or v < cur:
+            lanes[(q.canonical, q.kind)][q.lane] = v
+    spreads = [max(d["standard"], d["promo"]) / min(d["standard"], d["promo"]) for d in lanes.values() if "standard" in d and "promo" in d]
+    std = [q for q in paid if q.lane == "standard"]
+    claude = [q for q in std if q.family == "claude" and q.kind == "token"]
+    gpt = [q for q in std if q.kind == "token" and GPT_RESP_RE.match(q.canonical)]
+    cache_el = [q for q in std if q.kind == "token" and q.family in FLAGSHIP_CACHE_FAMS]
+    return {
+        "groups_paid": len(groups),
+        "groups_caveat": sum(1 for g in groups if g.get("caveats")),
+        "quotes_paid": len(paid),
+        "quotes_promo": sum(1 for q in paid if q.lane == "promo"),
+        "quotes_anomaly": sum(1 for q in paid if q.anomaly),
+        "dual_lane_models": len(spreads),
+        "extreme_spread_models": sum(1 for x in spreads if x > EXTREME_SPREAD),
+        "max_spread": round(max(spreads), 2) if spreads else None,
+        "claude_quotes": len(claude),
+        "claude_native": sum(1 for q in claude if "anthropic" in P.endpoint_tags(q.endpoints)),
+        "gpt_quotes": len(gpt),
+        "gpt_responses": sum(1 for q in gpt if "openai-response" in P.endpoint_tags(q.endpoints)),
+        "cache_eligible": len(cache_el),
+        "cache_disclosed": sum(1 for q in cache_el if q.cache_usd is not None or q.cache_cny is not None),
+    }
+
+
+def merged_run_stats(st: dict[str, Any], dom: str, run_stats: dict[str, Any]) -> dict[str, Any]:
+    rs = run_stats.get(dom) or {"attempts": 0, "successes": 0, "ms": []}
+    for a in st.get("aliases") or []:
+        ra = run_stats.get(a)
+        if ra:
+            rs = {"attempts": rs["attempts"] + ra["attempts"], "successes": rs["successes"] + ra["successes"], "ms": rs["ms"] + ra["ms"]}
+    return rs
+
+
+def station_dims(
+    dom: str, st: dict[str, Any], qs: list[P.Quote], it: dict[str, Any], rs: dict[str, Any],
+    stab: dict[str, Any] | None, cfg: dict[str, Any], now: datetime | None,
+    *, monitored: bool = True, drop_sources: int = 0,
+) -> list[S.Dim]:
+    """All 7 public-signal dimensions for one station (shared by build and tools/eval_scoring.py)."""
+    groups = [g for g in (st.get("groups") or []) if g.get("selectable")]
+    risk = SI.expiry_risk(it.get("domain_expires_at"), now)
+    n_src = max(0, len(it.get("sources") or []) - drop_sources)
+    return [
+        S.score_stability(rs["attempts"], rs["successes"], st.get("consecutive_failures") or 0),
+        S.score_longevity(it.get("domain_age_days"), it.get("domain_registered_at"), risk["days_left"] if risk else None),
+        S.score_transparency(
+            topup_known=st.get("topup_price") is not None,
+            priced=st.get("parsed") or 0,
+            placeholders=st.get("dropped_placeholder") or 0,
+            groups_selectable=len(groups),
+            groups_with_desc=sum(1 for g in groups if g.get("desc")),
+            quotes=len(qs),
+            anomalies=sum(1 for q in qs if q.anomaly),
+        ),
+        S.score_reputation(n_src, it.get("tranco_rank"), it.get("umbrella_rank"), it.get("majestic_rank")),
+        S.score_latency(statistics.median(rs["ms"]) if rs["ms"] else None),
+        S.score_price_stability(stab, monitored=monitored),
+        S.score_purity_protocol(**purity_inputs(st, qs, cfg)),
+    ]
+
+
+def score_params(cfg: dict[str, Any]) -> dict[str, Any]:
+    wl = cfg.get("weak_link")
+    sc = cfg.get("stage1_soft_cap")
+    return {
+        "soft": {k: float(v) for k, v in sc.items()} if isinstance(sc, dict) else None,
+        "weak_link": {k: (float(v[0]), float(v[1])) for k, v in wl.items()} if isinstance(wl, dict) else None,
+    }
+
+
+def compute_station_scores(stations, by_station, intel, run_stats, cfg, probe_map: dict[str, Any] | None = None,
+                           stability_map: dict[str, Any] | None = None, now: datetime | None = None,
+                           monitored: bool = True) -> dict[str, float]:
+    """Score every priced station, then assign market percentiles. Returns the market median per dimension."""
     weights = cfg.get("station_weights") or S.DEFAULT_STATION_WEIGHTS
     probe_map = probe_map or {}
+    stability_map = stability_map or {}
+    params = score_params(cfg)
     for dom, st in stations.items():
-        rs = run_stats.get(dom) or {"attempts": 0, "successes": 0, "ms": []}
-        for a in st.get("aliases") or []:
-            ra = run_stats.get(a)
-            if ra:
-                rs = {"attempts": rs["attempts"] + ra["attempts"], "successes": rs["successes"] + ra["successes"], "ms": rs["ms"] + ra["ms"]}
-        it = intel.get(dom) or {}
-        qs = by_station.get(dom, [])
-        groups = [g for g in (st.get("groups") or []) if g.get("selectable")]
-        dims = [
-            S.score_stability(rs["attempts"], rs["successes"], st.get("consecutive_failures") or 0),
-            S.score_longevity(it.get("domain_age_days"), it.get("domain_registered_at")),
-            S.score_transparency(
-                topup_known=st.get("topup_price") is not None,
-                priced=st.get("parsed") or 0,
-                placeholders=st.get("dropped_placeholder") or 0,
-                groups_selectable=len(groups),
-                groups_with_desc=sum(1 for g in groups if g.get("desc")),
-                quotes=len(qs),
-                anomalies=sum(1 for q in qs if q.anomaly),
-            ),
-            S.score_reputation(len(it.get("sources") or []), it.get("tranco_rank"), it.get("umbrella_rank"), it.get("majestic_rank")),
-            S.score_latency(statistics.median(rs["ms"]) if rs["ms"] else None),
-        ]
-        st["score"] = S.station_score(dims, weights, attempts=rs["attempts"], probe=probe_map.get(dom))
+        rs = merged_run_stats(st, dom, run_stats)
+        dims = station_dims(dom, st, by_station.get(dom, []), intel.get(dom) or {}, rs, stability_map.get(dom), cfg, now, monitored=monitored)
+        st["score"] = S.station_score(dims, weights, attempts=rs["attempts"], probe=probe_map.get(dom), **params)
+    scores = [st["score"] for st in stations.values()]
+    S.assign_percentiles(scores)
+    return S.market_medians(scores)
+
+
+FLAGSHIP_MODELS = ("claude-sonnet-5-5", "claude-opus-5-5", "gpt-6-astra", "gpt-6.1-sol", "deepseek-v4.1-flash", "gemini-4-carbon")
+
+
+def _lane_min_input(qs: list[P.Quote], lane: str) -> dict[str, float]:
+    out: dict[str, float] = {}
+    for q in qs:
+        if q.kind != "token" or q.lane != lane or q.free or q.welfare or q.input_cny is None or q.input_cny <= 0:
+            continue
+        if lane == "standard" and q.anomaly:
+            continue
+        if q.domain not in out or q.input_cny < out[q.domain]:
+            out[q.domain] = q.input_cny
+    return out
+
+
+def flagship_market(by_model: dict[str, list[P.Quote]], specs: dict[str, dict[str, Any]], cfg: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Full-market standard-lane input price distribution (one price per station) for each flagship model."""
+    rate = float(cfg.get("usd_cny_rate", 7.25))
+    out: dict[str, dict[str, Any]] = {}
+    for canon in FLAGSHIP_MODELS:
+        qs = by_model.get(canon) or []
+        stats = CH.price_stats(_lane_min_input(qs, "standard").values())
+        if not stats or stats["n"] < 4:
+            continue
+        alt = sorted(_lane_min_input(qs, "promo").values())
+        sp = specs.get(canon) or {}
+        off = sp.get("in_usd")
+        out[canon] = {**stats, "alt_median": CH.quantile(alt, .5) if alt else None,
+                      "official": off * rate if isinstance(off, (int, float)) and off > 0 else None}
+    return out
+
+
+def station_price_rows(qs: list[P.Quote], market_px: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    rows = []
+    for canon in FLAGSHIP_MODELS:
+        mk = market_px.get(canon)
+        mine = [q for q in qs if q.canonical == canon]
+        if not mk or not mine:
+            continue
+        std = _lane_min_input(mine, "standard").get(mine[0].domain) or min(
+            (q.input_cny for q in mine if q.lane == "standard" and q.kind == "token" and q.input_cny), default=None)
+        alt = _lane_min_input(mine, "promo").get(mine[0].domain)
+        if std or alt:
+            rows.append({**mk, "model": canon, "std": std, "alt": alt})
+    return rows
 
 
 def compute_quote_scores(by_model: dict[str, list[P.Quote]], stations, cfg) -> None:
@@ -876,16 +1005,20 @@ def fidelity_kpis(pr: dict[str, Any]) -> str:
     )
 
 
-def score_panel(st: dict[str, Any], cfg: dict[str, Any]) -> str:
+def score_panel(st: dict[str, Any], cfg: dict[str, Any], market_dims: dict[str, float] | None = None) -> str:
     sc: S.StationScore = st["score"]
     w = cfg.get("station_weights") or S.DEFAULT_STATION_WEIGHTS
+    keys = [k for k in S.DIM_ORDER if k in sc.dims]
+    pen = set(sc.penalized or [])
     lis = []
-    for key in ("stability", "longevity", "transparency", "reputation", "latency"):
+    for key in keys:
         d = sc.dims[key]
+        wl_tag = '<b class="badge warn">短板拖累</b> ' if key in pen else ""
+        li_cls = ' class="wl"' if key in pen else ""
         lis.append(
-            f'<li><span class="dl">{S.DIM_LABELS[key]}<small>{w.get(key, 0)}%</small></span>'
+            f'<li{li_cls}><span class="dl">{S.DIM_LABELS[key]}<small>{w.get(key, 0)}%</small></span>'
             f'<span class="bar"><i style="width:{d.score:.0f}%"></i></span><b>{d.score:.0f}</b>'
-            f'<small class="ev">{E(d.evidence)}{"（缺数据，按中性值计）" if (not d.known and "样本不足" not in d.evidence and "未" not in d.evidence and "无" not in d.evidence) else ""}</small></li>'
+            f'<small class="ev">{wl_tag}{E(d.evidence)}{"（缺数据，按中性值计）" if (not d.known and "样本不足" not in d.evidence and "未" not in d.evidence and "无" not in d.evidence and "尚" not in d.evidence) else ""}</small></li>'
         )
     pd = sc.dims["probe"]
     p_cls = "" if pd.known else "pending"
@@ -897,14 +1030,26 @@ def score_panel(st: dict[str, Any], cfg: dict[str, Any]) -> str:
         f'<small class="ev">{E(pd.evidence)}</small></li>'
     )
     cap_line = ""
-    if sc.stage == 1 and sc.raw_total > S.STAGE1_CAP:
-        cap_line = f'<small class="muted">公开信号分 {sc.raw_total:.0f} → 未实测封顶 B 级（74）</small>'
+    formula = f"加权均值 {sc.linear_total:.1f}" + (f" − 短板拖累 {sc.penalty:.1f}" if sc.penalty else "")
+    if sc.stage == 1 and sc.raw_total - sc.total >= 0.05:
+        cap_line = f'<small class="muted">{formula} = 公开信号分 {sc.raw_total:.1f} → 未实测平滑封顶 {sc.total:.1f}（上限 74）</small>'
     elif sc.cap_reason:
         cap_line = f'<small class="badge danger">{E(sc.cap_reason)}</small>'
+    elif sc.penalty:
+        cap_line = f'<small class="muted">{formula} = {sc.raw_total:.1f}</small>'
+    pct_line = ""
+    if sc.percentile is not None:
+        pcls = "ok" if sc.percentile >= 75 else ("info" if sc.percentile >= 40 else "warn")
+        pct_line = (f'<span class="pct-line"><span class="badge {pcls}">超过全网 {sc.percentile:.0f}% 站点</span>'
+                    f'<small class="muted" title="按缺失维度与证据样本估算的分数不确定度">±{sc.uncertainty:.1f} · 证据完整度 {sc.completeness:.0%}</small></span>')
+    radar = CH.station_radar_svg(
+        {k: sc.dims[k].score for k in keys}, market_dims, labels=S.DIM_LABELS, order=S.DIM_ORDER, penalized=pen,
+        name=str(st.get("display_name") or "本站")[:16],
+    )
     return (
         f'<section class="score-card"><div class="big">{grade_badge(sc.total)}<span class="num">{sc.total:.0f}</span>'
         f'{stage_badge(sc.stage, bool(sc.cap_reason and sc.stage == 2))}'
-        f'<small>站点信誉分 · 置信度{sc.confidence}</small>{cap_line}</div><ul class="dims">{"".join(lis)}</ul></section>'
+        f'<small>站点信誉分 {sc.total:.1f} · 置信度{sc.confidence}</small>{pct_line}{cap_line}{radar}</div><ul class="dims">{"".join(lis)}</ul></section>'
         + probe_panel(sc)
     )
 
@@ -988,7 +1133,11 @@ def build(cfg: dict[str, Any]) -> dict[str, Any]:
         by_station[q.domain].append(q)
     run_stats = load_run_stats(now)
     mark_anomalies(by_model, cfg)
-    compute_station_scores(stations, by_station, intel, run_stats, cfg, probe_map)
+    changes = update_history(quotes, stations, now)
+    stability_map = SI.compute_price_stability(changes)
+    monitored = len(list(HIST.glob("*.json.gz"))) >= 2
+    market_dims = compute_station_scores(stations, by_station, intel, run_stats, cfg, probe_map,
+                                         stability_map=stability_map, now=now, monitored=monitored)
     compute_quote_scores(by_model, stations, cfg)
 
     def dedupe_per_lane(qs: list[P.Quote]) -> list[P.Quote]:
@@ -1020,12 +1169,12 @@ def build(cfg: dict[str, Any]) -> dict[str, Any]:
             "lastmod": max(stations[q.domain]["fetched_at"] for q in rows),
         }
 
-    changes = update_history(quotes, stations, now)
-    stability_map = SI.compute_price_stability(changes)
     reviews_map = SI.load_reviews(DATA)
     _log(f"scored {len(model_pages)} models, starting page render")
     build_model_pages(site, model_pages, stations, cfg, specs)
-    build_station_pages(site, stations, by_station, intel, changes, cfg, run_stats=run_stats, stability_map=stability_map, reviews_map=reviews_map)
+    market_px = flagship_market(by_model, specs, cfg)
+    build_station_pages(site, stations, by_station, intel, changes, cfg, run_stats=run_stats, stability_map=stability_map,
+                        reviews_map=reviews_map, market_dims=market_dims, market_px=market_px)
     build_closed_station_pages(site, closed_stations)
     fam_order, fam_models = build_indexes(site, model_pages, stations, by_station, closed_stations, cfg, min_st, intel=intel, stability_map=stability_map)
     build_changes(site, changes, stations, model_pages)
@@ -1199,6 +1348,28 @@ def _spec_bar(sp: dict[str, Any] | None, ref_quote: P.Quote | None, cfg: dict[st
     )
 
 
+def model_dist_chart(canon: str, std_rows: list[P.Quote], alt_rows: list[P.Quote], rec: P.Quote | None,
+                     sp: dict[str, Any] | None, cfg: dict[str, Any]) -> str:
+    tok = [q.input_cny for q in std_rows if q.kind == "token" and not q.anomaly and q.input_cny]
+    if len(tok) >= 3:
+        off = (sp or {}).get("in_usd")
+        alt = [q.input_cny for q in alt_rows if q.lane == "promo" and q.kind == "token" and q.input_cny]
+        svg = CH.model_price_dist_svg(
+            CH.price_stats(tok),
+            official=off * float(cfg.get("usd_cny_rate", 7.25)) if isinstance(off, (int, float)) and off > 0 else None,
+            rec=rec.input_cny if (rec and rec.kind == "token") else None,
+            alt_median=CH.quantile(alt, .5) if alt else None,
+        )
+    else:
+        calls = [q.call_cny for q in std_rows if q.kind == "call" and not q.anomaly and q.call_cny]
+        alt = [q.call_cny for q in alt_rows if q.lane == "promo" and q.kind == "call" and q.call_cny]
+        svg = CH.model_price_dist_svg(
+            CH.price_stats(calls), rec=rec.call_cny if (rec and rec.kind == "call") else None,
+            alt_median=CH.quantile(alt, .5) if alt else None, what="单次调用价",
+        )
+    return f'<div class="chart-card">{svg}</div>' if svg else ""
+
+
 def build_model_pages(site: Site, model_pages, stations, cfg, specs: dict[str, dict[str, Any]] | None = None) -> None:
     specs = specs or {}
     now = site.now
@@ -1237,6 +1408,7 @@ def build_model_pages(site: Site, model_pages, stations, cfg, specs: dict[str, d
             for i, q in enumerate(top)
         )
         normal_tok = [q for q in std_rows if q.kind == "token" and not q.anomaly and q.input_cny is not None]
+        dist_html = model_dist_chart(canon, std_rows, alt_rows, rec, specs.get(canon), cfg)
         kpis = ""
         if normal_tok:
             ins = sorted(q.input_cny for q in normal_tok)
@@ -1277,6 +1449,7 @@ def build_model_pages(site: Site, model_pages, stations, cfg, specs: dict[str, d
   {spec_html}
   {('<h2 class="h-rec">常规按量推荐（未实测最高封顶 B 级）</h2><div class="recs">' + top_cards + '</div>') if top_cards else ''}
   {kpis}
+  {dist_html}
 </section>
 {filter_bar("m", show_mode=bool(any(q.kind == "token" for q in rows)), show_ep=True)}
 {std_tbl or '<p class="muted">该型号暂无常规按量报价，请展开下方特惠/福利分组查看。</p>'}
@@ -1340,6 +1513,7 @@ def _station_bento(
         '<div class="bcard">'
         f'<div class="bcard-h"><h3>价格稳定性（近 30 日）</h3><span class="badge {stab["cls"]}">{E(stab["label"])}</span></div>'
         f'<div class="gauge"><b class="{band}">{score}</b><span>/ 100 稳定分</span>{_meter(score, band, "价格稳定分")}</div>'
+        + CH.price_impulse_svg(stab.get("impulses") or [], now)
         + (f'<div class="bd">{"".join(chips)}</div>' if chips else "")
         + f'<p class="bnote">{E(stab["volatility_summary"])}</p>'
         '<dl class="bkv">'
@@ -1479,12 +1653,24 @@ def _station_bento(
     return f'<section class="bento-4" aria-label="站点高级详情">{card_price}{card_domain}{card_auth}{card_rev}</section>'
 
 
+def price_strip_section(rows: list[dict[str, Any]]) -> str:
+    svg = CH.station_price_strip_svg(rows)
+    if not svg:
+        return ""
+    return (
+        '<section class="chart-card"><h3>旗舰模型价格定位 <small class="muted">输入价 ¥/百万 token</small></h3>' + svg
+        + '<p class="muted">灰带为全网常规分组 P10–P90，深色段为 P25–P75，竖线为中位；蓝点为本站常规最低价，橙点为本站特惠/逆向最低价，虚线即同站价差；紫线为官方参考价（» 表示超出坐标）。便宜程度不计入信誉分。</p></section>'
+    )
+
+
 def build_station_pages(
     site: Site, stations, by_station, intel, changes, cfg,
     *, run_stats: dict[str, Any] | None = None, stability_map: dict[str, Any] | None = None,
     reviews_map: dict[str, list[dict[str, Any]]] | None = None,
+    market_dims: dict[str, float] | None = None, market_px: dict[str, dict[str, Any]] | None = None,
 ) -> None:
     now = site.now
+    market_px = market_px or {}
     run_stats = run_stats or {}
     stability_map = stability_map or {}
     reviews_map = reviews_map or {}
@@ -1539,13 +1725,15 @@ def build_station_pages(
             oauth_tags.append("支持 Telegram 登录")
 
         bento_html = _station_bento(dom, st, qs, it, run_stats.get(dom) or {}, stability_map.get(dom), reviews_map.get(dom) or [], now=now)
+        strip_html = price_strip_section(station_price_rows(qs, market_px))
         body = f"""
 <section class="hero sm">
   <p class="eyebrow">站点口碑档案 · {E(sc.stage_label)}</p>
   <h1>{E(name)} 靠谱吗？ <small>{E(dom)}</small></h1>
   <p class="lead">{health}</p>
-  {score_panel(st, cfg)}
+  {score_panel(st, cfg, market_dims)}
   {bento_html}
+  {strip_html}
   <div class="kpis">
     <div><b>{E(f"¥{tp:g}" if tp is not None else "未知")}</b><span>{E(st.get("topup_note") or "")}</span></div>
     <div><b>{st.get("parsed", len(qs))}</b><span>有效定价型号</span></div>
@@ -1598,6 +1786,9 @@ def build_closed_station_pages(site: Site, closed_stations: dict[str, dict[str, 
 
 
 # ---------------------------------------------------------------- indexes
+RANK_DIMS = ("stability", "longevity", "transparency", "reputation", "latency", "purity_protocol")
+
+
 def station_rank_table(
     stations, by_station, now, limit: int | None = None, compact: bool = False,
     intel: dict[str, Any] | None = None, stability_map: dict[str, Any] | None = None,
@@ -1615,8 +1806,9 @@ def station_rank_table(
         sc: S.StationScore = st["score"]
         tp = st.get("topup_price")
         dims = "" if compact else "".join(
-            f'<td class="n" data-v="{sc.dims[k].score:.1f}"><span class="{"" if sc.dims[k].known else "muted"}">{sc.dims[k].score:.0f}</span></td>'
-            for k in ("stability", "longevity", "transparency", "reputation", "latency")
+            (f'<td class="n" data-v="{sc.dims[k].score:.1f}"><span class="{"" if sc.dims[k].known else "muted"}">{sc.dims[k].score:.0f}</span></td>'
+             if k in sc.dims else '<td class="n" data-v="na"><span class="muted">—</span></td>')
+            for k in RANK_DIMS
         )
         extra_cols = ""
         if not compact:
@@ -1635,14 +1827,14 @@ def station_rank_table(
         rows.append(
             f'<tr><td class="n" data-v="{i}">{i}</td>'
             f'<td class="st" data-v="{E(dom)}"><a href="/site/{E(dom)}/">{E(st["display_name"])}</a><small>{E(dom)}</small></td>'
-            f'<td class="sc" data-v="{sc.total}">{grade_badge(sc.total)} <b>{sc.total:.0f}</b><small>{st_lbl} · 置信度{sc.confidence}</small></td>'
+            f'<td class="sc" data-v="{sc.total}">{grade_badge(sc.total)} <b>{sc.total:.1f}</b><small>{st_lbl} · 置信度{sc.confidence}</small></td>'
             f'{dims}{extra_cols}'
             f'<td class="n" data-v="{tp if tp is not None else 9e9}">{E(f"¥{tp:g}/$1" if tp is not None else "未知")}</td>'
             + ("" if compact else f'<td class="n" data-v="{st.get("parsed", len(by_station.get(dom, [])))}">{st.get("parsed", len(by_station.get(dom, [])))}</td>'
                f'<td class="t" data-v="{int(st["fetched_at"].timestamp())}">{E(ago(st["fetched_at"], now))}</td>')
             + "</tr>"
         )
-    dim_heads = "" if compact else "".join(f'<th data-type="n" data-first="desc"><button type="button">{S.DIM_LABELS[k]}</button></th>' for k in ("stability", "longevity", "transparency", "reputation", "latency"))
+    dim_heads = "" if compact else "".join(f'<th data-type="n" data-first="desc"><button type="button">{S.DIM_LABELS[k]}</button></th>' for k in RANK_DIMS)
     extra_heads = "" if compact else '<th data-type="n" data-first="desc"><button type="button">域名时长</button></th><th data-type="n" data-first="desc" title="0–100，越高越稳定；近 30 日涨价次数与幅度扣分"><button type="button">价格稳定</button></th>'
     return (
         '<div class="tbl-wrap"><table class="qt sortable rank"><thead><tr>'
@@ -1714,6 +1906,9 @@ def build_indexes(
         if st["score"].stage == 2:
             n_stage2 += 1
     gtxt = " · ".join(f"{g} 级 {grades.get(g, 0)} 家" for g in ("S", "A", "B", "C", "D"))
+    totals = [st["score"].total for st in stations.values()]
+    hist = CH.score_histogram_svg(totals, median=statistics.median(totals) if totals else None, cap=S.STAGE1_CAP)
+    hist_html = f'<div class="chart-card"><h3>全网信誉分分布 <small class="muted">{len(totals)} 家 · 每 5 分一档</small></h3>{hist}</div>' if hist else ""
     closed_html = ""
     if closed_stations:
         c_rows = "".join(
@@ -1731,8 +1926,8 @@ def build_indexes(
         "/stations/", "AI API 中转站分层评分排行榜",
         f"{len(stations)} 家 AI API 中转站分层信誉评分排行（实测认证 {n_stage2} 家，公开校验 {len(stations) - n_stage2} 家，另含 {len(closed_stations)} 家仅建档闭源站）：{gtxt}。",
         f'<section class="hero sm"><h1>AI API 中转站分层评分排行榜</h1>'
-        f'<p class="lead">未接入真实调用探针的站点统一 <b>Stage 1 封顶 B 级（74 分）</b>，仅实测达标解锁 A/S 认证。公开分维度：{E(S.summarize_weights(w))}。当前分布：{gtxt}。<a href="/about/">评分方法 →</a></p>'
-        f'<p class="muted">「价格稳定」为近 30 日公开报价的 0–100 稳定分：降价与 &lt;2% 舍入微调不扣分，涨价按调价次数与幅度扣分；数值列首次点击即按从高到低排序，未知值始终排在末尾。</p></section>'
+        f'<p class="lead">未接入真实调用探针的站点按 <b>Stage 1 平滑封顶（严格低于 74 分，最高 B 级）</b>，仅实测达标解锁 A/S 认证。公开分七维：{E(S.summarize_weights(w))}，关键信任维度低于健康线另计短板拖累。当前分布：{gtxt}。<a href="/about/">评分方法 →</a></p>'
+        f'<p class="muted">「价格稳定」为近 30 日公开报价的 0–100 稳定分：降价与 &lt;2% 舍入微调不扣分，涨价按调价次数与幅度扣分；「纯净」为分组纯净度与协议完备度。数值列首次点击即按从高到低排序，未知值始终排在末尾。</p>{hist_html}</section>'
         + station_rank_table(stations, by_station, site.now, intel=intel, stability_map=stability_map)
         + closed_html,
         crumbs=[("站点排行", "/stations/")], priority=0.9,
@@ -1855,7 +2050,7 @@ def build_about(site: Site, cfg: dict[str, Any]) -> None:
 <thead><tr><th>阶段</th><th>评级上限</th><th>准入与降级条件</th></tr></thead>
 <tbody>
 <tr><td><b>Stage 0 · 仅建档</b></td><td>不评分</td><td>接口返回 401/403（需登录或 WAF 拦截），仅保留基础档案页，不参与评分与比价。</td></tr>
-<tr><td><b>Stage 1 · 公开校验</b></td><td><b>最高 B 级（74 分）</b></td><td>仅凭公开元数据（稳定、资历、透明、口碑、响应）无法验证真实调用质量，因此无论公开信号分多高，未接入真实探针的站点与报价一律封顶 74 分（B 级）。</td></tr>
+<tr><td><b>Stage 1 · 公开校验</b></td><td><b>最高 B 级（严格 &lt; 74 分）</b></td><td>仅凭公开元数据（七维公开信号）无法验证真实调用质量，因此未接入真实探针的站点经单调平滑封顶映射到 [0, 74)，永远拿不到 A/S；报价综合分同样封顶 74 分。</td></tr>
 <tr><td><b>Stage 2 · 实测认证</b></td><td><b>解锁 A / S 级</b></td><td>独立匿名小号连续 7 天真金白银探针（≥20 次样本，含连通/TTFT/TPOT、Tool-calling、Prompt Cache 命中与余额实扣对账）。实测分占 35%、公开分占 65%；若实测成功率 &lt; 90% 或账单实扣偏差超过 ±15%，触发非补偿否决，强制降级封顶 C 级（64 分）。另有真伪/智商否决，见下表。</td></tr>
 </tbody></table>
 
@@ -1876,23 +2071,41 @@ def build_about(site: Site, cfg: dict[str, Any]) -> None:
 <li><b>预算熔断</b>：自动探针按单轮调用上限与每站每日调用上限执行，超出即跳过并记录原因，不会超支。</li>
 </ul>
 
-<h2>二、公开信号五维评分（0–100）</h2>
+<h2>二、公开信号七维评分（0–100）</h2>
+<p>站点信誉分衡量<b>可信度、可靠性、价格稳定、分组纯净与协议完备</b>，不衡量便宜程度；便宜程度只进入各模型页的报价综合分，并在站点页「旗舰模型价格定位」图中单独展示。</p>
 <table class="plain">
 <thead><tr><th>维度</th><th class="n">权重</th><th>计算依据</th></tr></thead>
 <tbody>
-<tr><td>稳定</td><td class="n">{w['stability']}%</td><td>公开价格接口刷新成功率（贝叶斯平滑：先验 5 次、70% 成功），最近每连续失败一次扣 15 分，最多扣 45 分。</td></tr>
-<tr><td>资历</td><td class="n">{w['longevity']}%</td><td>主域名注册时长（ICANN RDAP / CNNIC WHOIS）：1 个月 15 分、半年 55 分、1 年 75 分、2 年 90 分、3 年以上 100 分；查不到按 35 分计。</td></tr>
-<tr><td>透明</td><td class="n">{w['transparency']}%</td><td>公开充值比例 35 分；已定价型号占比 25 分；可选分组说明占比 20 分；异常低价占比越少越高（20 分）。</td></tr>
-<tr><td>口碑</td><td class="n">{w['reputation']}%</td><td>被多少个独立导航/社区/榜单收录（1 个 30 分、3 个 65 分、6 个以上 90 分），进入 Tranco / Umbrella / Majestic 流量榜加 10–25 分。</td></tr>
-<tr><td>响应</td><td class="n">{w['latency']}%</td><td>公开接口中位响应时间：0.6 秒内 100 分、1.5 秒 85 分、3 秒 60 分、6 秒 30 分。</td></tr>
+<tr><td>稳定</td><td class="n">{w.get('stability', 0)}%</td><td>公开价格接口刷新成功率（贝叶斯平滑：先验 5 次、70% 成功），最近每连续失败一次扣 15 分，最多扣 45 分。</td></tr>
+<tr><td>资历</td><td class="n">{w.get('longevity', 0)}%</td><td>主域名注册时长（ICANN RDAP / CNNIC WHOIS）：1 个月 15 分、半年 55 分、1 年 75 分、2 年 90 分、3 年以上 100 分；查不到按 35 分计。续费跑道：已过期 −35、30 天内到期 −20、60 天内 −12、180 天内 −4；已续费 1 年以上 +2、2 年以上 +4。</td></tr>
+<tr><td>透明</td><td class="n">{w.get('transparency', 0)}%</td><td>公开充值比例 35 分；已定价型号占比 25 分；可选分组说明占比 20 分；异常低价占比越少越高（20 分）。</td></tr>
+<tr><td>口碑</td><td class="n">{w.get('reputation', 0)}%</td><td>被多少个独立导航/社区/榜单收录（1 个 30 分、3 个 65 分、6 个以上 90 分），进入 Tranco / Umbrella / Majestic 流量榜加 10–25 分。</td></tr>
+<tr><td>响应</td><td class="n">{w.get('latency', 0)}%</td><td>公开接口中位响应时间：0.6 秒内 100 分、1.5 秒 85 分、3 秒 60 分、6 秒 30 分。</td></tr>
+<tr><td>价稳</td><td class="n">{w.get('price_stability', 0)}%</td><td>近 30 日公开报价稳定分：降价与 &lt;2% 舍入微调不扣分；按调价批次计，小幅上调每次 −6（最多 −30）、≥20% 急涨每次 −15（最多 −45）；最大涨幅 ≥50% 再 −12，涉及 ≥10 个型号 −8，≥3 次涨价 −6，输出档调整与批量下架少量扣分。</td></tr>
+<tr><td>纯净</td><td class="n">{w.get('purity_protocol', 0)}%</td><td>分组纯净度与协议完备度：45% 纯净线路（可选付费分组中无 Kiro/Cursor/逆向/特惠自认标签的占比 50%、常规线报价占比 30%、无异常低价 20%）＋ 25% 价差克制（同一型号常规线与特惠/逆向线价差超过 4× 的占比越低越高）＋ 30% 旗舰协议与缓存完备（Claude 原生 Anthropic 协议、GPT-5/6 OpenAI Responses 协议、旗舰型号公开缓存价的覆盖率）。</td></tr>
 </tbody></table>
+<h3>短板拖累（弱链惩罚）</h3>
+<p>加权算术均值允许“口碑高”抵消“刚暗涨 140%”，这正是旧版五维线性和的缺陷。新版对关键信任维度设置健康线 T 与强度 λ，低于健康线时按凸函数扣分：<code>拖累 = Σ λ·T·((T − x) / T)^1.5</code>，总拖累最多 20 分。当前参数：价稳 T=85、λ=0.6；纯净 T=60、λ=0.5；透明 T=60、λ=0.4；资历 T=60、λ=0.8。站点页雷达图中触发拖累的维度以橙色标出。</p>
+<h3>Stage 1 平滑封顶</h3>
+<p>公开信号分 r = 加权均值 − 短板拖累。未实测站点不再一刀切截断在 74（旧版有 112 家并列 74.0），而是经过严格单调、处处光滑的映射：</p>
+<ol>
+<li>软拐点压缩：<code>h(r) = r − (1 − m)·τ·[ln(1 + e^((r − K)/τ)) − ln(1 + e^(−K/τ))]</code>，K=45、m=0.65、τ=3，即低于 45 分基本不变，高于 45 分斜率平滑降为 0.65。</li>
+<li>指数逼近上限：h ≤ 71 时 f = h；h &gt; 71 时 <code>f = 74 − 3·e^(−(h − 71)/3)</code>，在 71 处一阶导连续，永远严格低于 74。</li>
+</ol>
+<p>因此公开信号更好的站点永远得分更高，头部站点按真实差距拉开（2026-11-27 全量离线评估：764 家中 0 家并列 74.0，前 15% 分布在约 66.6–73.0）。Stage 2 实测站点不经过此映射：公开分 65% + 实测分 35%，实测否决仍强制封顶 C 级（64 分）。</p>
+<h3>全网分位与不确定度</h3>
+<ul>
+<li><b>超过全网 N% 站点</b>：在所有参与评分的站点中，信誉分严格低于本站的占比。</li>
+<li><b>± 不确定度</b>：按各维权重估算，有证据的维度按 ±6 分、缺数据按中性值填充的维度按 ±22 分合成标准差，再乘以平滑封顶在该点的斜率；<b>证据完整度</b> = 有真实证据的维度权重占比。</li>
+<li>评分模型由 <code>tools/eval_scoring.py</code> 在全部真实站点数据上与“七维线性 + 封顶”“分位融合 + 风险惩罚”两个备选方案对比后选定，对比指标包括并列数、红旗站点排名位移以及权重 ±20% 扰动下的 Top-30 秩相关。</li>
+</ul>
 <p>等级划分：S ≥ 85，A ≥ 75，B ≥ 65，C ≥ 50，D &lt; 50。</p>
 
 <h2>三、常规推荐防踩雷与多分组规则</h2>
 <ul>
 <li><b>绝不根据营销词自动盖章“官转/高稳”</b>：实证抽检表明“稳定/满血/不降智”等自夸文案误判率约 30%。我们只展示可核验的协议标签（<code>Anthropic</code> / <code>OpenAI Responses</code> / <code>Gemini</code> 等）、缓存价、分时档位，以及站点自己标注的 <b>Kiro / Cursor / 逆向反代 / 特惠限时</b> 提醒标签。</li>
 <li><b>常规区与特惠逆向区隔离</b>：模型页默认将常规按量分组与特惠/逆向/福利分组分开，并支持展开同站全部分组对照价差。常规 Top 3 推荐严格否决自称逆向/特惠/测试分组、资历/透明不足站点及未实测却低于中位价 0.25× 的极端低价。</li>
-<li><b>综合评分</b> = 价格分 × {qw['price']}% + 站点信誉分 × {qw['station']}%（未实测同样封顶 74 分）。价格分以常规中位价为 50 分，每便宜一半 +20 分、每贵一倍 −20 分。</li>
+<li><b>综合评分</b> = 价格分 × {qw['price']}% + 站点信誉分 × {qw['station']}%（未实测同样封顶 74 分）。站点信誉分本身不含便宜程度，避免“低价”被重复计分。价格分以常规中位价为 50 分，每便宜一半 +20 分、每贵一倍 −20 分。</li>
 </ul>
 
 <h2>四、人民币换算与双计费视角</h2>

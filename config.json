@@ -27,7 +27,9 @@
   "usd_cny_rate": 7.25,
   "cache_mix_weights": {"cache": 7, "input": 2, "output": 1},
   "hot_models_count": 24,
-  "station_weights": {"stability": 30, "longevity": 25, "transparency": 20, "reputation": 15, "latency": 10},
+  "station_weights": {"stability": 18, "longevity": 16, "transparency": 14, "reputation": 12, "latency": 8, "price_stability": 17, "purity_protocol": 15},
+  "stage1_soft_cap": {"knee": 45, "slope": 0.65, "tau": 3, "top": 71},
+  "weak_link": {"price_stability": [85, 0.6], "purity_protocol": [60, 0.5], "transparency": [60, 0.4], "longevity": [60, 0.8]},
   "quote_weights": {"price": 40, "station": 60},
   "affiliate_links": {},
   "exclude_domains": []

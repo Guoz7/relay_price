@@ -307,6 +307,124 @@ class VerifyAndInsightsTests(unittest.TestCase):
         self.assertNotIn("30日价格", html)
         self.assertEqual(html.count("<tr>"), html.count("</tr>"))
 
+    # ---- V3 scoring + inline SVG chart integration
+    def test_price_stability_daily_impulses(self):
+        chg = [self._chg("x.test", "up", 1.0, 2.4, run="2026-11-26T01:00:00Z", model="a"),
+               self._chg("x.test", "up", 1.0, 1.1, run="2026-11-26T05:00:00Z", model="b"),
+               self._chg("x.test", "down", 2.0, 1.5, run="2026-11-20T00:00:00Z"),
+               self._chg("x.test", "up", 1.0, 1.01, run="2026-11-18T00:00:00Z")]
+        m = SI.compute_price_stability(chg)["x.test"]
+        self.assertEqual(m["impulses"], [["2026-11-20", 0.0, -25.0], ["2026-11-26", 140.0, 0.0]])
+        self.assertEqual(SI.default_stability()["impulses"], [])
+
+    def _seven_station(self, **over):
+        vals = {k: 80.0 for k in S.DIM_ORDER}
+        vals.update(over)
+        sc = S.station_score([S.Dim(k, v, f"ev-{k}") for k, v in vals.items()], S.DEFAULT_STATION_WEIGHTS, attempts=10)
+        return {"display_name": "Demo", "score": sc, "topup_price": 1.0, "parsed": 3,
+                "fetched_at": datetime(2026, 11, 26, tzinfo=timezone.utc)}
+
+    def test_score_panel_radar_percentile_and_weak_link(self):
+        import re
+        import xml.etree.ElementTree as ET
+        st = self._seven_station(price_stability=60, reputation=100)
+        others = [self._seven_station(reputation=r)["score"] for r in (20, 40)]
+        S.assign_percentiles([st["score"], *others])
+        html = B.score_panel(st, {"station_weights": S.DEFAULT_STATION_WEIGHTS}, {k: 60.0 for k in S.DIM_ORDER})
+        svgs = re.findall(r"<svg.*?</svg>", html, re.S)
+        self.assertEqual(len(svgs), 1)
+        ET.fromstring(svgs[0])
+        self.assertIn('class="ch radar"', html)
+        self.assertIn("超过全网", html)
+        self.assertIn("证据完整度 100%", html)
+        self.assertIn("短板拖累", html)
+        self.assertIn('<li class="wl">', html)
+        self.assertIn("未实测平滑封顶", html)
+        for k in S.DIM_ORDER:
+            self.assertIn(f"ev-{k}", html)
+        self.assertEqual(html.count("<li"), html.count("</li>"))
+        legacy = B.score_panel(self._station(), {})  # 5-dim station still renders (radar over 5 axes)
+        self.assertIn('class="ch radar"', legacy)
+
+    def test_bento_contains_impulse_chart(self):
+        st = self._station()
+        stab = SI.compute_price_stability([self._chg("demo.test", "up", 1.0, 1.8, run="2026-11-25T00:00:00Z")])["demo.test"]
+        now = datetime(2026, 11, 27, tzinfo=timezone.utc)
+        html = B._station_bento("demo.test", st, [], {}, {}, stab, [], now=now)
+        self.assertIn('class="ch imp"', html)
+        self.assertIn('class="hk"', html)
+        self.assertIn("无调价事件", B._station_bento("demo.test", st, [], {}, {}, None, [], now=now))
+        self.assertEqual(html.count("<div"), html.count("</div>"))
+
+    def _q(self, dom, model, lane, inp, eps=None, cache=None, caveats=None, group="default"):
+        return P.Quote(domain=dom, model=model, canonical=model, family=P.classify_family(model), kind="token",
+                       group=group, group_ratio=1.0, group_desc=None, input_usd=inp, output_usd=inp * 5, input_cny=inp,
+                       output_cny=inp * 5, cache_usd=cache, cache_cny=cache, lane=lane, endpoints=eps or [],
+                       caveats=caveats or [])
+
+    def test_purity_inputs_spread_protocol_and_cache(self):
+        st = {"groups": [{"name": "default", "selectable": True, "caveats": [], "welfare": False},
+                         {"name": "ClaudeCodeReverse", "selectable": True, "caveats": ["自称逆向/反代"], "welfare": False},
+                         {"name": "free", "selectable": True, "caveats": [], "welfare": True}]}
+        qs = [self._q("d.test", "claude-sonnet-5-5", "standard", 3.0, ["anthropic"], cache=0.3),
+              self._q("d.test", "claude-sonnet-5-5", "promo", 0.5, ["anthropic"], caveats=["自称逆向/反代"]),
+              self._q("d.test", "gpt-6-astra", "standard", 5.0, ["openai"]),
+              self._q("d.test", "gpt-6-astra", "promo", 4.0, ["openai"])]
+        pin = B.purity_inputs(st, qs, {})
+        self.assertEqual((pin["groups_paid"], pin["groups_caveat"]), (2, 1))
+        self.assertEqual((pin["dual_lane_models"], pin["extreme_spread_models"], pin["max_spread"]), (2, 1, 6.0))
+        self.assertEqual((pin["claude_quotes"], pin["claude_native"], pin["gpt_quotes"], pin["gpt_responses"]), (1, 1, 1, 0))
+        self.assertEqual((pin["cache_eligible"], pin["cache_disclosed"]), (2, 1))
+        d = S.score_purity_protocol(**pin)
+        self.assertTrue(0 < d.score < 80)
+        self.assertIn("1/2 个双线型号价差超 4×", d.evidence)
+
+    def test_station_dims_and_flagship_strip(self):
+        import re
+        import xml.etree.ElementTree as ET
+        now = datetime(2026, 11, 27, tzinfo=timezone.utc)
+        by_model = {"claude-sonnet-5-5": [self._q(f"s{i}.test", "claude-sonnet-5-5", "standard", 1.0 + i) for i in range(8)]
+                    + [self._q("s0.test", "claude-sonnet-5-5", "promo", 0.3)]}
+        specs = {"claude-sonnet-5-5": {"in_usd": 2.0}}
+        mk = B.flagship_market(by_model, specs, {"usd_cny_rate": 7.25})
+        self.assertEqual(mk["claude-sonnet-5-5"]["n"], 8)
+        self.assertEqual(mk["claude-sonnet-5-5"]["official"], 14.5)
+        rows = B.station_price_rows([q for q in by_model["claude-sonnet-5-5"] if q.domain == "s0.test"], mk)
+        self.assertEqual((rows[0]["std"], rows[0]["alt"]), (1.0, 0.3))
+        sec = B.price_strip_section(rows)
+        ET.fromstring(re.search(r"<svg.*</svg>", sec, re.S).group(0))
+        self.assertIn("旗舰模型价格定位", sec)
+        self.assertEqual(B.price_strip_section([]), "")
+        st = {"groups": [], "topup_price": 1.0, "parsed": 1}
+        dims = B.station_dims("s0.test", st, by_model["claude-sonnet-5-5"][:1], {"domain_age_days": 400, "domain_expires_at": "2026-12-10"},
+                              {"attempts": 3, "successes": 3, "ms": [500.0]}, None, {}, now)
+        self.assertEqual([d.key for d in dims], list(S.DIM_ORDER))
+        self.assertIn("13 天后到期", dims[1].evidence)
+
+    def test_model_dist_chart_budget(self):
+        std = [self._q(f"m{i}.test", "gpt-6-astra", "standard", 2.0 + i) for i in range(12)]
+        alt = [self._q("m0.test", "gpt-6-astra", "promo", 0.8)]
+        html = B.model_dist_chart("gpt-6-astra", std, alt, std[3], {"in_usd": 10.0}, {"usd_cny_rate": 7.25})
+        self.assertIn('class="ch mdist"', html)
+        self.assertLess(len(html.encode()), 2500)
+        self.assertEqual(B.model_dist_chart("x", std[:2], [], None, None, {}), "")
+
+    def test_rank_table_purity_column_and_one_decimal_scores(self):
+        stations = {"a.test": self._seven_station(), "b.test": self._station("b.test")}
+        html = B.station_rank_table(stations, {}, datetime(2026, 11, 27, tzinfo=timezone.utc))
+        self.assertIn('<button type="button">纯净</button>', html)
+        self.assertIn('data-v="na"><span class="muted">—</span>', html)
+        self.assertIn(f'<b>{stations["a.test"]["score"].total:.1f}</b>', html)
+        self.assertEqual(html.count("<tr>"), html.count("</tr>"))
+
+    def test_about_documents_seven_dims_weak_link_and_soft_cap(self):
+        site = DummySite()
+        B.build_about(site, {})
+        body = site.pages["/about/"]["body"]
+        for txt in ("七维", "价稳", "纯净", "短板拖累", "平滑封顶", "λ·T·((T − x) / T)^1.5", "74 − 3·e^(−(h − 71)/3)",
+                    "超过全网 N% 站点", "证据完整度", "eval_scoring.py", "续费跑道"):
+            self.assertIn(txt, body)
+
     def test_app_js_passes_node_check(self):
         import subprocess
         root = Path(__file__).resolve().parent.parent
