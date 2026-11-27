@@ -143,7 +143,7 @@ def build_calc(
   <div class="tbl-wrap">
     <table class="qt" id="c-table">
       <thead><tr>
-        <th>模型 / 定位</th><th>上下文</th><th class="n">官网直连估算 / 月</th><th class="n">常规中转最优 / 月</th><th class="n">约官网折数</th><th>首选主站</th><th>推荐备用站</th>
+        <th scope="col">模型 / 定位</th><th scope="col">上下文</th><th class="n" scope="col">官网直连估算 / 月</th><th class="n" scope="col">常规中转最优 / 月</th><th class="n" scope="col">约官网折数</th><th scope="col">首选主站</th><th scope="col">推荐备用站</th>
       </tr></thead>
       <tbody></tbody>
     </table>
@@ -199,7 +199,7 @@ def build_calc(
       function stCell(p){{
         if(!p) return '<span class="muted">—</span>';
         var mc = monthCost(p.in, p.out, p.cache, req, inp, out, cr);
-        return '<span class="st-head"><a href="/site/'+esc(p.dom)+'/">'+esc(p.name)+'</a> <b class="gr gr-'+esc(p.grade)+'">'+esc(p.grade)+'</b></span><small>'+esc(p.group.slice(0,18))+' · '+fmtY(mc)+'/月</small>';
+        return '<span class="st-head"><a href="/site/'+esc(p.dom)+'/" title="'+esc(p.name)+' · '+esc(p.dom)+'">'+esc(p.name)+'</a> <b class="gr gr-'+esc(p.grade)+'">'+esc(p.grade)+'</b></span><small>'+esc(p.group.slice(0,18))+' · '+fmtY(mc)+'/月</small>';
       }}
       var lt = m.long_tier ? ' <span class="badge warn" title="超过 200K/272K 长上下文官方按高档计费">长文加价</span>' : '';
       return '<tr><td class="mn"><a href="/model/'+esc(m.slug)+'/"><code>'+esc(m.id)+'</code></a><small>'+esc(m.role)+'</small></td>'

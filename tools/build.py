@@ -517,9 +517,10 @@ class Site:
         canonical = self.url(path)
         crumbs_html = ""
         ld = list(ld or [])
+        is_en = lang.lower().startswith("en")
         if crumbs:
-            items = [("首页", "/")] + crumbs
-            crumbs_html = '<nav class="crumbs" aria-label="面包屑">' + " / ".join(
+            items = [("Home" if is_en else "首页", "/en/" if is_en else "/")] + crumbs
+            crumbs_html = f'<nav class="crumbs" aria-label="{"Breadcrumb" if is_en else "面包屑"}">' + " / ".join(
                 f'<a href="{E(u)}">{E(t)}</a>' if i < len(items) - 1 else f"<span>{E(t)}</span>"
                 for i, (t, u) in enumerate(items)
             ) + "</nav>"
@@ -527,9 +528,9 @@ class Site:
                 "@context": "https://schema.org", "@type": "BreadcrumbList",
                 "itemListElement": [{"@type": "ListItem", "position": i + 1, "name": t, "item": self.url(u)} for i, (t, u) in enumerate(items)],
             })
-        full_title = f"{title} | {self.name}" if path != "/" else title
+        brand_lbl = "API Price Radar" if is_en else self.name
+        full_title = (title if (path == "/" or brand_lbl in title) else f"{title} | {brand_lbl}")
         robots = '<meta name="robots" content="noindex,follow">' if noindex else ""
-        is_en = lang.lower().startswith("en")
         nav_html = (
             '<a href="/en/">Overview</a><a href="/calc/">TCO Calc</a><a href="/verify/">Verify Model</a>'
             '<a href="/scenes/claude-code/">Claude Code</a><a href="/stations/">Relays</a>'
@@ -546,7 +547,6 @@ class Site:
             f'<p>未接入真金白银探针实测的站点统一封顶 Stage 1（最高 B 级 74 分），仅实测达标站点解锁 A/S 认证。价格按站点公开只读接口、分组倍率与公开充值比例换算，未计入卡密折扣与活动；请以站点实时页面为准，大额充值前先小额测试。</p>'
             f'<p>本页生成于 {fmt_cst(self.now)}（北京时间）· <a href="/scenes/">场景选站</a> · <a href="/calc/">月度算账器</a> · <a href="/verify/">模型验真</a> · <a href="/about/">评分方法与利益披露</a> · <a href="/submit/">提交收录 / 纠错</a> · <a href="/en/">English</a> · <a href="/changes.xml">RSS</a> · <a href="/sitemap.xml">Sitemap</a></p>'
         )
-        brand_lbl = "API Price Radar" if is_en else self.name
         search_ph = "Search models, e.g. claude-sonnet-5-5 / gpt-6-astra" if is_en else "搜模型，如 deepseek-v4.1-flash / claude-sonnet-5-5"
         doc = f"""<!doctype html>
 <html lang="{E(lang)}">
@@ -742,7 +742,7 @@ def quote_table(
             + (f"¥{tp:g}/$1" if tp is not None else f'<span class="muted" title="{E(st.get("topup_note") or "")}">未知</span>')
             + "</td>"
             f'<td class="t {"stale" if stale else "fresh"}" data-v="{int(f.timestamp()) if f else 0}" title="{E(fmt_cst(f))}">'
-            f'{E(ago(f, now) + (" · 待刷新" if stale else ""))}</td>'
+            f'{E(ago(f, now))}</td>'
         )
 
     def badges(q: P.Quote) -> str:
@@ -1276,6 +1276,14 @@ def build_model_pages(site: Site, model_pages, stations, cfg, specs: dict[str, d
 
 
 # ---------------------------------------------------------------- station pages
+def _meter(pct: int | None, cls: str, label: str) -> str:
+    v = 0 if pct is None else max(0, min(100, int(pct)))
+    return (
+        f'<div class="meter {cls}" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{v}" '
+        f'aria-label="{E(label)}"><i style="width:{v}%"></i></div>'
+    )
+
+
 def _station_bento(
     dom: str,
     st: dict[str, Any],
@@ -1284,28 +1292,52 @@ def _station_bento(
     rs: dict[str, Any],
     stab: dict[str, Any] | None,
     revs: list[dict[str, Any]],
+    now: datetime | None = None,
 ) -> str:
     sc: S.StationScore = st["score"]
     # 1. Price Stability card
-    stab = stab or {"total": 0, "price_moves": 0, "ups": 0, "downs": 0, "outs": 0, "news": 0, "removed": 0, "max_up_pct": 0.0, "max_down_pct": 0.0, "label": "价格平稳", "cls": "ok"}
-    up_txt = f"{stab['ups']} 次（最大 +{stab['max_up_pct']:g}%）" if stab["ups"] else "0 次"
-    dn_txt = f"{stab['downs']} 次（最大 -{stab['max_down_pct']:g}%）" if stab["downs"] else "0 次"
+    stab = {**SI.default_stability(), **(stab or {})}
+    score = int(stab.get("stability_score", 100))
+    band = stab.get("cls") or SI.stability_band(score)
+    up_txt = f"{stab['ups']} 条（{stab['hike_events']} 次调价，最大 +{stab['max_up_pct']:g}%）" if stab["ups"] else "0 条"
+    dn_txt = f"{stab['downs']} 条（最大 -{stab['max_down_pct']:g}%）" if stab["downs"] else "0 条"
+    chips = []
+    if stab["sharp_events"]:
+        chips.append(f'<span class="badge danger">急涨 ×{stab["sharp_events"]}</span>')
+    if stab["minor_hikes"]:
+        chips.append(f'<span class="badge warn">小幅上调 ×{stab["minor_hikes"]}</span>')
+    if stab["downs"]:
+        chips.append(f'<span class="badge ok">降价 ×{stab["downs"]}</span>')
+    if stab["rounding"]:
+        chips.append(f'<span class="badge">舍入微调 ×{stab["rounding"]}</span>')
+    last_up = f'<dt>最近涨价</dt><dd>{E(str(stab["last_up_at"])[:10])}</dd>' if stab.get("last_up_at") else ""
     card_price = (
         '<div class="bcard">'
         f'<div class="bcard-h"><h3>价格稳定性（近 30 日）</h3><span class="badge {stab["cls"]}">{E(stab["label"])}</span></div>'
+        f'<div class="gauge"><b class="{band}">{score}</b><span>/ 100 稳定分</span>{_meter(score, band, "价格稳定分")}</div>'
+        + (f'<div class="bd">{"".join(chips)}</div>' if chips else "")
+        + f'<p class="bnote">{E(stab["volatility_summary"])}</p>'
         '<dl class="bkv">'
-        f'<dt>涨价异动</dt><dd>{E(up_txt)}</dd>'
-        f'<dt>降价调整</dt><dd>{E(dn_txt)}</dd>'
+        f'<dt>涨价记录</dt><dd>{E(up_txt)}</dd>'
+        f'<dt>降价记录</dt><dd>{E(dn_txt)}</dd>'
+        f'{last_up}'
         f'<dt>型号变动</dt><dd>上新 {stab["news"]} · 下架 {stab["removed"]} · 输出档调整 {stab["outs"]}</dd>'
-        f'<dt>公开调价记录</dt><dd>{"见下方 30 日调价明细" if stab["total"] else "近 30 天内未监测到公开报价变动"}</dd>'
         '</dl></div>'
     )
 
     # 2. Domain Longevity & Infra card
-    age_s, age_long, age_cls = SI.fmt_domain_age(it.get("domain_age_days"))
+    days = it.get("domain_age_days")
+    age_s, age_long, age_cls = SI.fmt_domain_age(days)
+    lpct = SI.longevity_pct(days)
     reg_at = it.get("domain_registered_at") or "未知"
     exp_at = it.get("domain_expires_at") or "未知"
     registrar = (it.get("registrar") or "未公开")[:44]
+    risk = SI.expiry_risk(it.get("domain_expires_at"), now)
+    exp_badge = ""
+    if risk and risk["level"] == "expired":
+        exp_badge = ' <span class="badge danger">域名已过期</span>'
+    elif risk and risk["level"] == "soon":
+        exp_badge = f' <span class="badge warn">{risk["days_left"]} 天后到期</span>'
     ranks = []
     if it.get("tranco_rank"):
         ranks.append(f"Tranco #{int(it['tranco_rank']):,}")
@@ -1318,12 +1350,15 @@ def _station_bento(
     ms_list = rs.get("ms") or []
     med_ms = f"{statistics.median(ms_list):.0f}ms" if ms_list else "—"
     uptime_s = f"{suc}/{att}（{suc / att:.0%}）· 中位响应 {med_ms}" if att else "样本累计中"
+    lm_cls = "muted" if lpct is None else ("ok" if lpct >= 50 else ("info" if lpct >= 17 else "warn"))
     card_domain = (
         '<div class="bcard">'
         f'<div class="bcard-h"><h3>域名时长与基础设施</h3><span class="badge {age_cls}">{E(age_s)}</span></div>'
+        f'<div class="lmeter">{_meter(lpct, lm_cls, "域名时长（满格 3 年）")}'
+        '<div class="ticks" aria-hidden="true"><span>0</span><span>1 年</span><span>2 年</span><span>3 年+</span></div></div>'
         '<dl class="bkv">'
         f'<dt>主域名注册</dt><dd>{E(str(reg_at))} · {E(age_long)}</dd>'
-        f'<dt>到期 / 注册商</dt><dd>{E(str(exp_at))} · {E(registrar)}</dd>'
+        f'<dt>到期 / 注册商</dt><dd>{E(str(exp_at))}{exp_badge} · {E(registrar)}</dd>'
         f'<dt>全球流量排名</dt><dd>{E(rank_s)}</dd>'
         f'<dt>30日接口可用</dt><dd>{E(uptime_s)}</dd>'
         '</dl></div>'
@@ -1349,7 +1384,7 @@ def _station_bento(
         auth_badge = '<span class="badge">Stage 1 未官测</span>'
         auth_dl = (
             '<dt>真伪验真状态</dt><dd>尚未纳入 7 日官测探针池（评级封顶 B 级 74 分）</dd>'
-            '<dt>自带 Key 自测</dt><dd>支持一键检验 Thinking 加密签名回传、Tool-Calling 与两轮缓存命中</dd>'
+            '<dt>自带 Key 自测</dt><dd>支持一键检验 Thinking 签名回传与篡改负检、Tool-Calling、缓存命中与用量一致性</dd>'
         )
     card_auth = (
         '<div class="bcard">'
@@ -1366,14 +1401,34 @@ def _station_bento(
         + quote(f"[实测评价] {dom}", safe="")
     )
     if revs:
-        avg_r = sum(float(r.get("rating") or 0) for r in revs) / len(revs)
-        rev_badge = f'<span class="badge ok">★ {avg_r:.1f} / 5（{len(revs)} 条实测）</span>'
-        rev_body = '<div class="rev-list">' + "".join(
-            f'<div class="rev-item"><b>{"★" * int(r.get("rating") or 0)}</b> <code>{E(str(r.get("model") or ""))}</code> '
-            f'<small>@{E(str(r.get("author") or "developer"))} · {E(str(r.get("date") or ""))}</small>'
-            f'<p>{E(str(r.get("summary") or "")[:180])}</p></div>'
-            for r in revs[:3]
-        ) + "</div>"
+        rsum = SI.review_summary(revs)
+        if rsum["avg"] is not None:
+            rev_badge = f'<span class="badge ok">★ {rsum["avg"]:.1f} / 5（{rsum["count"]} 条实测）</span>'
+            stars = (
+                f'<div class="stars-row"><span class="stars" style="--p:{rsum["pct"]}%" role="img" '
+                f'aria-label="平均 {rsum["avg"]:.1f} 星（满分 5）">★★★★★</span>'
+                f'<b>{rsum["avg"]:.1f}</b><small>{rsum["rated"]} 条评分</small></div>'
+            )
+        else:
+            rev_badge = f'<span class="badge">{rsum["count"]} 条实测 · 未评分</span>'
+            stars = ""
+        sig_html = "".join(f'<span class="badge {cls}">{E(lbl)} ×{n}</span>' for _k, lbl, cls, n in rsum["signals"])
+        items = []
+        for r in revs[:3]:
+            rv = SI.review_rating(r)
+            rpct = int(round(rv / 5 * 100)) if rv is not None else 0
+            tags = "".join(
+                f'<span class="badge {SI.REVIEW_SIGNALS[k][1]}">{E(SI.REVIEW_SIGNALS[k][0])}</span>' for k in SI.review_signals(r)
+            )
+            items.append(
+                '<div class="rev-item"><div class="rev-h">'
+                + (f'<span class="stars stars-sm" style="--p:{rpct}%" role="img" aria-label="{rv:g} 星">★★★★★</span>' if rv is not None else "")
+                + f'<code>{E(str(r.get("model") or ""))}</code>'
+                f'<small>@{E(str(r.get("author") or "developer"))} · {E(str(r.get("date") or ""))}</small></div>'
+                + (f'<div class="bd">{tags}</div>' if tags else "")
+                + f'<p>{E(str(r.get("summary") or "")[:180])}</p></div>'
+            )
+        rev_body = stars + (f'<div class="bd">{sig_html}</div>' if sig_html else "") + '<div class="rev-list">' + "".join(items) + "</div>"
     else:
         rev_badge = f'<span class="badge">外部收录 {len(srcs)} 处 · 暂无站内实评</span>'
         src_preview = "、".join(srcs[:4]) + ("…" if len(srcs) > 4 else "") if srcs else "自主发现"
@@ -1452,7 +1507,7 @@ def build_station_pages(
         if st.get("telegram_oauth"):
             oauth_tags.append("支持 Telegram 登录")
 
-        bento_html = _station_bento(dom, st, qs, it, run_stats.get(dom) or {}, stability_map.get(dom), reviews_map.get(dom) or [])
+        bento_html = _station_bento(dom, st, qs, it, run_stats.get(dom) or {}, stability_map.get(dom), reviews_map.get(dom) or [], now=now)
         body = f"""
 <section class="hero sm">
   <p class="eyebrow">站点口碑档案 · {E(sc.stage_label)}</p>
@@ -1536,16 +1591,14 @@ def station_rank_table(
         if not compact:
             days = (intel.get(dom) or {}).get("domain_age_days")
             age_s, _, age_cls = SI.fmt_domain_age(days)
-            sb = stability_map.get(dom)
-            if sb and (sb["ups"] or sb["downs"]):
-                sb_txt = f'涨{sb["ups"]}·降{sb["downs"]}'
-                sb_cls = sb["cls"]
-                sb_v = sb["ups"] * 100 + sb["price_moves"]
-            else:
-                sb_txt, sb_cls, sb_v = "平稳", "ok", 0
+            sb = stability_map.get(dom) or SI.default_stability()
+            sb_v = int(sb.get("stability_score", 100))
+            sb_band = sb.get("cls") or SI.stability_band(sb_v)
+            sb_tip = E(f'{sb.get("label", "")}：{sb.get("volatility_summary", "")}')
+            age_v = days if isinstance(days, (int, float)) and days >= 0 else "na"
             extra_cols = (
-                f'<td class="n" data-v="{days if isinstance(days, (int, float)) else -1}"><span class="badge {age_cls}">{E(age_s)}</span></td>'
-                f'<td class="n" data-v="{sb_v}"><span class="badge {sb_cls}">{E(sb_txt)}</span></td>'
+                f'<td class="n" data-v="{age_v}"><span class="badge {age_cls}">{E(age_s)}</span></td>'
+                f'<td class="n" data-v="{sb_v}" title="{sb_tip}"><span class="sbar {sb_band}" style="--v:{sb_v}%">{sb_v}</span></td>'
             )
         st_lbl = "Stage 2 实测" if (sc.stage == 2 and not sc.cap_reason) else ("Stage 2 降级" if sc.stage == 2 else "Stage 1 未实测")
         rows.append(
@@ -1558,15 +1611,15 @@ def station_rank_table(
                f'<td class="t" data-v="{int(st["fetched_at"].timestamp())}">{E(ago(st["fetched_at"], now))}</td>')
             + "</tr>"
         )
-    dim_heads = "" if compact else "".join(f'<th data-type="n"><button type="button">{S.DIM_LABELS[k]}</button></th>' for k in ("stability", "longevity", "transparency", "reputation", "latency"))
-    extra_heads = "" if compact else '<th data-type="n"><button type="button">域名时长</button></th><th data-type="n"><button type="button">30日价格</button></th>'
+    dim_heads = "" if compact else "".join(f'<th data-type="n" data-first="desc"><button type="button">{S.DIM_LABELS[k]}</button></th>' for k in ("stability", "longevity", "transparency", "reputation", "latency"))
+    extra_heads = "" if compact else '<th data-type="n" data-first="desc"><button type="button">域名时长</button></th><th data-type="n" data-first="desc" title="0–100，越高越稳定；近 30 日涨价次数与幅度扣分"><button type="button">价格稳定</button></th>'
     return (
-        '<div class="tbl-wrap"><table class="qt sortable"><thead><tr>'
+        '<div class="tbl-wrap"><table class="qt sortable rank"><thead><tr>'
         '<th data-type="n"><button type="button">#</button></th><th data-type="s"><button type="button">站点</button></th>'
         '<th data-type="n" aria-sort="descending"><button type="button">信誉分</button></th>'
         f'{dim_heads}{extra_heads}'
         '<th data-type="n"><button type="button">充值比例</button></th>'
-        + ("" if compact else '<th data-type="n"><button type="button">型号</button></th><th data-type="n"><button type="button">更新</button></th>')
+        + ("" if compact else '<th data-type="n" data-first="desc"><button type="button">型号</button></th><th data-type="n" data-first="desc"><button type="button">更新</button></th>')
         + "</tr></thead><tbody>" + "".join(rows) + "</tbody></table></div>"
     )
 
@@ -1647,7 +1700,8 @@ def build_indexes(
         "/stations/", "AI API 中转站分层评分排行榜",
         f"{len(stations)} 家 AI API 中转站分层信誉评分排行（实测认证 {n_stage2} 家，公开校验 {len(stations) - n_stage2} 家，另含 {len(closed_stations)} 家仅建档闭源站）：{gtxt}。",
         f'<section class="hero sm"><h1>AI API 中转站分层评分排行榜</h1>'
-        f'<p class="lead">未接入真实调用探针的站点统一 <b>Stage 1 封顶 B 级（74 分）</b>，仅实测达标解锁 A/S 认证。公开分维度：{E(S.summarize_weights(w))}。当前分布：{gtxt}。<a href="/about/">评分方法 →</a></p></section>'
+        f'<p class="lead">未接入真实调用探针的站点统一 <b>Stage 1 封顶 B 级（74 分）</b>，仅实测达标解锁 A/S 认证。公开分维度：{E(S.summarize_weights(w))}。当前分布：{gtxt}。<a href="/about/">评分方法 →</a></p>'
+        f'<p class="muted">「价格稳定」为近 30 日公开报价的 0–100 稳定分：降价与 &lt;2% 舍入微调不扣分，涨价按调价次数与幅度扣分；数值列首次点击即按从高到低排序，未知值始终排在末尾。</p></section>'
         + station_rank_table(stations, by_station, site.now, intel=intel, stability_map=stability_map)
         + closed_html,
         crumbs=[("站点排行", "/stations/")], priority=0.9,

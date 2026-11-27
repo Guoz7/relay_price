@@ -1,4 +1,6 @@
 import json
+import re
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -149,6 +151,15 @@ class ModelSpecsAndPagesTests(unittest.TestCase):
             self.assertIn("/en/", site.pages)
             self.assertEqual(site.pages["/en/"]["kwargs"].get("lang"), "en")
             self.assertIn("StationA", site.pages["/en/"]["body"])
+            body = site.pages["/calc/"]["body"]
+            self.assertIn('id="c-table"', body)
+            self.assertIn('title="\'+esc(p.name)+\' · \'+esc(p.dom)+\'"', body)
+            scripts = [m for m in re.findall(r"<script(?![^>]*ld\+json)[^>]*>(.*?)</script>", body, re.S) if m.strip()]
+            self.assertTrue(scripts)
+            js_path = dist / "calc_inline.js"
+            js_path.write_text("\n".join(scripts), encoding="utf-8")
+            r = subprocess.run(["node", "--check", str(js_path)], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, msg=r.stderr)
 
 
 if __name__ == "__main__":

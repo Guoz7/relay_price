@@ -1,5 +1,13 @@
 {
   "schema_version": 1,
   "policy": "Only evidence-backed developer reviews submitted via GitHub Issue (.github/ISSUE_TEMPLATE/station-review.yml) are listed here. No anonymous spam or paid reviews.",
+  "signal_keys": {
+    "verified": "验真通过",
+    "billing_match": "扣费一致",
+    "price_hike": "暗涨预警",
+    "spoof": "疑似套壳",
+    "rate_limit": "限流 / 超时"
+  },
+  "review_fields": "domain, rating (1-5), model, author (GitHub id), date (YYYY-MM-DD), summary, signals [signal_keys], issue (URL)",
   "reviews": []
 }

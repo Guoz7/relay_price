@@ -94,10 +94,10 @@
       var va = ca ? ca.dataset.v || ca.textContent : "", vb = cb ? cb.dataset.v || cb.textContent : "";
       if (num) {
         var fa = parseFloat(va), fb = parseFloat(vb);
-        // >= 9e8 means "no RMB price" (USD-only or missing): always keep at the bottom
+        // >= 9e8 (no RMB price) or non-numeric ("na" = unknown): always keep at the bottom
         var ma = !(fa < 9e8), mb = !(fb < 9e8);
         if (ma !== mb) return ma ? 1 : -1;
-        if (ma && mb) return fa - fb;
+        if (ma && mb) return (isNaN(fa) ? 1 : 0) - (isNaN(fb) ? 1 : 0) || (fa - fb) || 0;
         return asc ? fa - fb : fb - fa;
       }
       var r = String(va).localeCompare(String(vb), "zh");
@@ -112,7 +112,8 @@
     Array.prototype.forEach.call(ths, function (th, col) {
       var btn = th.querySelector("button"); if (!btn) return;
       btn.addEventListener("click", function () {
-        var asc = th.getAttribute("aria-sort") !== "ascending";
+        var cur = th.getAttribute("aria-sort");
+        var asc = cur ? cur !== "ascending" : th.dataset.first !== "desc";
         sortTable(t, col, asc);
       });
     });

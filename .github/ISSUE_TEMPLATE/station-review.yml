@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        感谢分享真实实测体验！为防止刷评与恶意抹黑，请提供**客观可核对的体验与证据**（可附上 `/verify/` 验真报告或脱敏扣费截图）。审核通过后将收录到 `data/reviews.json` 并展示在对应站点档案页。
+        感谢分享真实实测体验！为防止刷评与恶意抹黑，请提供**客观可核对的体验与证据**（可附上 `/verify/` 验真报告或脱敏扣费截图）。审核通过后将收录到 `data/reviews.json`（勾选项按冒号前的标签映射为 `signals`）并展示在对应站点档案页。
 
   - type: input
     id: domain
@@ -43,11 +43,11 @@ body:
     attributes:
       label: 你观察到的客观情况（可多选）
       options:
-        - label: 通过 /verify/ 验真（Thinking 签名 / 工具调用 / 缓存命中）
-        - label: 余额实扣与公开标价一致
-        - label: 出现疑似套壳 / 降智 / 剥离缓存或工具调用失败
-        - label: 出现未通知暗涨价或分组倍率突变
-        - label: 出现频繁 429 / 超时 / 充值或售后异常
+        - label: 验真通过：通过 /verify/ 验真（Thinking 签名 / 工具调用 / 缓存命中）
+        - label: 扣费一致：余额实扣与公开标价一致
+        - label: 疑似套壳：出现疑似套壳 / 降智 / 剥离缓存或工具调用失败
+        - label: 暗涨预警：出现未通知暗涨价或分组倍率突变
+        - label: 限流：出现频繁 429 / 超时 / 充值或售后异常
 
   - type: textarea
     id: summary
