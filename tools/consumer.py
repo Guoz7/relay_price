@@ -205,17 +205,15 @@ def pct_delta(mine: float | None, other: float | None) -> tuple[str, str]:
 
 
 # ---------------------------------------------------------------- peer matching (B_hybrid + brand / mirror dedup)
-_MULTI_SUFFIX = {"com.cn", "net.cn", "org.cn", "gov.cn", "ac.cn", "com.hk", "com.tw", "co.uk", "co.jp", "com.au", "co.kr", "com.sg"}
 _AFFIXES = ("api", "ai")
 
 
 def root_label(dom: str) -> str:
-    parts = [p for p in str(dom).lower().strip(".").split(".") if p]
-    if not parts:
-        return ""
-    if len(parts) >= 3 and ".".join(parts[-2:]) in _MULTI_SUFFIX:
-        return parts[-3]
-    return parts[-2] if len(parts) >= 2 else parts[0]
+    """Owner label of the registrable root (jbbt.pages.dev -> jbbt, api.x.it.com -> x, api.foo.com.cn -> foo)."""
+    import psl
+
+    root = psl.registrable_root(dom)
+    return root.split(".")[0] if root else ""
 
 
 def brand_stem(dom: str) -> str:
@@ -328,7 +326,7 @@ def client_chips(endpoints: Iterable[str] | None) -> list[tuple[str, str]]:
 
 def verdict_tags(*, stage: int, failed: bool, age_days: Any, ups: int, sharp: int, monitored: bool,
                  cache_cov: Any, attempts: int, successes: int, caveat_groups: int,
-                 consecutive_failures: int = 0) -> tuple[list[str], list[tuple[str, str]]]:
+                 consecutive_failures: int = 0, shared_host: str | None = None) -> tuple[list[str], list[tuple[str, str]]]:
     """(green highlights <= 3, [(warning text, "warn" | "danger"), ...]) in plain Chinese."""
     greens: list[str] = []
     warns: list[tuple[str, str]] = []
@@ -347,7 +345,9 @@ def verdict_tags(*, stage: int, failed: bool, age_days: Any, ups: int, sharp: in
         warns.append(("实测未达标，最高只给 C 级", "danger"))
     elif stage < 2:
         warns.append(("仅公开报价，未人工实测（最高 B 级）", "warn"))
-    if isinstance(age_days, (int, float)) and 0 <= age_days < 182:
+    if shared_host:
+        warns.append((f"使用托管二级域名（*.{shared_host}），无法核实独立建站时间，建议先小额试水", "warn"))
+    elif isinstance(age_days, (int, float)) and 0 <= age_days < 182:
         warns.append(("建站未满半年，建议先小额试水", "warn"))
     if caveat_groups:
         warns.append(("含低价特惠/逆向分组，主力号慎选", "warn"))
@@ -360,6 +360,126 @@ def verdict_tags(*, stage: int, failed: bool, age_days: Any, ups: int, sharp: in
     if consecutive_failures:
         warns.append((f"最近 {consecutive_failures} 次巡检没打开，价格可能不是最新", "warn"))
     return greens[:3], warns
+
+
+# ---------------------------------------------------------------- evidence-backed consumer tags
+FREE_GROUP_RE = re.compile(r"(?:免费|公益|福利|体验|试用|测试|(?<![a-z])(?:free|trial)(?![a-z]))", re.I)
+NOUSE_GROUP_RE = re.compile(r"(?:禁止使用|禁用|勿用|不要用|请勿使用|停用|已下线|废弃|内部使用|仅限内部)")
+REVERSE_TOOL_RE = re.compile(
+    r"(?:逆向|官逆|reverse|web2api|cookie|kiro|awsq|aws-?q|cursor|windsurf|augment|copilot|antigravity)", re.I)
+PRICE_FIELDS = ("input_usd", "output_usd", "call_usd", "input_cny", "output_cny", "call_cny")
+
+
+def _free_quote(q: Any) -> bool:
+    """Free only when at least one price is published and every published price is exactly 0 (never inferred from gaps)."""
+    nums = [v for v in (getattr(q, k, None) for k in PRICE_FIELDS)
+            if isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)]
+    return bool(nums) and all(v == 0 for v in nums)
+
+
+def _groups(st: dict[str, Any]) -> list[dict[str, Any]]:
+    return [g for g in (st.get("groups") or []) if isinstance(g, dict) and g.get("name") is not None]
+
+
+def _tag(key: str, label: str, cls: str, tip: str) -> dict[str, str]:
+    return {"key": key, "label": label, "cls": cls, "tip": tip}
+
+
+def station_tags(st: dict[str, Any], qs: Iterable[Any], it: dict[str, Any] | None = None) -> list[dict[str, str]]:
+    """Plain-language practical tags, each backed by a published field and carrying a provenance tooltip."""
+    st = st or {}
+    qs = list(qs or [])
+    tags: list[dict[str, str]] = []
+    free_models = sorted({str(q.model) for q in qs if _free_quote(q)})
+    if free_models:
+        tags.append(_tag("free_model", "有免费模型", "ok",
+                         f"来自站点公开价格表：{len(free_models)} 个模型标价为 0（如 {free_models[0][:40]}）"))
+    groups = _groups(st)
+    free_groups = [str(g["name"]) for g in groups
+                   if g.get("selectable", True) and FREE_GROUP_RE.search(str(g["name"]))
+                   and not NOUSE_GROUP_RE.search(f"{g['name']} {g.get('desc') or ''}")]
+    if free_groups:
+        tags.append(_tag("free_group", "有免费/体验分组", "ok",
+                         f"来自站点公开分组：{len(free_groups)} 个免费/体验类分组（如 {'、'.join(n[:24] for n in free_groups[:2])}）"))
+    if st.get("checkin_enabled") is True:
+        tags.append(_tag("checkin", "支持每日签到", "ok", "来自站点公开接口：已开启每日签到领额度"))
+    if st.get("web_playground") is True:
+        tags.append(_tag("playground", "支持网页试测", "ok", "来自站点公开接口：内置网页对话/测试台，免配客户端可先试"))
+    gift = st.get("new_user_usd")
+    if isinstance(gift, (int, float)) and not isinstance(gift, bool) and gift > 0:
+        tags.append(_tag("new_user_gift", "注册送额度", "ok", f"来自站点公开接口：新用户赠送 ${gift:g} 额度"))
+    mt = st.get("min_topup")
+    if isinstance(mt, (int, float)) and not isinstance(mt, bool) and 0 < mt <= 10:
+        tags.append(_tag("low_topup", "低门槛起充", "ok", f"来自站点公开接口：最低充值 {mt:g}"))
+    if st.get("email_verification") is False:
+        tags.append(_tag("no_email", "免邮箱秒注册", "info", "来自站点公开接口：注册时不要求邮箱验证码"))
+    if groups and not any(REVERSE_TOOL_RE.search(f"{g['name']} {g.get('desc') or ''}") for g in groups) \
+            and not any(g.get("caveats") for g in groups) and not any(getattr(q, "caveats", None) for q in qs):
+        tags.append(_tag("pure_std", "无逆向纯常规", "info",
+                         f"来自站点公开分组：{len(groups)} 个分组里没有逆向、编程工具特惠或其他自认低价线路"))
+    if st.get("linuxdo_oauth") is True:
+        tl = st.get("linuxdo_min_tl")
+        if isinstance(tl, int) and not isinstance(tl, bool) and tl > 0:
+            tags.append(_tag("linuxdo", f"Linux.do TL{tl}+", "info",
+                             f"来自站点公开接口：可用 Linux.do 账号登录，需信任等级 {tl} 级及以上"))
+        else:
+            tags.append(_tag("linuxdo", "Linux.do 登录", "info", "来自站点公开接口：可用 Linux.do 账号登录"))
+    if st.get("github_oauth") is True:
+        tags.append(_tag("github", "GitHub 登录", "info", "来自站点公开接口：可用 GitHub 账号登录"))
+    return tags
+
+
+TAG_FACETS = {"free": ("free_model", "free_group", "checkin", "playground", "new_user_gift"),
+              "noemail": ("no_email",), "pure": ("pure_std",)}
+
+
+def tag_facets(tags: Iterable[dict[str, str]]) -> list[str]:
+    keys = {t["key"] for t in tags}
+    return [f for f, want in TAG_FACETS.items() if keys & set(want)]
+
+
+GROUP_TYPES: tuple[tuple[re.Pattern[str], str, str], ...] = (
+    (re.compile(r"(?:逆向|官逆|反代|web2api|cookie|(?<![a-z])reverse(?![a-z]))", re.I), "逆向线路",
+     "非官方直连渠道，价格很低但可能限速、掉上下文或突然失效，只建议日常轻聊"),
+    (re.compile(r"(?:kiro|krio|awsq|aws-?q|cursor|windsurf|augment|antigravity|反重力|copilot)", re.I), "工具特惠线",
+     "借第三方编程/应用渠道折价供货，比官转便宜不少，但偶发限流或波动，重要任务建议选常规组"),
+    (re.compile(r"(?:免费|公益|福利|体验|试用|测试|白嫖|(?<![a-z])(?:free|trial|test)(?![a-z]))", re.I), "免费/体验组",
+     "适合先白嫖试水或轻度体验，通常有每日额度或并发限制"),
+    (re.compile(r"(?:按次|周卡|日卡|包月|月卡|订阅)"), "按次/套餐组",
+     "按次数或周期计费，适合固定频次使用，下单前注意有效期与限额"),
+    (re.compile(r"(?:满血|官转|官方|直连|企业|高并发|原生)"), "常规官转线",
+     "站点自称官方直连或满血，主打稳定与完整能力，价格相对高一些，适合写代码和主力工作流"),
+    (re.compile(r"(?:特惠|促销|限时|折扣|特价|(?<![a-z])promo(?![a-z]))", re.I), "特惠促销线",
+     "阶段性低价分组，注意留意是否限模型或后续调回原价"),
+)
+GROUP_DEFAULT = ("常规按量组", "按实际对话字数计费")
+CAVEAT_TYPES = {"自称逆向/反代": "逆向线路", "自称Kiro": "工具特惠线", "自称Cursor": "工具特惠线", "特惠/限时分组": "特惠促销线"}
+
+
+def explain_group(name: str, desc: str = "", caveats: Iterable[str] = ()) -> tuple[str, str]:
+    """(short badge, one-sentence plain explanation) for an opaque relay group name."""
+    cav = list(caveats or ())
+    for rx, badge, text in GROUP_TYPES:
+        if rx.search(str(name or "")):
+            return badge, text
+    by_cav = {CAVEAT_TYPES[c] for c in cav if c in CAVEAT_TYPES}
+    for rx, badge, text in GROUP_TYPES:
+        if badge in by_cav or rx.search(str(desc or "")):
+            return badge, text
+    return GROUP_DEFAULT
+
+
+def group_type_summary(groups: Iterable[dict[str, Any]], limit: int = 3) -> list[dict[str, Any]]:
+    """[{badge, text, names}] for the selectable groups, in first-seen order (one row per distinct line type)."""
+    out: dict[str, dict[str, Any]] = {}
+    for g in groups or []:
+        if not isinstance(g, dict) or g.get("name") is None or g.get("selectable") is False:
+            continue
+        badge, text = explain_group(str(g["name"]), str(g.get("desc") or ""), g.get("caveats") or ())
+        row = out.setdefault(badge, {"badge": badge, "text": text, "names": []})
+        if len(row["names"]) < limit:
+            row["names"].append(str(g["name"])[:24])
+    return list(out.values())
 
 
 # ---------------------------------------------------------------- flagship lanes for the consumer price bars

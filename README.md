@@ -84,7 +84,8 @@
 | --- | --- |
 | `config.json` | 站点域名、收录渠道、评分权重、缓存混合权重与可选统计配置 |
 | `seeds.txt` | 收录站点域名清单（每行一个域名） |
-| `tools/refresh.py` | 并发只读抓取各站 `/api/status` 与 `/api/pricing`，快照写入 `data/raw/*.json.gz` |
+| `tools/refresh.py` | 并发只读抓取各站 `/api/status` 与 `/api/pricing`，快照写入 `data/raw/*.json.gz`；每次记录原始响应 SHA-256 前 16 位回执（`status_sha256` / `pricing_sha256`），并跨 New API / One-Hub 归一签到、网页试测、登录方式等公开字段 |
+| `tools/psl.py` | 多级后缀与共享托管平台识别（`it.com`、`eu.org`、`pages.dev`、`up.railway.app` 等）：判定可注册根域；托管二级域名不继承平台的域名年龄与流量排名 |
 | `tools/adapters.py` | 兼容 New API、One API、VoAPI 与 `public-schema` 公开报价格式 |
 | `tools/pricing.py` | 多分组价格换算、缓存价、分时表达式解析与自认风险标签提取（纯函数） |
 | `tools/model_specs.py` | 同步 `anomalyco/models.dev` 与 `BerriAI/litellm` 官网参考价、上下文窗口与能力规格（`data/model-specs.json`） |
@@ -93,7 +94,7 @@
 | `tools/scenes.py` | 4 大场景导购页生成器（Claude Code / DeepSeek / Codex·GPT / Gemini·生图视频） |
 | `tools/calc_page.py` | `/calc/` 交互式月度总账、80/20 混合路由省钱与 1 主 + 1 备选站助手生成器 |
 | `tools/compare_page.py` | `/compare/` 纯前端并排对比矩阵：页内嵌入仅含展示指标的紧凑 JSON（约 25 KB gzip，不含 API 地址 / 额度单位 / 分组倍率等原始配置），默认预载 Top 3、只看差异项、`?s=` 分享链接；不提供任何批量下载 |
-| `tools/consumer.py` | 面向普通用户的价格锚点（约官网几折 · 比全网多少同行便宜）、同级别同行匹配（重合型号 + 价格 + 靠谱分，镜像 / 同品牌去重）与更省钱 / 更稳备选 |
+| `tools/consumer.py` | 面向普通用户的价格锚点（约官网几折 · 比全网多少同行便宜）、同级别同行匹配（重合型号 + 价格 + 靠谱分，镜像 / 同品牌去重）与更省钱 / 更稳备选；`station_tags` 仅凭公开字段生成带来源说明的实用标签，`explain_group` 把分组名翻译成通俗线路类型 |
 | `tools/dashboard.py` | 站点页第一层（体检结论卡、近 30 天在线心跳与价格阶梯走势、同行横向对比、热门模型比价条）与 `/stations/`「省钱 vs 靠谱」气泡图 HTML |
 | `tools/timeseries.py` | 30 天滚动时序账本 `data/timeseries.json.gz`：从 `data/fetch-runs` 与 `data/history` 回填，每站最多 120 个点（6 小时一次），不受调价日志条数淘汰影响 |
 | `tools/profile_schema.py` | 全量原始快照字段审计：覆盖率、零值率、枚举、脏占位链接、`billing_expr` 变量表，以及缓存三值语义 / 字段展示门槛 / 对比页内嵌数据体积三项实验与硬性不变量 |

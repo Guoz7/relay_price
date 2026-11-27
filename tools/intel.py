@@ -35,8 +35,10 @@ HUB_TOOLS = ROOT.parent / "priceai-research" / "tools"
 HUB_DB = ROOT.parent / "priceai-research" / "data" / "relay-hub.sqlite3"
 sys.path.insert(0, str(HUB_TOOLS))
 
-import relay_hub  # noqa: E402
 import relay_intel  # noqa: E402
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import psl  # noqa: E402
 
 MAX_AGE = timedelta(days=7)
 MINE_SOURCES = DATA / "mine-sources.json"
@@ -50,11 +52,11 @@ def mined_sources(domains: list[str]) -> tuple[dict[str, set[str]], dict[str, se
     by_root_dir: dict[str, set[str]] = {}
     by_root_link: dict[str, set[str]] = {}
     for dom, e in raw.items():
-        r = relay_hub.root_dom(dom)
+        r = psl.registrable_root(dom)
         by_root_dir.setdefault(r, set()).update(e.get("directory", []))
         by_root_link.setdefault(r, set()).update(e.get("station_link", []))
-    dirs = {d: by_root_dir.get(relay_hub.root_dom(d), set()) for d in domains}
-    links = {d: by_root_link.get(relay_hub.root_dom(d), set()) for d in domains}
+    dirs = {d: by_root_dir.get(psl.registrable_root(d), set()) for d in domains}
+    links = {d: by_root_link.get(psl.registrable_root(d), set()) for d in domains}
     return dirs, links
 
 
@@ -72,13 +74,13 @@ def hub_sources(domains: list[str]) -> dict[str, list[str]]:
     con.close()
     by_root: dict[str, set[str]] = {}
     by_dom: dict[str, set[str]] = {}
-    for dom, root, sid, cat in rows:
+    for dom, _hub_root, sid, cat in rows:
         if (cat or "") == "direct_probe" or str(sid).startswith("manual"):
             continue
         by_dom.setdefault(dom, set()).add(sid)
-        by_root.setdefault(root or dom, set()).add(sid)
+        by_root.setdefault(psl.registrable_root(dom), set()).add(sid)
     for d in domains:
-        out[d] |= by_dom.get(d, set()) | by_root.get(relay_hub.root_dom(d), set())
+        out[d] |= by_dom.get(d, set()) | by_root.get(psl.registrable_root(d), set())
     return {d: sorted(v) for d, v in out.items()}
 
 
@@ -91,17 +93,20 @@ def main() -> None:
     now = datetime.now(timezone.utc)
     intel: dict[str, Any] = json.loads(OUT.read_text(encoding="utf-8")) if OUT.exists() else {}
     domains = sorted(f.name[: -len(".json.gz")] for f in RAW.glob("*.json.gz"))
-    roots = {d: relay_hub.root_dom(d) for d in domains}
+    roots = {d: psl.registrable_root(d) for d in domains}
+    shared = {d for d in domains if psl.shared_host_of(d)}
 
     srcs = hub_sources(domains)
     mdirs, mlinks = mined_sources(domains)
     umb, maj = relay_intel.scan_local_rank_csvs(set(domains) | set(roots.values()))
     for d in domains:
-        e = intel.setdefault(d, {})
+        e = intel[d] = psl.sanitize_intel_entry(d, intel.get(d) or {})
         e["root"] = roots[d]
         e["sources"] = sorted(set(srcs.get(d, [])) | mdirs.get(d, set()))
         if mlinks.get(d):
             e["linked_from"] = sorted(x.removeprefix("station:") for x in mlinks[d])
+        if d in shared:
+            continue
         r = roots[d]
         e["umbrella_rank"] = umb.get(d) or umb.get(r)
         e["majestic_rank"] = (maj.get(d) or maj.get(r) or (None,))[0]
@@ -110,8 +115,8 @@ def main() -> None:
         todo_roots = sorted(
             {
                 roots[d] for d in domains
-                if args.force or not intel[d].get("net_checked_at")
-                or now - datetime.fromisoformat(intel[d]["net_checked_at"]) > MAX_AGE
+                if d not in shared and (args.force or not intel[d].get("net_checked_at")
+                or now - datetime.fromisoformat(intel[d]["net_checked_at"]) > MAX_AGE)
             }
         )
         print(f"network intel for {len(todo_roots)} root domains (rdap + tranco, throttled)…", flush=True)
@@ -140,12 +145,13 @@ def main() -> None:
         stamp = now.replace(microsecond=0).isoformat()
         for d in domains:
             res = results.get(roots[d])
-            if res is None:
+            if res is None or d in shared:
                 continue
             e = intel[d]
             e.update({k: res.get(k) for k in ("domain_registered_at", "domain_expires_at", "domain_age_days", "registrar", "tranco_rank")})
             e["net_checked_at"] = stamp
 
+    intel = psl.sanitize_intel(intel)
     OUT.write_text(json.dumps(intel, ensure_ascii=False, indent=1, sort_keys=True), encoding="utf-8")
     have_age = sum(1 for d in domains if intel[d].get("domain_age_days") is not None)
     have_rank = sum(1 for d in domains if any(intel[d].get(k) for k in ("tranco_rank", "umbrella_rank", "majestic_rank")))

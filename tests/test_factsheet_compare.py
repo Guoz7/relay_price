@@ -228,7 +228,7 @@ class RenderTests(unittest.TestCase):
         for bad in ("下载 JSON", "导出 CSV", "/data/", "Turnstile", "OpenAI Responses"):
             self.assertNotIn(bad, bar)
         self.assertEqual({t for _, chips in B.FACETS for t, _ in chips},
-                         {"ep-a", "ep-o", "ep-g", "cw", "cheap", "age1", "stab", "gb", "easy"})
+                         {"ep-a", "ep-o", "ep-g", "cw", "cheap", "age1", "stab", "gb", "easy", "free", "noemail", "pure"})
         self.assertEqual(bar.count("<div"), bar.count("</div>"))
         self.assertIn("已选", B.compare_bar())
         self.assertIn("开始并排对比", B.compare_bar())

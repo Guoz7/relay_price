@@ -215,7 +215,7 @@
   function copyText(text, btn, label) {
     function done(ok) {
       if (!btn) return;
-      btn.textContent = ok ? "已复制" : "请手动复制";
+      btn.textContent = ok ? (btn.getAttribute("data-done") || "已复制") : "请手动复制";
       btn.classList.toggle("done", ok);
       setTimeout(function () { btn.textContent = label; btn.classList.remove("done"); }, 1600);
     }
@@ -237,6 +237,107 @@
       if (el) copyText(el.textContent, b, label);
     });
   });
+
+  // ---------- 本地「收藏我的常用站」 (localStorage only, max 8, zero login)
+  (function () {
+    var KEY = "relay_favs_v1", MAX = 8;
+    function read() {
+      var raw = null;
+      try { raw = JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { raw = []; }
+      if (!Array.isArray(raw)) raw = [];
+      var seen = {}, out = [];
+      raw.forEach(function (x) {
+        var d = typeof x === "string" ? x : (x && x.d);
+        if (typeof d !== "string" || !/^[a-z0-9.-]{3,80}$/i.test(d) || seen[d]) return;
+        seen[d] = 1;
+        out.push({ d: d.toLowerCase(), n: (x && typeof x.n === "string") ? x.n.slice(0, 24) : "" });
+      });
+      return out.slice(0, MAX);
+    }
+    function write(list) {
+      try { localStorage.setItem(KEY, JSON.stringify(list.slice(0, MAX))); return true; } catch (e) { return false; }
+    }
+    function has(list, d) { return list.some(function (x) { return x.d === d; }); }
+    function cmpHref(list) { return "/compare/?s=" + list.slice(0, 4).map(function (x) { return encodeURIComponent(x.d); }).join(","); }
+
+    var btns = document.querySelectorAll("[data-fav-btn]");
+    function syncBtns() {
+      var list = read();
+      Array.prototype.forEach.call(btns, function (b) {
+        var on = has(list, b.getAttribute("data-fav-btn"));
+        b.setAttribute("aria-pressed", on ? "true" : "false");
+        b.classList.toggle("on", on);
+        b.textContent = on ? "★ 已收藏" : "☆ 收藏常用站";
+      });
+    }
+    Array.prototype.forEach.call(btns, function (b) {
+      b.addEventListener("click", function () {
+        var d = b.getAttribute("data-fav-btn"), list = read(), msg = b.nextElementSibling;
+        var say = function (t) { if (msg && msg.classList.contains("fav-msg")) { msg.textContent = t; clearTimeout(b._t); b._t = setTimeout(function () { msg.textContent = ""; }, 2400); } };
+        if (has(list, d)) {
+          list = list.filter(function (x) { return x.d !== d; });
+          say(write(list) ? "已取消收藏" : "浏览器禁止本地保存，收藏未生效");
+        } else if (list.length >= MAX) {
+          say("最多收藏 " + MAX + " 家，请先在排行页取消一家");
+          b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop");
+          return;
+        } else {
+          list.push({ d: d, n: b.getAttribute("data-fav-name") || "" });
+          say(write(list) ? "已收藏，可在首页和排行页顶部快速查看" : "浏览器禁止本地保存，收藏未生效");
+        }
+        syncBtns();
+      });
+    });
+    syncBtns();
+
+    var bar = document.getElementById("fav-bar");
+    function rowInfo(d) {
+      var tr = null;
+      Array.prototype.some.call(document.querySelectorAll("table.rank td[data-dom]"), function (r) {
+        if (r.getAttribute("data-dom") === d) { tr = r; return true; }
+        return false;
+      });
+      return tr ? { n: tr.getAttribute("data-name"), g: tr.getAttribute("data-g"), disc: tr.getAttribute("data-disc"), up: tr.getAttribute("data-up") } : null;
+    }
+    function renderBar() {
+      if (!bar) return;
+      var list = read();
+      if (!list.length) { bar.hidden = true; bar.innerHTML = ""; return; }
+      var rich = !!document.querySelector("table.rank td[data-dom]");
+      var items = list.map(function (x) {
+        var info = rich ? rowInfo(x.d) : null, name = (info && info.n) || x.n || x.d;
+        var meta = "";
+        if (info) {
+          var gk = /^[SABCD]$/.test(info.g || "") ? info.g : "x";
+          meta = '<b class="gr gr-' + gk + '">' + esc(info.g || "—") + "</b>"
+            + (info.disc && info.disc !== "—" ? '<span class="fav-m">' + esc(info.disc) + "</span>" : "")
+            + '<span class="fav-m">' + (info.up ? "在线率 " + esc(info.up) + "%" : "在线率累积中") + "</span>";
+        } else if (rich) {
+          meta = '<span class="fav-m muted">暂未在排行中（可能暂时下线）</span>';
+        }
+        return '<li class="fav-it"><a href="/site/' + encodeURIComponent(x.d) + '/">' + esc(name) + "</a>" + meta
+          + '<button type="button" class="fav-x" data-unfav="' + esc(x.d) + '" aria-label="取消收藏 ' + esc(name) + '">×</button></li>';
+      }).join("");
+      var acts = (rich ? "" : '<a class="btn sm" href="/stations/">去排行查看状态 →</a>')
+        + (list.length >= 2 ? '<a class="btn sm primary" href="' + cmpHref(list) + '">一键对比收藏 →</a>' : "");
+      bar.innerHTML = '<div class="fav-h"><b>我收藏的常用站</b><small>仅保存在本机浏览器，' + list.length + "/" + MAX + "</small></div>"
+        + '<ul class="fav-list">' + items + "</ul>" + (acts ? '<div class="fav-acts">' + acts + "</div>" : "");
+      bar.hidden = false;
+    }
+    if (bar) {
+      bar.addEventListener("click", function (e) {
+        var x = e.target && e.target.closest ? e.target.closest("[data-unfav]") : null;
+        if (!x) return;
+        var d = x.getAttribute("data-unfav");
+        write(read().filter(function (it) { return it.d !== d; }));
+        renderBar();
+        var nx = bar.querySelector("[data-unfav]");
+        if (nx) nx.focus();
+      });
+      renderBar();
+    }
+    window.addEventListener("storage", function (e) { if (e.key === KEY) { syncBtns(); renderBar(); } });
+  })();
 
   // ---------- station page: 人民币价格视角 <-> 原始倍率与公式视角 (pure CSS class toggle, no DOM rebuild)
   Array.prototype.forEach.call(document.querySelectorAll(".filters .view-bar"), function (vb) {

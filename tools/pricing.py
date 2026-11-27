@@ -650,6 +650,7 @@ def normalize_station(domain: str, pricing: dict[str, Any], status: dict[str, An
         }
     )
     meta.update(station_billing_meta(domain, status, price))
+    meta.update(station_feature_meta(status))
 
     def cny(v: float | None) -> float | None:
         return None if (v is None or price is None) else v * price
@@ -926,6 +927,31 @@ def station_billing_meta(domain: str, status: dict[str, Any] | None, price: floa
     if qn is not None and qn > 0 and qpu:
         out["new_user_usd"] = round(qn / float(qpu), 4)
     return out
+
+
+def station_feature_meta(status: dict[str, Any] | None) -> dict[str, Any]:
+    """Consumer-facing switches from the slimmed /api/status; every field is None when the station does not publish it."""
+    st = status if isinstance(status, dict) else {}
+
+    def flag(*keys: str) -> bool | None:
+        vals = [st[k] for k in keys if isinstance(st.get(k), bool)]
+        return any(vals) if vals else None
+
+    cq = _num(st.get("checkin_quota"))
+    tl = st.get("linuxdo_min_tl")
+    chats = st.get("chats")
+    names = [str(c).strip()[:40] for c in chats if isinstance(c, str) and c.strip()] if isinstance(chats, list) else []
+    return {
+        "checkin_enabled": flag("checkin_enabled"),
+        "checkin_quota": cq if cq is not None and cq >= 0 else None,
+        "web_playground": flag("web_playground"),
+        "linuxdo_min_tl": tl if isinstance(tl, int) and not isinstance(tl, bool) and tl >= 0 else None,
+        "discord_oauth": flag("discord_oauth"),
+        "enable_drawing": flag("enable_drawing"),
+        "enable_task": flag("enable_task"),
+        "pay_online": flag("pay_online", "enable_online_topup"),
+        "chats": names[:12] or None,
+    }
 
 
 def cache_status_of(kind: str, cache_val: float | None, na: bool) -> str:

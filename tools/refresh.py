@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import gzip
+import hashlib
 import json
 import sqlite3
 import ssl
@@ -188,6 +189,8 @@ def fetch_one(domain: str, ua: str, timeout: float, pricing_url: str | None = No
         "domain": domain,
         "fetched_at": now_iso(),
         "elapsed_ms": int((time.time() - t0) * 1000),
+        "status_sha256": receipt(st_body),
+        "pricing_sha256": receipt(pr_body),
         "status_http": st_code,
         "pricing_http": pr_code,
         "status_error": st_err,
@@ -199,7 +202,66 @@ def fetch_one(domain: str, ua: str, timeout: float, pricing_url: str | None = No
     }
 
 
+def receipt(body: bytes | None) -> str | None:
+    """First 16 hex chars of SHA-256 over the raw HTTP response bytes (tamper-evident content receipt)."""
+    return hashlib.sha256(body).hexdigest()[:16] if body else None
+
+
+def _flag(v: Any) -> bool | None:
+    if isinstance(v, bool):
+        return v
+    if isinstance(v, (int, float)) and v in (0, 1):
+        return bool(v)
+    if isinstance(v, str) and v.strip().lower() in ("true", "false", "1", "0"):
+        return v.strip().lower() in ("true", "1")
+    return None
+
+
+def _first_flag(status: dict[str, Any], keys: tuple[str, ...]) -> bool | None:
+    """True if any present key is truthy, False if keys are present but all false, None when none is published."""
+    vals = [f for f in (_flag(status.get(k)) for k in keys if k in status) if f is not None]
+    return any(vals) if vals else None
+
+
+def _int_or_none(v: Any) -> int | None:
+    if isinstance(v, bool):
+        return None
+    if isinstance(v, (int, float)) and float(v).is_integer():
+        return int(v)
+    if isinstance(v, str) and v.strip().lstrip("-").isdigit():
+        return int(v.strip())
+    return None
+
+
+def _sidebar_playground(raw: Any) -> bool | None:
+    """SidebarModulesAdmin (dict or JSON string): chat section enabled with a playground / chat module switched on."""
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except ValueError:
+            return None
+    chat = raw.get("chat") if isinstance(raw, dict) else None
+    if not isinstance(chat, dict):
+        return None
+    if _flag(chat.get("enabled")) is False:
+        return False
+    vals = [f for f in (_flag(chat.get(k)) for k in ("playground", "chat") if k in chat) if f is not None]
+    return any(vals) if vals else None
+
+
+def _pay_methods(v: Any) -> int | None:
+    if isinstance(v, str):
+        try:
+            v = json.loads(v)
+        except ValueError:
+            return None
+    if isinstance(v, (list, dict)):
+        return len(v)
+    return _int_or_none(v)
+
+
 def _slim_status(status: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Small, secret-free subset of /api/status, normalized across New API (snake_case) and One/Done-Hub (PascalCase)."""
     if not isinstance(status, dict):
         return None
     keep = (
@@ -217,6 +279,30 @@ def _slim_status(status: dict[str, Any] | None) -> dict[str, Any] | None:
         names = [str(k)[:40] for c in chats if isinstance(c, dict) for k in c.keys()]
         if names:
             out["chats"] = names[:12]
+    ck = _first_flag(status, ("checkin_enabled", "CheckinEnabled", "enable_checkin"))
+    if ck is not None:
+        out["checkin_enabled"] = ck
+    cq = status.get("CheckinQuota", status.get("checkin_quota"))
+    if isinstance(cq, (int, float)) and not isinstance(cq, bool) and cq >= 0:
+        out["checkin_quota"] = cq
+    pg = [f for f in (_first_flag(status, ("demo_site_enabled", "GuestChatPageEnabled")),
+                      _sidebar_playground(status.get("SidebarModulesAdmin"))) if f is not None]
+    if pg:
+        out["web_playground"] = any(pg)
+    tl = _int_or_none(status.get("linuxdo_minimum_trust_level"))
+    if _flag(status.get("linuxdo_oauth")) is True and tl is not None and tl >= 0:
+        out["linuxdo_min_tl"] = tl
+    for key, aliases in (("discord_oauth", ("discord_oauth",)), ("enable_drawing", ("enable_drawing",)),
+                         ("enable_task", ("enable_task",))):
+        f = _first_flag(status, aliases)
+        if f is not None:
+            out[key] = f
+    pay = _first_flag(status, ("enable_online_topup", "EnableOnlineTopUp", "AlipayFaceToFaceEnabled"))
+    methods = _pay_methods(status.get("CustomAvailablePayMethods")) if "CustomAvailablePayMethods" in status else None
+    if methods is not None:
+        pay = bool(pay) or methods > 0
+    if pay is not None:
+        out["pay_online"] = pay
     return out
 
 
@@ -247,6 +333,8 @@ def cmd_fetch(args: argparse.Namespace) -> None:
             st["last_attempt_at"] = res["fetched_at"]
             st["last_status_http"] = res.get("status_http")
             st["last_pricing_http"] = res.get("pricing_http")
+            st["status_sha256"] = res.get("status_sha256")
+            st["pricing_sha256"] = res.get("pricing_sha256")
             if res.get("pricing") is not None:
                 ok += 1
                 st["last_success_at"] = res["fetched_at"]
@@ -256,6 +344,8 @@ def cmd_fetch(args: argparse.Namespace) -> None:
                     "domain": d,
                     "fetched_at": res["fetched_at"],
                     "run_at": run_at,
+                    "status_sha256": res.get("status_sha256"),
+                    "pricing_sha256": res.get("pricing_sha256"),
                     "status": _slim_status(res.get("status")),
                     "pricing": {k: res["pricing"].get(k) for k in ("data", "group_ratio", "usable_group") if k in res["pricing"]},
                     "system": res.get("system"),
@@ -351,7 +441,9 @@ def cmd_adopt_alt(args: argparse.Namespace) -> None:
                 continue
             adopted[d] = u
             systems[out.get("system") or "?"] = systems.get(out.get("system") or "?", 0) + 1
-            snap = {"domain": d, "fetched_at": out["fetched_at"], "run_at": now_iso(), "status": _slim_status(out.get("status")),
+            snap = {"domain": d, "fetched_at": out["fetched_at"], "run_at": now_iso(),
+                    "status_sha256": out.get("status_sha256"), "pricing_sha256": out.get("pricing_sha256"),
+                    "status": _slim_status(out.get("status")),
                     "pricing": out["pricing"], "system": out.get("system"), "pricing_url": u}
             with gzip.open(RAW / f"{d}.json.gz", "wt", encoding="utf-8") as fh:
                 json.dump(snap, fh, ensure_ascii=False, separators=(",", ":"))

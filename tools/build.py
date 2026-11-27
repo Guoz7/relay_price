@@ -44,6 +44,7 @@ import export_readme  # noqa: E402
 import model_specs as MS  # noqa: E402
 import pricing as P  # noqa: E402
 import probes  # noqa: E402
+import psl  # noqa: E402
 import scenes  # noqa: E402
 import scoring as S  # noqa: E402
 import station_insights as SI  # noqa: E402
@@ -224,6 +225,8 @@ def load_snapshots(cfg: dict[str, Any], now: datetime) -> tuple[list[P.Quote], d
                 "consecutive_failures": int(st.get("consecutive_failures") or 0),
                 "last_error": st.get("last_error"),
                 "aliases": [],
+                "status_sha256": snap.get("status_sha256"),
+                "pricing_sha256": snap.get("pricing_sha256"),
             }
         )
         stations[dom] = meta
@@ -379,14 +382,21 @@ def mark_anomalies(by_model: dict[str, list[P.Quote]], cfg: dict[str, Any]) -> N
 
 
 def merge_mirrors(quotes: list[P.Quote], stations: dict[str, dict[str, Any]], intel: dict[str, Any]) -> list[P.Quote]:
-    """Same root domain + same station name = one operator; keep the domain with most quotes."""
+    """Same root domain + same station name = one operator; keep the domain with most quotes.
+
+    Tenants of shared hosting platforms (*.pages.dev, *.vercel.app, ...) are keyed by their own full host,
+    so two unrelated stations on the same platform are never merged.
+    """
     order = seed_order()
     counts: dict[str, int] = defaultdict(int)
     for q in quotes:
         counts[q.domain] += 1
     groups: dict[tuple[str, str], list[str]] = defaultdict(list)
     for dom, st in stations.items():
-        root = (intel.get(dom) or {}).get("root") or dom
+        if psl.shared_host_of(dom):
+            root = psl.registrable_root(dom)
+        else:
+            root = (intel.get(dom) or {}).get("root") or psl.registrable_root(dom)
         if st["display_name"] == dom:
             continue
         groups[(root, st["display_name"].lower())].append(dom)
@@ -1199,7 +1209,7 @@ def build(cfg: dict[str, Any]) -> dict[str, Any]:
     min_st = int(cfg.get("min_stations_for_model_page", 3))
     index_min_st = int(cfg.get("index_min_stations", 10))
 
-    intel = load_json(DATA / "intel.json", {})
+    intel = psl.sanitize_intel(load_json(DATA / "intel.json", {}))
     probe_map = probes.load_probe_summary(DATA)
     specs = MS.load_model_specs(DATA)
     quotes = merge_mirrors(quotes, stations, intel)
@@ -1609,7 +1619,10 @@ def _station_bento(
 
     # 2. Domain Longevity & Infra card
     days = it.get("domain_age_days")
+    shared = it.get("shared_host")
     age_s, age_long, age_cls = SI.fmt_domain_age(days)
+    if shared:
+        age_s, age_long, age_cls = f"托管二级域名（*.{shared}）", "无法通过域名核实建站年限", "warn"
     lpct = SI.longevity_pct(days)
     reg_at = it.get("domain_registered_at") or "未知"
     exp_at = it.get("domain_expires_at") or "未知"
@@ -1628,6 +1641,13 @@ def _station_bento(
     if it.get("majestic_rank"):
         ranks.append(f"Majestic #{int(it['majestic_rank']):,}")
     rank_s = " · ".join(ranks) if ranks else "暂未进入全球公开流量榜"
+    if shared:
+        reg_line = f"无法通过域名核实建站年限（站点挂在 *.{shared} 平台的二级域名下）"
+        exp_line = "不适用（平台主域名的注册信息不代表这家站）"
+        rank_s = "不适用（平台主域名的流量不代表这家站）"
+    else:
+        reg_line = f"{reg_at} · {age_long}"
+        exp_line = None
     att, suc = int(rs.get("attempts") or 0), int(rs.get("successes") or 0)
     ms_list = rs.get("ms") or []
     med_ms = f"{statistics.median(ms_list):.0f}ms" if ms_list else "—"
@@ -1639,8 +1659,9 @@ def _station_bento(
         f'<div class="lmeter">{_meter(lpct, lm_cls, "开站时长（满格 3 年）")}'
         '<div class="ticks" aria-hidden="true"><span>0</span><span>1 年</span><span>2 年</span><span>3 年+</span></div></div>'
         '<dl class="bkv">'
-        f'<dt>主域名注册</dt><dd>{E(str(reg_at))} · {E(age_long)}</dd>'
-        f'<dt>到期 / 注册商</dt><dd>{E(str(exp_at))}{exp_badge} · {E(registrar)}</dd>'
+        f'<dt>主域名注册</dt><dd>{E(reg_line)}</dd>'
+        + (f'<dt>到期 / 注册商</dt><dd>{E(exp_line)}</dd>' if exp_line else
+           f'<dt>到期 / 注册商</dt><dd>{E(str(exp_at))}{exp_badge} · {E(registrar)}</dd>') +
         f'<dt>全球流量排名</dt><dd>{E(rank_s)}</dd>'
         f'<dt>近 30 天巡检在线率</dt><dd>{E(uptime_s)}</dd>'
         '</dl></div>'
@@ -1947,8 +1968,23 @@ def _peer_row(d: str, stations, cx: dict[str, Any], mine_idx: float | None, me: 
     delta, delta_cls = CM.pct_delta(mine_idx, m.get("mkt_idx"))
     return {"dom": d, "name": str(st.get("display_name") or d)[:24], "me": me, "score": sc.total, "grade_html": grade_badge(sc.total),
             "disc": CM.fmt_discount_short(m.get("off_pct")), "delta": delta, "delta_cls": delta_cls,
-            "age_txt": SI.fmt_domain_age(days)[0], "age_pct": SI.longevity_pct(days),
+            "age_txt": age_label(cx["intel"].get(d) or {})[0], "age_pct": SI.longevity_pct(days),
             "stab": int(stab.get("stability_score", 100)), "uptime": _uptime_pct(st, d, cx["run_stats"])}
+
+
+def age_label(it: dict[str, Any]) -> tuple[str, str, str]:
+    """(short, long, badge class) for the station's domain age; shared-host tenants never inherit the platform's age."""
+    if it.get("shared_host"):
+        return "托管域名", f"托管二级域名（*.{it['shared_host']}），无法通过域名核实建站年限", "warn"
+    return SI.fmt_domain_age(it.get("domain_age_days"))
+
+
+def ensure_ctags(stations: dict[str, dict[str, Any]], by_station, intel: dict[str, Any] | None) -> None:
+    """Attach evidence-backed consumer tags (`st["ctags"]`) to every station that does not have them yet."""
+    intel = intel or {}
+    for dom, st in stations.items():
+        if "ctags" not in st:
+            st["ctags"] = CM.station_tags(st, by_station.get(dom, []), intel.get(dom) or {})
 
 
 def consumer_layer1(dom: str, st: dict[str, Any], stations, cx: dict[str, Any]) -> tuple[str, str]:
@@ -1965,9 +2001,10 @@ def consumer_layer1(dom: str, st: dict[str, Any], stations, cx: dict[str, Any]) 
         stage=sc.stage, failed=bool(sc.cap_reason and sc.stage == 2), age_days=it.get("domain_age_days"),
         ups=int(stab.get("ups") or 0), sharp=int(stab.get("sharp_events") or 0), monitored=cx["monitored"],
         cache_cov=st.get("cache_read_coverage"), attempts=int(rs["attempts"]), successes=int(rs["successes"]),
-        caveat_groups=caveat_groups, consecutive_failures=int(st.get("consecutive_failures") or 0))
+        caveat_groups=caveat_groups, consecutive_failures=int(st.get("consecutive_failures") or 0),
+        shared_host=it.get("shared_host"))
     verdict = DB.verdict_card(grade_html=grade_badge(sc.total), score=sc.total, headline=CM.price_headline(m), greens=greens,
-                              warns=warns, chips=CM.client_chips(st.get("endpoints")))
+                              warns=warns, chips=CM.client_chips(st.get("endpoints")), tags=st.get("ctags") or ())
     aliases = list(st.get("aliases") or [])
     dash = DB.dashboard(DB.heartbeat_card(ledger_series(cx["ledger"], dom, aliases)),
                         DB.price_trend_card(_trend_models(dom, cx, peers, aliases), TS.LABELS.values()))
@@ -2008,6 +2045,12 @@ def build_station_pages(
     for c in sorted(changes, key=lambda x: x.get("run_at") or "", reverse=True):
         if len(chg_by_dom[c["domain"]]) < 15:
             chg_by_dom[c["domain"]].append(c)
+    ensure_ctags(stations, by_station, intel)
+
+    def g_plain(g: dict[str, Any]) -> str:
+        badge, text = CM.explain_group(str(g["name"]), str(g.get("desc") or ""), g.get("caveats") or ())
+        cls = " ".join(c for c in ("badge", DB.GROUP_BADGE_CLS.get(badge, "")) if c)
+        return f"<td class='desc'><span class=\"{cls}\">{E(badge)}</span> {E(text)}</td>"
 
     for dom, st in stations.items():
         qs = by_station.get(dom, [])
@@ -2018,7 +2061,7 @@ def build_station_pages(
             f"<tr><td><code>{E(str(g['name'])[:40])}</code></td><td class='n'>×{g['ratio']:g}</td>"
             f"<td>{'' if g['selectable'] else '<span class=muted>不可选</span>'}"
             + "".join(f' <span class="badge caveat">{E(c)}</span>' for c in (g.get("caveats") or []))
-            + f"</td><td class='desc'>{E((g['desc'] or '')[:160])}</td></tr>"
+            + f"</td>{g_plain(g)}<td class='desc'>{E((g['desc'] or '')[:160])}</td></tr>"
             for g in groups[:80]
         )
         fam_counts: dict[str, int] = defaultdict(int)
@@ -2060,9 +2103,11 @@ def build_station_pages(
 <section class="hero sm">
   <p class="eyebrow">站点体检档案 · {E(plain_stage(sc))}</p>
   <h1>{E(name)} 靠谱吗？ <small>{E(dom)}</small></h1>
-  <p class="lead">{health}</p>
+  <p class="lead">{health} {DB.fav_button(dom, name)}</p>
   {verdict_html}
 </section>
+{DB.setup_card(dom, st)}
+{DB.group_legend(groups)}
 {layer1_html}
 <section class="detail-block" aria-label="评分明细与站点详情">
   <h2>评分明细与站点详情</h2>
@@ -2082,7 +2127,7 @@ def build_station_pages(
 {fact_sheet(dom, st, qs)}
 </details>
 <details class="groups"><summary>全部分组倍率与自认标签（{len(groups)}）</summary>
-<div class="tbl-wrap"><table class="plain"><thead><tr><th>分组</th><th class="n">倍率</th><th>状态 / 提醒</th><th>站点原文说明</th></tr></thead><tbody>{g_rows}</tbody></table></div></details>
+<div class="tbl-wrap"><table class="plain"><thead><tr><th>分组</th><th class="n">倍率</th><th>状态 / 提醒</th><th>通俗解释</th><th>站点原文说明</th></tr></thead><tbody>{g_rows}</tbody></table></div></details>
 {chg_html}
 {filter_bar("s", show_mode=True, show_ep=True, show_view=True)}
 {tbl}"""
@@ -2130,7 +2175,9 @@ FACETS = (
     ("按使用场景", (("ep-a", "写代码 / Claude Code"), ("ep-o", "日常聊天 / 翻译"), ("ep-g", "Gemini 模型"), ("cw", "长对话省钱缓存"))),
     ("按选站偏好", (("cheap", "省钱优选（前 30% 便宜）"), ("age1", "老牌稳用（1 年以上）"), ("stab", "近期没涨价"),
                 ("gb", "高分优先（B 级+）"), ("easy", "好注册（支持快捷登录）"))),
+    ("按省心福利", (("free", "有免费/可试测"), ("noemail", "免邮箱秒注册"), ("pure", "无逆向纯常规"))),
 )
+RANK_TAG_SHORT = {"free": "可白嫖试用", "noemail": "免邮箱注册", "pure": "纯常规线路"}
 
 
 def station_facets(st: dict[str, Any], sc: S.StationScore, stab: dict[str, Any] | None, days: Any) -> str:
@@ -2147,6 +2194,7 @@ def station_facets(st: dict[str, Any], sc: S.StationScore, stab: dict[str, Any] 
         ("gb", sc.grade in ("S", "A", "B")),
         ("easy", bool(st.get("github_oauth") or st.get("linuxdo_oauth") or st.get("telegram_oauth"))),
     ) if ok]
+    toks += CM.tag_facets(st.get("ctags") or ())
     return " ".join(toks)
 
 
@@ -2189,6 +2237,8 @@ def station_rank_table(
     intel = intel or {}
     stability_map = stability_map or {}
     run_stats = run_stats or {}
+    if not compact:
+        ensure_ctags(stations, by_station, intel)
     items = sorted(
         stations.items(),
         key=lambda kv: (-kv[1]["score"].stage, -kv[1]["score"].total, -kv[1]["score"].raw_total, kv[0]),
@@ -2210,7 +2260,7 @@ def station_rank_table(
             )
             continue
         days = (intel.get(dom) or {}).get("domain_age_days")
-        age_s, _, age_cls = SI.fmt_domain_age(days)
+        age_s, _, age_cls = age_label(intel.get(dom) or {})
         sb = stability_map.get(dom) or SI.default_stability()
         sb_v = int(sb.get("stability_score", 100))
         sb_band = sb.get("cls") or SI.stability_band(sb_v)
@@ -2224,6 +2274,14 @@ def station_rank_table(
             if isinstance(off, (int, float)) else '<td class="pr" data-v="na"><span class="muted">暂无比价基线</span></td>'
         )
         up = _uptime_pct(st, dom, run_stats)
+        ctags = st.get("ctags") or []
+        rtags = "".join(f'<span class="rtag {t}" data-tip="{E(chr(65307).join(x["tip"] for x in ctags if x["key"] in CM.TAG_FACETS[t]))}" tabindex="0">'
+                        f'{E(RANK_TAG_SHORT[t])}</span>' for t in CM.tag_facets(ctags))
+        fav_attrs = (f' data-dom="{E(dom)}" data-name="{E(str(st["display_name"])[:24])}" data-g="{E(sc.grade)}"'
+                     f' data-disc="{E(CM.fmt_discount_short(off))}" data-up="{"" if up is None else f"{up:.0f}"}"')
+        name_cell = name_cell.replace('<td class="st" ', f'<td class="st"{fav_attrs} ', 1)
+        if rtags:
+            name_cell = name_cell[:-5] + f'<span class="rtags">{rtags}</span></td>'
         up_cell = (f'<td class="n" data-v="{up:.1f}"><span class="sbar {SI.stability_band(up)}" style="--v:{up:.0f}%">{up:.0f}%</span></td>'
                    if up is not None else '<td class="n" data-v="na"><span class="muted">累积中</span></td>')
         rows.append(
@@ -2314,6 +2372,7 @@ def build_indexes(
             n_stage2 += 1
     gtxt = " · ".join(f"{g} 级 {grades.get(g, 0)} 家" for g in ("S", "A", "B", "C", "D"))
     bubble_rows = []
+    ensure_ctags(stations, by_station, intel)
     for dom, st in stations.items():
         cm = st.get("cm") or {}
         days = (intel.get(dom) or {}).get("domain_age_days")
@@ -2340,7 +2399,8 @@ def build_indexes(
     site.page(
         "/stations/", "AI API 中转站分层评分排行榜",
         f"{len(stations)} 家 AI API 中转站分层信誉评分排行（实测认证 {n_stage2} 家，公开校验 {len(stations) - n_stage2} 家，另含 {len(closed_stations)} 家仅建档闭源站）：{gtxt}。",
-        f'<section class="hero sm"><h1>AI API 中转站靠谱度排行榜</h1>'
+        DB.fav_bar()
+        + f'<section class="hero sm"><h1>AI API 中转站靠谱度排行榜</h1>'
         f'<p class="lead">先看图找到“既靠谱又便宜”的站，再用下面的场景按钮缩小范围。只抓取公开报价、还没人工实测的站最高只给 B 级（低于 74 分）；'
         f'通过真实调用实测才可能拿到 A/S 级。当前分布：{gtxt}。<a href="/about/">评分方法 →</a></p>'
         f'<p class="muted">「相对价格」是热门型号价格约为官网价的几折；「防暗涨」越高说明近 30 天越少偷偷涨价；「近 30 天在线」是站内定时巡检能打开接口的比例。数值列首次点击按从高到低排序，未知值始终排在末尾。</p></section>'
@@ -2650,6 +2710,7 @@ def build_home(site: Site, cfg, model_pages, stations, closed_stations, fam_orde
     n_stage2 = sum(1 for st in stations.values() if st["score"].stage == 2 and not st["score"].cap_reason)
     desc = cfg["description"]
     body = f"""
+{DB.fav_bar()}
 <section class="hero">
   <h1>{E(cfg.get('site_tagline', site.name))}</h1>
   <p class="lead">收录 <b>{len(stations)}</b> 家公开报价站（另含 {len(closed_stations)} 家闭源档案）与 <b>{len(model_pages)}</b> 个型号。展开多分组价差、支持协议与 7:2:1 缓存成本；未实测站点统一封顶 B 级（74 分）{f"，当前已有 {n_stage2} 家通过 Stage 2 实测认证" if n_stage2 else ""}。更新于 {E(fmt_cst(latest))}。</p>

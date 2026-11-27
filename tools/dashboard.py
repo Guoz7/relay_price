@@ -10,9 +10,12 @@ import math
 import statistics
 from html import escape
 from typing import Any, Iterable, Sequence
+from urllib.parse import urlsplit
 
 import charts as CH
 import consumer as C
+import pricing as P
+import psl
 
 MIN_CURVE_POINTS = 5
 
@@ -50,8 +53,14 @@ def tabs(prefix: str, items: Sequence[tuple[str, str]], label: str) -> str:
 
 
 # ---------------------------------------------------------------- 1. verdict strip
+def tag_pills(tags: Iterable[dict[str, str]]) -> str:
+    return "".join(f'<span class="ptag {E(t.get("cls") or "info")}" data-tip="{E(t.get("tip") or "")}" tabindex="0">{E(t["label"])}</span>'
+                   for t in tags or () if t.get("label"))
+
+
 def verdict_card(*, grade_html: str, score: float, headline: str, greens: Iterable[str], warns: Iterable[tuple[str, str]],
-                 chips: Iterable[tuple[str, str]], cap_note: str = "") -> str:
+                 chips: Iterable[tuple[str, str]], cap_note: str = "", tags: Iterable[dict[str, str]] = ()) -> str:
+    t_html = tag_pills(tags)
     g_html = "".join(f'<span class="lt ok">{E(t)}</span>' for t in greens)
     w_html = "".join(f'<li class="lt {E(cls)}">{E(t)}</li>' for t, cls in warns)
     c_html = "".join(f'<span class="app-chip" data-tip="{E(tip)}" tabindex="0">{E(lbl)}</span>' for lbl, tip in chips)
@@ -62,11 +71,114 @@ def verdict_card(*, grade_html: str, score: float, headline: str, greens: Iterab
         '<div class="vd-body">'
         f'<p class="vd-price">{E(headline)}</p>'
         + (f'<div class="vd-tags">{g_html}</div>' if g_html else "")
+        + (f'<div class="vd-ptags"><span class="muted">实用标签</span>{t_html}</div>' if t_html else "")
         + (f'<ul class="vd-warn">{w_html}</ul>' if w_html else "")
         + (f'<div class="vd-apps"><span class="muted">能直接用在</span>{c_html}</div>' if c_html else
            '<div class="vd-apps"><span class="muted">站点未声明支持的接口类型，接入前请先看站点文档</span></div>')
         + '</div></section>'
     )
+
+
+# ---------------------------------------------------------------- 1b. 「30 秒接进我的软件」 setup card
+KEY_HINT = "sk-换成你的令牌"
+SETUP_CLIENTS = (
+    ("Cherry Studio", "root", "API 地址", "设置 → 模型服务 → 添加，提供商类型选 OpenAI → 填 API 地址和 API 密钥 → 点「管理」添加模型"),
+    ("ChatBox", "root", "API 域名", "设置 → 模型提供方 → 添加自定义提供方（OpenAI 兼容）→ 填 API 域名和 API 密钥 → 选模型"),
+    ("沉浸式翻译", "chat", "自定义 API 接口地址", "设置 → 翻译服务 → OpenAI（自定义）→ 填接口地址、API 密钥和模型名"),
+    ("Claude Code", "root", "ANTHROPIC_BASE_URL", "在终端里设置下面两个环境变量，再运行 claude"),
+    ("Cursor", "v1", "OpenAI Base URL", "Settings → Models → 打开 Override OpenAI Base URL → 填地址，再在 OpenAI API Key 填令牌"),
+)
+
+
+def setup_base_url(dom: str, st: dict[str, Any] | None) -> tuple[str, bool]:
+    """(root base URL without trailing `/` or `/v1`, True when taken from the station's own public setting).
+
+    The station's `server_address` is used only when it is a clean public URL on the same registrable root as the
+    station domain; placeholders, loopback/private hosts and foreign hosts fall back to `https://<domain>`.
+    """
+    own = f"https://{str(dom).strip().lower().strip('.')}"
+    u = P.sanitize_station_url((st or {}).get("server_address"), dom)
+    if not u:
+        return own, False
+    sp = urlsplit(u)
+    host = (sp.hostname or "").lower().strip(".")
+    if sp.scheme not in ("http", "https") or not host or psl.registrable_root(host) != psl.registrable_root(dom):
+        return own, False
+    path = sp.path or ""
+    while path.endswith("/"):
+        path = path[:-1]
+    if path.lower().endswith("/v1"):
+        path = path[:-3].rstrip("/")
+    return f"{sp.scheme}://{sp.netloc}{path}", True
+
+
+def _client_url(base: str, mode: str) -> str:
+    return {"root": base, "v1": base + "/v1", "chat": base + "/v1/chat/completions"}[mode]
+
+
+def setup_card(dom: str, st: dict[str, Any] | None) -> str:
+    st = st or {}
+    base, from_station = setup_base_url(dom, st)
+    eps = set(st.get("endpoints") or [])
+    items = []
+    for i, (client, mode, field, steps) in enumerate(SETUP_CLIENTS):
+        url = _client_url(base, mode)
+        if client == "Claude Code":
+            cfg = (f'# macOS / Linux\nexport ANTHROPIC_BASE_URL="{url}"\nexport ANTHROPIC_AUTH_TOKEN="{KEY_HINT}"\n'
+                   f'# Windows PowerShell\n$env:ANTHROPIC_BASE_URL="{url}"\n$env:ANTHROPIC_AUTH_TOKEN="{KEY_HINT}"')
+        else:
+            cfg = f"{field}：{url}\nAPI 密钥：{KEY_HINT}"
+        warn = ""
+        if client == "Claude Code" and eps and "anthropic" not in eps:
+            warn = '<p class="su-warn">该站未声明 Claude 原生接口，Claude Code 可能无法直接使用，接入前先看站点文档</p>'
+        items.append((client,
+                      f'<p class="su-step">{E(steps)}</p>'
+                      f'<div class="su-row"><span class="su-k">{E(field)}</span><code class="su-url" id="su-u{i}">{E(url)}</code>'
+                      f'<button type="button" class="btn sm" data-copy="su-u{i}" data-done="已复制 ✓">复制地址</button></div>'
+                      f'<pre class="su-pre" id="su-c{i}">{E(cfg)}</pre>'
+                      f'<button type="button" class="btn sm primary" data-copy="su-c{i}" data-done="已复制 ✓">复制配置</button>{warn}'))
+    chats = [str(c) for c in (st.get("chats") or []) if str(c).strip()][:4]
+    note = (f'<p class="su-note">该站后台还自带一键导入：{E("、".join(chats))}</p>' if chats else "")
+    src = ("地址取自站点公开设置" if from_station else "地址按站点域名推断；如站点后台「令牌」页显示了别的接口地址，以后台为准")
+    src += "。令牌在站点后台「令牌」页创建，复制配置后把 sk-换成你的令牌 替换成真实令牌"
+    return (
+        '<section class="setup-card" aria-labelledby="su-h">'
+        '<h2 id="su-h">30 秒接进我的软件 <small>选你在用的软件，复制地址和配置即可</small></h2>'
+        + tabs("su", items, "选择你的软件")
+        + note
+        + f'<p class="muted su-src">{E(src)}；令牌只填在你自己的软件里，本站不会收集。</p></section>'
+    )
+
+
+# ---------------------------------------------------------------- 1c. plain-language group line types
+GROUP_BADGE_CLS = {"逆向线路": "danger", "工具特惠线": "warn", "特惠促销线": "warn", "免费/体验组": "ok",
+                   "按次/套餐组": "info", "常规官转线": "", "常规按量组": ""}
+
+
+def group_legend(groups: Iterable[dict[str, Any]]) -> str:
+    """「线路类型一眼看懂」 when the station sells two or more distinct line types; empty string otherwise."""
+    rows = C.group_type_summary(groups)
+    if len(rows) < 2:
+        return ""
+    lis = "".join(
+        f'<li><span class="{" ".join(c for c in ("badge", GROUP_BADGE_CLS.get(r["badge"], "")) if c)}">{E(r["badge"])}</span>'
+        f'<span class="gl-t">{E(r["text"])}</span><small>如 {E("、".join(r["names"]))}</small></li>'
+        for r in rows
+    )
+    return ('<section class="gl-card" aria-labelledby="gl-h">'
+            f'<h2 id="gl-h">线路类型一眼看懂 <small>本站分组共 {len(rows)} 类，选分组前先看这里</small></h2>'
+            f'<ul class="gl-list">{lis}</ul>'
+            '<p class="muted">按分组名称和站点自己的说明归类，只用来帮你读懂分组，不代表本站实测过这些线路。</p></section>')
+
+
+# ---------------------------------------------------------------- 1d. local favourites (localStorage, zero login)
+def fav_button(dom: str, name: str) -> str:
+    return (f'<button type="button" class="btn sm fav-btn" data-fav-btn="{E(dom)}" data-fav-name="{E(str(name)[:24])}" '
+            'aria-pressed="false">☆ 收藏常用站</button><span class="fav-msg" role="status" aria-live="polite"></span>')
+
+
+def fav_bar() -> str:
+    return '<section class="fav-bar" id="fav-bar" hidden aria-label="我收藏的常用站"></section>'
 
 
 # ---------------------------------------------------------------- 2a. heartbeat & response card

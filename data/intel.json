@@ -2957,17 +2957,17 @@
   "umbrella_rank": null
  },
  "api.lijiajiaai.it.com": {
-  "domain_age_days": 12452,
-  "domain_expires_at": "2036-10-22",
-  "domain_registered_at": "1992-10-23",
-  "majestic_rank": 381,
-  "net_checked_at": "2026-11-26T12:16:00+00:00",
-  "registrar": "Intis Telecom Limited",
-  "root": "it.com",
+  "domain_age_days": null,
+  "domain_expires_at": null,
+  "domain_registered_at": null,
+  "majestic_rank": null,
+  "net_checked_at": null,
+  "registrar": null,
+  "root": "lijiajiaai.it.com",
   "sources": [
    "tokencosting.com/claude+openai+rankings"
   ],
-  "tranco_rank": 1197,
+  "tranco_rank": null,
   "umbrella_rank": null
  },
  "api.lingyaai.cn": {
@@ -4319,9 +4319,9 @@
   "domain_expires_at": null,
   "domain_registered_at": null,
   "majestic_rank": null,
-  "net_checked_at": "2026-11-26T13:20:48+00:00",
+  "net_checked_at": null,
   "registrar": null,
-  "root": "sn.cn",
+  "root": "bc.sn.cn",
   "sources": [
    "Tooltopia 公益站集合"
   ],
@@ -4381,6 +4381,7 @@
   "net_checked_at": "2026-11-26T11:42:01+00:00",
   "registrar": null,
   "root": "beizhi.dedyn.io",
+  "shared_host": "dedyn.io",
   "sources": [
    "cjmarklll/token-harbor",
    "daheiai/awesome-api-proxy",
@@ -7321,34 +7322,19 @@
   "umbrella_rank": null
  },
  "jbbt.pages.dev": {
-  "domain_age_days": 2276,
-  "domain_expires_at": "2027-09-02",
-  "domain_registered_at": "2020-09-02",
+  "domain_age_days": null,
+  "domain_expires_at": null,
+  "domain_registered_at": null,
   "linked_from": [
-   "ai.070798.xyz",
-   "api.rootflowai.com",
-   "arityflow.top",
-   "hk.rootflowai.com",
-   "jbbt.cc",
-   "maolaoapi.com",
-   "n1n.ai",
-   "passion8.cc",
-   "wqdsjhaoai.site",
-   "yunzhuhub.com"
+   "jbbt.cc"
   ],
-  "majestic_rank": 315,
+  "majestic_rank": null,
   "net_checked_at": "2026-11-26T17:13:09+00:00",
-  "registrar": "CloudFlare, Inc.",
-  "root": "pages.dev",
-  "sources": [
-   "Han-maker-wp/awesome-ai-api-hub",
-   "Tavily 抗截断/防截断检索",
-   "apizhongzhuanzhan/apizhongzhuanzhan.github.io",
-   "gpt5free/free2ai-relay-035",
-   "gpt5free/free2ai-relay-065",
-   "ytzzjx 公益中转导航"
-  ],
-  "tranco_rank": 162,
+  "registrar": null,
+  "root": "jbbt.pages.dev",
+  "shared_host": "pages.dev",
+  "sources": [],
+  "tranco_rank": null,
   "umbrella_rank": null
  },
  "jelixcode.net": {
@@ -10875,19 +10861,20 @@
   "umbrella_rank": null
  },
  "test1122.up.railway.app": {
-  "domain_age_days": 2674,
-  "domain_expires_at": "2028-08-01",
-  "domain_registered_at": "2019-08-01",
+  "domain_age_days": null,
+  "domain_expires_at": null,
+  "domain_registered_at": null,
   "linked_from": [
    "subrouter.ai"
   ],
-  "majestic_rank": 8473,
+  "majestic_rank": null,
   "net_checked_at": "2026-11-26T17:13:09+00:00",
-  "registrar": "Namecheap Inc.",
-  "root": "railway.app",
+  "registrar": null,
+  "root": "test1122.up.railway.app",
+  "shared_host": "up.railway.app",
   "sources": [],
-  "tranco_rank": 2121,
-  "umbrella_rank": 3060
+  "tranco_rank": null,
+  "umbrella_rank": null
  },
  "thefirstsnow.top": {
   "domain_age_days": 3,
