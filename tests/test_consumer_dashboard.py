@@ -409,6 +409,29 @@ class MiniBuildTests(unittest.TestCase):
             self.assertNotIn(bad, blob)
         self.assertEqual(len(json.loads(blob)["rows"]), len(FIXTURE))
 
+    def test_compare_fx_mode_value_allowed_but_fx_key_blocked(self):
+        td = Path(tempfile.mkdtemp(prefix="rc-fx-"))
+        try:
+            (td / "robots.txt").write_text("User-agent: *\nDisallow: /data/\n", encoding="utf-8")
+            (td / "stations").mkdir()
+            (td / "stations" / "index.html").write_text('<div id="bubble-data"></div><div id="bubble-chart"></div><div id="facets"></div>', encoding="utf-8")
+            (td / "compare").mkdir()
+            ok_doc = {"v": 2, "cols": ["d", "mode"], "col_desc": {"d": "域名", "mode": "充值方式"}, "rows": [["a.com", "fx"]]}
+            (td / "compare" / "index.html").write_text(
+                f'<div id="compare-app"></div><script type="application/json" id="cmp-data">{json.dumps(ok_doc)}</script>',
+                encoding="utf-8",
+            )
+            self.assertEqual(VD.check_zero_download(td), [])
+            bad_doc = {"v": 2, "cols": ["d", "fx"], "col_desc": {"d": "域名", "fx": "汇率"}, "rows": [["a.com", 7.3]]}
+            (td / "compare" / "index.html").write_text(
+                f'<div id="compare-app"></div><script type="application/json" id="cmp-data">{json.dumps(bad_doc)}</script>',
+                encoding="utf-8",
+            )
+            errs = VD.check_zero_download(td)
+            self.assertTrue(any("exposes key 'fx'" in e for e in errs), errs)
+        finally:
+            shutil.rmtree(td, ignore_errors=True)
+
     def test_node_check_all_scripts(self):
         for rel in ("assets/app.js", "functions/api/verify.js"):
             r = subprocess.run(["node", "--check", str(ROOT / rel)], capture_output=True, text=True)

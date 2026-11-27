@@ -68,8 +68,14 @@ JARGON = ("P10–P90", "IQR", "对数轴", "Turnstile", "quota_per_unit", "billi
 _STRIP_RE = re.compile(
     r'<details class="(?:adv-drawer|groups)"[^>]*>.*?</details>|<script\b[^>]*>.*?</script>',
     re.S)
-CMP_FORBIDDEN = ("server_address", "docs_link", "top_up_link", "quota_per_unit", "usd_exchange_rate", "group_ratio",
-                 "billing_expr", '"api"', '"docs"', '"topup"', '"qpu"', '"fx"', '"ver"')
+CMP_FORBIDDEN_KEYS = (
+    "server_address", "docs_link", "top_up_link", "quota_per_unit", "usd_exchange_rate",
+    "group_ratio", "billing_expr", "version", "api", "docs", "topup", "qpu", "fx", "ver",
+)
+CMP_FORBIDDEN_RAW = (
+    "server_address", "docs_link", "top_up_link", "quota_per_unit", "usd_exchange_rate",
+    "group_ratio", "billing_expr",
+)
 
 
 def first_screen_text(html: str) -> str:
@@ -123,13 +129,19 @@ def check_zero_download(dist: Path) -> list[str]:
         m = re.search(r'<script type="application/json" id="cmp-data">(.*?)</script>', html, re.S)
         if m:
             blob = m.group(1)
-            for bad in CMP_FORBIDDEN:
+            for bad in CMP_FORBIDDEN_RAW:
                 if bad in blob:
                     errs.append(f"compare/index.html: cmp-data exposes {bad}")
             try:
-                json.loads(blob)
+                doc = json.loads(blob)
             except ValueError as e:
                 errs.append(f"compare/index.html: cmp-data invalid ({e})")
+            else:
+                if isinstance(doc, dict):
+                    keys = set(doc.keys()) | set(doc.get("cols") or []) | set((doc.get("col_desc") or {}).keys())
+                    for bad in CMP_FORBIDDEN_KEYS:
+                        if bad in keys:
+                            errs.append(f"compare/index.html: cmp-data exposes key {bad!r}")
     else:
         errs.append("compare/index.html missing")
     return errs
