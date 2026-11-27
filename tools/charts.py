@@ -125,7 +125,7 @@ def station_price_strip_svg(rows: list[dict[str, Any]], unit: str = "¥") -> str
     rows = [r for r in rows if r.get("p10") and r.get("p90") and (r.get("std") or r.get("alt"))][:6]
     if not rows:
         return ""
-    x0, x1, rh, top = 118, 372, 26, 6
+    x0, x1, rh, top = 132, 386, 26, 6
     parts: list[str] = []
     aria: list[str] = []
     for i, r in enumerate(rows):
@@ -140,7 +140,7 @@ def station_price_strip_svg(rows: list[dict[str, Any]], unit: str = "¥") -> str
             return x0 + (x1 - x0) * (math.log(v) - math.log(lo)) / (math.log(hi) - math.log(lo))
 
         name = str(r["model"])[:28]
-        parts.append(f'<text x="4" y="{y + 4}">{_e(name[:18])}</text>')
+        parts.append(f'<text x="4" y="{y + 4}">{_e(name[:20])}</text>')
         bx, bx2 = X(r["p10"]), X(r["p90"])
         parts.append(f'<path class="bd" d="M{_n(bx)} {y - 4}h{_n(max(1, bx2 - bx))}v8H{_n(bx)}z"/>')
         if r.get("p25") and r.get("p75"):
@@ -172,7 +172,7 @@ def station_price_strip_svg(rows: list[dict[str, Any]], unit: str = "¥") -> str
     h = top + len(rows) * rh + 14
     legend = (f'<text class="t2" x="4" y="{h - 4}">▬ 全网 P10–P90 · ▮ P25–P75 · │中位 · '
               f'<tspan class="tof">┃官方</tspan> · <tspan class="tac">● 本站常规</tspan> · <tspan class="tw">● 特惠/逆向</tspan>（对数轴）</text>')
-    return _svg("strip", 440, h, "旗舰模型输入价定位图（每百万 token）", "".join(parts) + legend, "；".join(aria))
+    return _svg("strip", 454, h, "旗舰模型输入价定位图（每百万 token）", "".join(parts) + legend, "；".join(aria))
 
 
 # ---------------------------------------------------------------- 3. price impulses
@@ -222,7 +222,7 @@ def score_histogram_svg(totals: Sequence[float], *, median: float | None = None,
     counts = [0] * nb
     for v in vals:
         counts[min(nb - 1, max(0, int(v // bin_w)))] += 1
-    w, h, x0, x1, yb, ht = 480, 150, 24, 470, 118, 92
+    w, h, x0, x1, yb, ht = 480, 160, 24, 470, 128, 92
     peak = max(counts) or 1
 
     def X(s: float) -> float:

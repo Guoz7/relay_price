@@ -49,6 +49,8 @@ def render_rank_markdown(
         "",
         f"- [月度成本算账器与主备选站助手（官方直连 vs 中转 vs 80/20 混合路由）]({base}/calc/)",
         f"- [LLM 模型真伪鉴别与协议自测工具（Thinking 签名 / Tool-Calling / 缓存验真）]({base}/verify/)",
+        f"- [中转站并排对比（2–4 家固定规格 + 6 大旗舰价格，只看差异项 / 分享链接）]({base}/compare/)",
+        f"- [开放数据 stations.json（全部在榜站点归一化规格，供脚本与 AI Agent 读取）]({base}/data/stations.json) ｜ [CSV]({base}/data/stations.csv)",
         f"- [Claude Code 编程中转站推荐]({base}/scenes/claude-code/)（Anthropic 原生协议 + 7:2:1 缓存成本）",
         f"- [DeepSeek API 中转与性价比对比]({base}/scenes/deepseek/)（缓存读价 + 分时高低峰提示）",
         f"- [Codex / GPT-6 系列中转站推荐]({base}/scenes/codex-gpt/)（OpenAI Responses 协议 + 多分组价差）",

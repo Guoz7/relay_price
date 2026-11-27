@@ -36,6 +36,7 @@ sys.path.insert(0, str(TOOLS))
 
 import calc_page  # noqa: E402
 import charts as CH  # noqa: E402
+import compare_page as CP  # noqa: E402
 import en_page  # noqa: E402
 import export_readme  # noqa: E402
 import model_specs as MS  # noqa: E402
@@ -666,7 +667,7 @@ class Site:
             '<a href="/about/">Method</a><a href="/submit/">Submit</a><a href="/">中文</a>'
             if is_en else
             '<a href="/scenes/">场景</a><a href="/calc/">算账</a><a href="/verify/">验真</a>'
-            '<a href="/stations/">排行</a><a href="/models/">模型</a><a href="/changes/">调价</a>'
+            '<a href="/stations/">排行</a><a href="/compare/">对比</a><a href="/models/">模型</a><a href="/changes/">调价</a>'
             '<a href="/about/">方法</a><a href="/submit/">收录</a><a href="/en/" title="English Overview">EN</a>'
         )
         foot_html = (
@@ -734,7 +735,13 @@ class Site:
 
 
 # ---------------------------------------------------------------- tables
-def filter_bar(tid: str, *, show_mode: bool = True, show_ep: bool = True) -> str:
+def filter_bar(tid: str, *, show_mode: bool = True, show_ep: bool = True, show_view: bool = False) -> str:
+    view_html = (
+        '<span class="mode-bar view-bar" role="group" aria-label="表格视角">'
+        '<button type="button" class="on" data-view="cny" aria-pressed="true" title="输入 / 输出 / 缓存读 / 缓存写 / 综合价（人民币每百万 token）">人民币价格视角</button>'
+        '<button type="button" data-view="ratio" aria-pressed="false" title="模型倍率 / 补全倍率 / 缓存倍率 / 写缓存倍率 / 分组倍率 / 计费模式 + 公式溯源">原始倍率与公式视角</button>'
+        '</span>'
+    ) if show_view else ""
     mode_html = (
         '<span class="mode-bar" role="group" aria-label="计费视角">'
         '<button type="button" class="on" data-mode="mix" aria-pressed="true">对话 3:1</button>'
@@ -753,7 +760,7 @@ def filter_bar(tid: str, *, show_mode: bool = True, show_ep: bool = True) -> str
         '</select></label>'
     ) if show_ep else ""
     return (
-        f'<div class="filters" data-for="{tid}">{mode_html}{ep_html}'
+        f'<div class="filters" data-for="{tid}">{view_html}{mode_html}{ep_html}'
         '<label><input type="checkbox" data-hide="stale-row"> 隐藏 7 天未更新</label>'
         '<label><input type="checkbox" data-hide="unk-row"> 只看可换算人民币</label>'
         '<label><input type="checkbox" data-hide="lowsc-row"> 只看 B 级及以上</label>'
@@ -810,6 +817,29 @@ def _model_groups_json(rows: list[P.Quote]) -> str:
     return f'<script type="application/json" id="m-groups">{raw}</script>'
 
 
+TOKEN_RATIO_HEADS = (("模型倍率", "n"), ("补全倍率", "n"), ("缓存倍率", "n"), ("写缓存倍率", "n"),
+                     ("分组倍率", "n"), ("计费模式", "s"), ("公式溯源", "s"))
+THREE_LABELS = {
+    "free": ("免费", "badge free", "站点明确配置 ×0（不是未填写的默认 0）"),
+    "unknown": ("未公开", "muted", "站点未公开该价格；未公开不等于免费"),
+    "na": ("不适用", "muted", "该型号不涉及此项计费（生图 / 向量 / 按次计费或不支持缓存）"),
+}
+
+
+def three_valued(q: P.Quote, cny: float | None, usd: float | None) -> str:
+    """Strict three-valued cache semantics: priced / free (explicit ×0) / unknown (未公开) / na (不适用)."""
+    v = cny if cny is not None else usd
+    if v is not None:
+        return "free" if v == 0 else "priced"
+    return "na" if (q.cache_status == "na" or q.kind != "token") else "unknown"
+
+
+def three_cell(status: str, cls: str = "") -> str:
+    txt, span_cls, tip = THREE_LABELS[status]
+    sortv = "0" if status == "free" else "9e9"
+    return f'<td class="n{cls}" data-v="{sortv}"><span class="{span_cls}" title="{E(tip)}">{txt}</span></td>'
+
+
 def quote_table(
     site: Site,
     rows: list[P.Quote],
@@ -821,6 +851,7 @@ def quote_table(
     title_prefix: str = "",
 ) -> str:
     cfg, now = site.cfg, site.now
+    cx = "" if show_station else " cny-x"
     tok = [q for q in rows if q.kind == "token"]
     call = [q for q in rows if q.kind == "call"]
     parts = []
@@ -835,7 +866,7 @@ def quote_table(
         cells += extra
         cells += [("分组 / 协议", "s", ""), ("充值比例", "n", ""), ("更新", "n", "")]
         return "".join(
-            f'<th data-type="{t}" class="{cls}" scope="col"{" aria-sort=descending" if h == "综合评分" else ""}><button type="button">{E(h)}</button></th>'
+            f'<th data-type="{t}" class="{cls.strip()}" scope="col"{" aria-sort=descending" if h == "综合评分" else ""}><button type="button">{E(h)}</button></th>'
             for h, t, cls in cells
         )
 
@@ -882,13 +913,36 @@ def quote_table(
         b += [f'<span class="badge">{E(x)}</span>' for x in q.flags]
         return ("<div class='bd'>" + "".join(b) + "</div>") if b else ""
 
-    def price_cell(cny: float | None, usd: float | None, strong: bool = False) -> str:
+    def price_cell(cny: float | None, usd: float | None, strong: bool = False, cls: str = "") -> str:
         if cny is None and usd is None:
-            return '<td class="n" data-v="9e9">—</td>'
+            return f'<td class="n{cls}" data-v="9e9">—</td>'
         sortv = cny if cny is not None else 9e8 + usd
         main = money(cny) if cny is not None else f'<span class="usd" title="站点未公开充值比例，显示美元额度">{money(usd, "$")}</span>'
         sub = f"<small>{money(usd, '$')}</small>" if (cny is not None and usd is not None and abs(cny - usd) > 1e-12) else ""
-        return f'<td class="n{" hl" if strong else ""}" data-v="{sortv}">{main}{sub}</td>'
+        return f'<td class="n{" hl" if strong else ""}{cls}" data-v="{sortv}">{main}{sub}</td>'
+
+    def cache_cell(q: P.Quote, cny: float | None, usd: float | None, cls: str = "") -> str:
+        return price_cell(cny, usd, cls=cls) if three_valued(q, cny, usd) == "priced" else three_cell(three_valued(q, cny, usd), cls)
+
+    def ratio_cell(v: float | None) -> str:
+        if v is None:
+            return '<td class="n ratio-col" data-v="na">—</td>'
+        return f'<td class="n ratio-col" data-v="{v:.10g}">×{v:.6g}</td>'
+
+    def ratio_cells(q: P.Quote, st: dict[str, Any]) -> str:
+        if show_station:
+            return ""
+        mode = q.billing_mode or ("倍率" if q.model_ratio is not None else ("按次" if q.kind == "call" else "—"))
+        fml = P.format_formula(q, st.get("topup_price"))
+        head_f, _, rest = fml.partition("；")
+        f_html = (E(head_f) + (f"<small>{E(rest)}</small>" if rest else "")) if fml else "无可复核公式"
+        cells = "" if q.kind != "token" else (
+            ratio_cell(q.model_ratio) + ratio_cell(q.completion_ratio) + ratio_cell(q.cache_ratio) + ratio_cell(q.cache_write_ratio))
+        return (
+            cells + ratio_cell(q.group_ratio)
+            + f'<td class="ratio-col">{E(mode)}</td>'
+            + f'<td class="ratio-col fml">{f_html}</td>'
+        )
 
     def mix_cell(q: P.Quote) -> str:
         mv = mix(q, cfg, "cny")
@@ -896,7 +950,7 @@ def quote_table(
         l_mix = money(mv) if mv is not None else '<span class="muted">—</span>'
         vm = f"{mv:.6g}" if mv is not None else "9e9"
         vc = f"{cv:.6g}" if cv is not None else ""
-        return f'<td class="n mix-col" data-v="{vm}" data-m="{vm}" data-c="{vc}">{l_mix}</td>'
+        return f'<td class="n mix-col{cx}" data-v="{vm}" data-m="{vm}" data-c="{vc}">{l_mix}</td>'
 
     def row_cls(q: P.Quote, st: dict[str, Any], unknown: bool) -> str:
         return " ".join(x for x in (
@@ -920,14 +974,19 @@ def quote_table(
             eps_csv = ",".join(P.endpoint_tags(q.endpoints))
             body.append(
                 f'<tr class="{cls}" data-eps="{E(eps_csv)}">{lead(q, st)}'
-                f'{price_cell(q.input_cny, q.input_usd, strong=True)}{price_cell(q.output_cny, q.output_usd)}'
-                f'{price_cell(q.cache_cny, q.cache_usd)}{mix_cell(q)}'
+                f'{price_cell(q.input_cny, q.input_usd, strong=True)}{price_cell(q.output_cny, q.output_usd, cls=cx)}'
+                f'{cache_cell(q, q.cache_cny, q.cache_usd, cx)}'
+                + ("" if show_station else cache_cell(q, q.cache_write_cny, q.cache_write_usd, cx))
+                + f'{mix_cell(q)}{ratio_cells(q, st)}'
                 f'{tail(q, st)}</tr>{sub_row(q, cls, eps_csv)}'
             )
         parts.append(
             f'<h2 id="{table_id}-token">{E(title_prefix)}按 Token 计费 <small>每百万 token 人民币（小字为站内美元额度）· 可切 7:2:1 缓存视角</small></h2>'
             f'<div class="tbl-wrap"><table class="qt sortable" id="{table_id}-t"><thead><tr>'
-            + head([("输入", "n", ""), ("输出", "n", ""), ("缓存读", "n", ""), ("3:1 综合价", "n", "mix-th")])
+            + head([("输入", "n", ""), ("输出", "n", cx), ("缓存读", "n", cx)]
+                   + ([] if show_station else [("缓存写", "n", cx)])
+                   + [("3:1 综合价", "n", "mix-th" + cx)]
+                   + ([] if show_station else [(h, t, "ratio-col") for h, t in TOKEN_RATIO_HEADS]))
             + "</tr></thead><tbody>" + "".join(body) + "</tbody></table></div>"
         )
     if call:
@@ -939,12 +998,12 @@ def quote_table(
             eps_csv = ",".join(P.endpoint_tags(q.endpoints))
             body.append(
                 f'<tr class="{cls}" data-eps="{E(eps_csv)}">{lead(q, st)}'
-                f'{price_cell(q.call_cny, q.call_usd, strong=True)}{tail(q, st)}</tr>{sub_row(q, cls, eps_csv)}'
+                f'{price_cell(q.call_cny, q.call_usd, strong=True)}{ratio_cells(q, st)}{tail(q, st)}</tr>{sub_row(q, cls, eps_csv)}'
             )
         parts.append(
             f'<h2 id="{table_id}-call">{E(title_prefix)}按次计费 <small>每次调用人民币</small></h2>'
             f'<div class="tbl-wrap"><table class="qt sortable" id="{table_id}-c"><thead><tr>'
-            + head([("每次", "n", "")])
+            + head([("每次", "n", "")] + ([] if show_station else [(h, t, "ratio-col") for h, t in TOKEN_RATIO_HEADS[4:]]))
             + "</tr></thead><tbody>" + "".join(body) + "</tbody></table></div>"
         )
     return "".join(parts)
@@ -1134,6 +1193,7 @@ def build(cfg: dict[str, Any]) -> dict[str, Any]:
     run_stats = load_run_stats(now)
     mark_anomalies(by_model, cfg)
     changes = update_history(quotes, stations, now)
+    config_log = update_config_changes(stations, now)
     stability_map = SI.compute_price_stability(changes)
     monitored = len(list(HIST.glob("*.json.gz"))) >= 2
     market_dims = compute_station_scores(stations, by_station, intel, run_stats, cfg, probe_map,
@@ -1189,6 +1249,12 @@ def build(cfg: dict[str, Any]) -> dict[str, Any]:
     scenes.build_scenes(site, model_pages, stations, helpers)
     calc_page.build_calc(site, model_pages, stations, specs, helpers, DIST)
     verify_page.build_verify(site)
+    open_payload = CP.fit_payload(CP.stations_payload(stations, by_station, intel, stability_map, now, FLAGSHIP_MODELS, cfg["base_url"]))
+    open_json = CP.dumps(open_payload)
+    write(DIST / "data" / "stations.json", open_json)
+    write(DIST / "data" / "stations.csv", CP.stations_csv(open_payload))
+    _log(f"stations.json {len(open_json.encode('utf-8')) / 1024:.1f} KB ({len(open_payload['rows'])} stations)")
+    CP.build_compare(site, open_payload)
     en_page.build_en(site, model_pages, stations, specs, len(closed_stations), helpers)
     build_home(site, cfg, model_pages, stations, closed_stations, fam_order, fam_models, changes)
     site.page("/404.html", "页面不存在", "页面不存在",
@@ -1217,6 +1283,8 @@ def build(cfg: dict[str, Any]) -> dict[str, Any]:
         "models": len(model_pages),
         "indexed_models": sum(1 for mp in model_pages.values() if mp["indexed"]),
         "quotes": len(quotes),
+        "station_config_changes": sum(len(v) for v in config_log.values()),
+        "open_data": ["/data/stations.json", "/data/stations.csv"],
     }, ensure_ascii=False))
     build_seo_files(site, model_pages, stations, len(closed_stations))
     export_readme.export_github_readme(
@@ -1663,6 +1731,98 @@ def price_strip_section(rows: list[dict[str, Any]]) -> str:
     )
 
 
+def _tri(v: Any, yes: str, no: str) -> str:
+    if v is None:
+        return '<span class="muted" title="站点 /api/status 未公开该字段">未公开</span>'
+    return f'<span class="badge {"warn" if v else "ok"}">{yes}</span>' if v else f'<span class="badge ok">{no}</span>'
+
+
+def _fs_link(url: str | None, label: str | None = None) -> str:
+    if not url:
+        return '<span class="muted">未公开</span>'
+    return f'<a class="ext" href="{E(url)}" rel="nofollow noopener" target="_blank">{E(label or url[:60])}</a>'
+
+
+def _fs_rows(rows: list[tuple[str, str]]) -> str:
+    return "".join(f"<div><dt>{E(k)}</dt><dd>{v}</dd></div>" for k, v in rows)
+
+
+def fact_sheet(dom: str, st: dict[str, Any], qs: list[P.Quote]) -> str:
+    """Fixed-slot 4-block station spec sheet (计费汇率 / 接入入口 / 账号风控 / 协议缓存); optional rows only when present."""
+    tp = st.get("topup_price")
+    fx = st.get("usd_exchange_rate")
+    mode = st.get("topup_mode") or "unknown"
+    fxb, basis = P.fx_basis(fx)
+    mode_tip = {"discount": f"¥{tp:g} 买 $1 额度，低于汇率 ¥{fxb:g} 的一半" if tp is not None else "",
+                "fx": f"≈ 按汇率 ¥{fxb:g} 充 $1" if tp is not None else "",
+                "custom": f"¥{tp:g} / $1，介于折价与汇率之间" if tp is not None else ""}.get(mode, "")
+    qpu = st.get("quota_per_unit")
+    qdt = st.get("quota_display_type")
+    sym = st.get("custom_currency_symbol")
+    chg = (st.get("config_changes") or [None])[0]
+    b1 = [
+        ("充值比例", f"<b>¥{tp:g} / $1</b>" if tp is not None else f'<span class="muted" title="{E(st.get("topup_note") or "")}">未公开</span>'),
+        ("充值模式", f'<span class="badge {"ok" if mode == "discount" else ""}">{E(P.TOPUP_MODE_LABELS.get(mode, mode))}</span>'
+                     + (f" <small>{E(mode_tip)}</small>" if mode_tip else "")),
+        ("站内汇率", (f"¥{fx:g} / $1" + (" <small>非人民币汇率口径，判定充值模式时按参考汇率 7.25</small>" if basis == "reference" else ""))
+                     if fx is not None else '<span class="muted">未公开</span>'),
+        ("额度单位", f"<code>{qpu:,}</code> 额度 = $1" if qpu else '<span class="muted">未公开</span>'),
+        ("显示币种", (f"<code>{E(qdt)}</code>" + (f" <small>符号 {E(sym)}</small>" if (qdt == "CUSTOM" and sym) else "")) if qdt else '<span class="muted">未公开</span>'),
+        ("最近汇率 / 分组倍率变动", (f'<span class="badge warn">{E(str(chg.get("run_at") or "")[:10])}</span> {E(str(chg.get("text") or ""))}'
+                                 if chg else '<span class="muted">近 30 天未观测到变动</span>')),
+    ]
+    if st.get("min_topup") is not None:
+        b1.append(("最低充值", f"{st['min_topup']:g}"))
+    if st.get("new_user_usd") is not None:
+        b1.append(("新用户赠送", f"${st['new_user_usd']:g} 额度"))
+    if st.get("enable_online_topup") is not None:
+        b1.append(("在线充值", "已开启" if st["enable_online_topup"] else "未开启"))
+    ver = st.get("version")
+    b2 = [
+        ("API Base URL", f"<code>{E(st['server_address'])}</code>" if st.get("server_address")
+         else f'<span class="muted">未公开</span> <small>可先试 <code>https://{E(dom)}</code></small>'),
+        ("文档链接", _fs_link(st.get("docs_link"))),
+    ]
+    if st.get("top_up_link"):
+        b2.append(("充值入口", _fs_link(st.get("top_up_link"))))
+    b2.append(("系统版本", f"<code>{E(str(ver)[:40])}</code>" if ver else '<span class="muted">未公开</span>'))
+    logins = [(lbl, st.get(k)) for lbl, k in (("GitHub", "github_oauth"), ("Linux.do", "linuxdo_oauth"), ("Telegram", "telegram_oauth"))]
+    for lbl, k in (("微信", "wechat_login"), ("OIDC", "oidc_enabled")):
+        if st.get(k) is not None:
+            logins.append((lbl, st.get(k)))
+    login_html = " ".join(f'<span class="badge {"ok" if v else "muted"}">{"✓" if v else "✗"} {E(lbl)}</span>' for lbl, v in logins)
+    b3 = [
+        ("邮箱验证", _tri(st.get("email_verification"), "注册需邮箱验证", "无需邮箱验证")),
+        ("Turnstile 人机校验", _tri(st.get("turnstile_check"), "已开启", "未开启")),
+        ("第三方登录", login_html),
+    ]
+    if st.get("aff_enabled") is not None:
+        b3.append(("邀请返利", "已开启" if st["aff_enabled"] else "未开启"))
+    eps = st.get("endpoints") or []
+    ep_html = "".join(f'<span class="badge ep">{E(P.ENDPOINT_LABELS.get(e, e))}</span>' for e in eps) or '<span class="muted">未声明</span>'
+    n_elig = st.get("cache_eligible_models") or 0
+
+    def cov(v: Any) -> str:
+        if v is None:
+            return '<span class="muted">不适用</span>'
+        return f'<span class="sbar {"ok" if v >= 60 else ("warn" if v >= 20 else "danger")}" style="--v:{int(v)}%">{int(v)}%</span> <small>{n_elig} 个可缓存型号</small>'
+
+    groups = st.get("groups") or []
+    b4 = [
+        ("原生协议", ep_html),
+        ("缓存读覆盖率", cov(st.get("cache_read_coverage"))),
+        ("缓存写覆盖率", cov(st.get("cache_write_coverage"))),
+        ("公开分组 / 有效型号", f"<b>{len(groups)}</b> 组 · <b>{st.get('parsed', len({q.model for q in qs}))}</b> 个型号"),
+    ]
+    blocks = (("① 计费与汇率口径", b1), ("② 接入与官方入口", b2), ("③ 账号与风控门槛", b3), ("④ 协议与缓存覆盖", b4))
+    return (
+        '<section class="factsheet" aria-labelledby="fs-h"><h2 id="fs-h">站点规格档案卡 <small>Fact Sheet · 只读 /api/status + /api/pricing 清洗结果，「未公开」不等于「免费」或「不支持」</small></h2>'
+        '<div class="fs-grid">'
+        + "".join(f'<div class="fs-card"><h3>{E(t)}</h3><dl class="fs-dl">{_fs_rows(rows)}</dl></div>' for t, rows in blocks)
+        + '</div></section>'
+    )
+
+
 def build_station_pages(
     site: Site, stations, by_station, intel, changes, cfg,
     *, run_stats: dict[str, Any] | None = None, stability_map: dict[str, Any] | None = None,
@@ -1744,10 +1904,11 @@ def build_station_pages(
   {('<div class="bd">' + ep_pills + '</div>') if ep_pills else ''}
   <p class="muted">型号分布：{E(fam_txt)}{('；收录来源：' + E('、'.join(srcs[:8])) + ('…' if len(srcs) > 8 else '')) if srcs else ''}</p>
 </section>
+{fact_sheet(dom, st, qs)}
 <details class="groups"><summary>全部分组倍率与自认标签（{len(groups)}）</summary>
 <div class="tbl-wrap"><table class="plain"><thead><tr><th>分组</th><th class="n">倍率</th><th>状态 / 提醒</th><th>站点原文说明</th></tr></thead><tbody>{g_rows}</tbody></table></div></details>
 {chg_html}
-{filter_bar("s", show_mode=True, show_ep=True)}
+{filter_bar("s", show_mode=True, show_ep=True, show_view=True)}
 {tbl}"""
         site.page(
             f"/site/{dom}/",
@@ -1789,6 +1950,54 @@ def build_closed_station_pages(site: Site, closed_stations: dict[str, dict[str, 
 RANK_DIMS = ("stability", "longevity", "transparency", "reputation", "latency", "purity_protocol")
 
 
+FACETS = (
+    ("协议", (("ep-a", "Anthropic"), ("ep-r", "OpenAI Responses"), ("ep-g", "Gemini"))),
+    ("登录与门槛", (("lx", "Linux.do 登录"), ("gh", "GitHub 登录"), ("nots", "免 Turnstile"))),
+    ("计费与缓存", (("cr", "公开缓存读"), ("cw", "公开缓存写"), ("disc", "折价额度站"), ("fx", "汇率直充站"))),
+    ("质量", (("stab", "价格平稳 ≥80"), ("age1", "域名 ≥1年"), ("gb", "B 级及以上"))),
+)
+
+
+def station_facets(st: dict[str, Any], sc: S.StationScore, stab_v: int, days: Any) -> str:
+    """Space-separated facet tokens for the /stations/ multi-facet filter (AND across selected chips)."""
+    eps = set(st.get("endpoints") or [])
+    toks = [t for t, ok in (
+        ("ep-a", "anthropic" in eps), ("ep-r", "openai-response" in eps), ("ep-g", "gemini" in eps),
+        ("lx", bool(st.get("linuxdo_oauth"))), ("gh", bool(st.get("github_oauth"))), ("nots", st.get("turnstile_check") is False),
+        ("cr", (st.get("cache_read_coverage") or 0) > 0), ("cw", (st.get("cache_write_coverage") or 0) > 0),
+        ("disc", st.get("topup_mode") == "discount"), ("fx", st.get("topup_mode") == "fx"),
+        ("stab", stab_v >= 80), ("age1", isinstance(days, (int, float)) and days >= 365), ("gb", sc.grade in ("S", "A", "B")),
+    ) if ok]
+    return " ".join(toks)
+
+
+def facet_bar(total: int) -> str:
+    groups = "".join(
+        f'<div class="fc-g" role="group" aria-label="{E(g)}"><span class="fc-l">{E(g)}</span>'
+        + "".join(f'<button type="button" class="chip" data-f="{t}" aria-pressed="false">{E(lbl)}</button>' for t, lbl in chips)
+        + "</div>"
+        for g, chips in FACETS
+    )
+    return (
+        f'<div class="facets" id="facets" data-total="{total}">{groups}'
+        f'<div class="fc-foot"><output id="facet-count" aria-live="polite">当前显示 {total} / {total} 家站点</output>'
+        '<button type="button" class="btn sm" id="facet-reset">重置筛选</button>'
+        '<a class="btn sm" href="/data/stations.json" download>下载 JSON</a>'
+        '<a class="btn sm" href="/data/stations.csv" download>导出 CSV</a>'
+        '<a class="btn sm primary" href="/compare/">并排对比 →</a></div></div>'
+    )
+
+
+def compare_bar() -> str:
+    return (
+        '<div class="cmp-bar" id="cmp-bar" hidden role="region" aria-label="站点对比栏">'
+        '<span>已选 <b id="cmp-n">0</b>/4 家站点</span><span class="cmp-names" id="cmp-names"></span>'
+        '<button type="button" class="btn sm" id="cmp-clear">清空</button>'
+        '<a class="btn sm primary" id="cmp-go" href="/compare/" aria-disabled="true">开始并排对比 →</a>'
+        '<span class="cmp-msg" id="cmp-msg" role="status"></span></div>'
+    )
+
+
 def station_rank_table(
     stations, by_station, now, limit: int | None = None, compact: bool = False,
     intel: dict[str, Any] | None = None, stability_map: dict[str, Any] | None = None,
@@ -1811,6 +2020,8 @@ def station_rank_table(
             for k in RANK_DIMS
         )
         extra_cols = ""
+        facet_attr = ""
+        cmp_cell = ""
         if not compact:
             days = (intel.get(dom) or {}).get("domain_age_days")
             age_s, _, age_cls = SI.fmt_domain_age(days)
@@ -1823,16 +2034,19 @@ def station_rank_table(
                 f'<td class="n" data-v="{age_v}"><span class="badge {age_cls}">{E(age_s)}</span></td>'
                 f'<td class="n" data-v="{sb_v}" title="{sb_tip}"><span class="sbar {sb_band}" style="--v:{sb_v}%">{sb_v}</span></td>'
             )
+            facet_attr = f' data-f="{station_facets(st, sc, sb_v, days)}"'
+            cmp_cell = (f'<td class="cmp"><input type="checkbox" data-cmp="{E(dom)}" data-name="{E(str(st["display_name"])[:24])}"'
+                        f' aria-label="加入对比：{E(st["display_name"])}"></td>')
         st_lbl = "Stage 2 实测" if (sc.stage == 2 and not sc.cap_reason) else ("Stage 2 降级" if sc.stage == 2 else "Stage 1 未实测")
         rows.append(
-            f'<tr><td class="n" data-v="{i}">{i}</td>'
+            f'<tr><td class="n" data-v="{i}"{facet_attr}>{i}</td>'
             f'<td class="st" data-v="{E(dom)}"><a href="/site/{E(dom)}/">{E(st["display_name"])}</a><small>{E(dom)}</small></td>'
             f'<td class="sc" data-v="{sc.total}">{grade_badge(sc.total)} <b>{sc.total:.1f}</b><small>{st_lbl} · 置信度{sc.confidence}</small></td>'
             f'{dims}{extra_cols}'
             f'<td class="n" data-v="{tp if tp is not None else 9e9}">{E(f"¥{tp:g}/$1" if tp is not None else "未知")}</td>'
             + ("" if compact else f'<td class="n" data-v="{st.get("parsed", len(by_station.get(dom, [])))}">{st.get("parsed", len(by_station.get(dom, [])))}</td>'
                f'<td class="t" data-v="{int(st["fetched_at"].timestamp())}">{E(ago(st["fetched_at"], now))}</td>')
-            + "</tr>"
+            + cmp_cell + "</tr>"
         )
     dim_heads = "" if compact else "".join(f'<th data-type="n" data-first="desc"><button type="button">{S.DIM_LABELS[k]}</button></th>' for k in RANK_DIMS)
     extra_heads = "" if compact else '<th data-type="n" data-first="desc"><button type="button">域名时长</button></th><th data-type="n" data-first="desc" title="0–100，越高越稳定；近 30 日涨价次数与幅度扣分"><button type="button">价格稳定</button></th>'
@@ -1842,7 +2056,8 @@ def station_rank_table(
         '<th data-type="n" aria-sort="descending"><button type="button">信誉分</button></th>'
         f'{dim_heads}{extra_heads}'
         '<th data-type="n"><button type="button">充值比例</button></th>'
-        + ("" if compact else '<th data-type="n" data-first="desc"><button type="button">型号</button></th><th data-type="n" data-first="desc"><button type="button">更新</button></th>')
+        + ("" if compact else '<th data-type="n" data-first="desc"><button type="button">型号</button></th><th data-type="n" data-first="desc"><button type="button">更新</button></th>'
+           '<th class="cmp" scope="col" title="勾选 2–4 家站点后并排对比">对比</th>')
         + "</tr></thead><tbody>" + "".join(rows) + "</tbody></table></div>"
     )
 
@@ -1928,7 +2143,9 @@ def build_indexes(
         f'<section class="hero sm"><h1>AI API 中转站分层评分排行榜</h1>'
         f'<p class="lead">未接入真实调用探针的站点按 <b>Stage 1 平滑封顶（严格低于 74 分，最高 B 级）</b>，仅实测达标解锁 A/S 认证。公开分七维：{E(S.summarize_weights(w))}，关键信任维度低于健康线另计短板拖累。当前分布：{gtxt}。<a href="/about/">评分方法 →</a></p>'
         f'<p class="muted">「价格稳定」为近 30 日公开报价的 0–100 稳定分：降价与 &lt;2% 舍入微调不扣分，涨价按调价次数与幅度扣分；「纯净」为分组纯净度与协议完备度。数值列首次点击即按从高到低排序，未知值始终排在末尾。</p>{hist_html}</section>'
+        + facet_bar(len(stations))
         + station_rank_table(stations, by_station, site.now, intel=intel, stability_map=stability_map)
+        + compare_bar()
         + closed_html,
         crumbs=[("站点排行", "/stations/")], priority=0.9,
     )
@@ -1987,6 +2204,59 @@ def update_history(quotes: list[P.Quote], stations, now: datetime) -> list[dict[
     log_path.write_text(json.dumps(log, ensure_ascii=False), encoding="utf-8")
     for f in files[:-60]:
         f.unlink(missing_ok=True)
+    return log
+
+
+def station_config_snapshot(st: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "price": st.get("topup_price"),
+        "fx": st.get("usd_exchange_rate"),
+        "groups": {str(g.get("name"))[:40]: g["ratio"] for g in (st.get("groups") or [])
+                   if isinstance(g.get("ratio"), (int, float)) and not isinstance(g.get("ratio"), bool)},
+    }
+
+
+def _moved(a: Any, b: Any) -> bool:
+    return isinstance(a, (int, float)) and isinstance(b, (int, float)) and abs(float(a) - float(b)) > 1e-9 * max(1.0, abs(float(a)))
+
+
+def diff_station_config(old: dict[str, Any], new: dict[str, Any]) -> list[str]:
+    """Human-readable fixed-config moves between two runs (top-up price, station FX rate, group ratios)."""
+    out: list[str] = []
+    if _moved(old.get("price"), new.get("price")):
+        out.append(f"充值比例 ¥{old['price']:g}→¥{new['price']:g}/$1")
+    if _moved(old.get("fx"), new.get("fx")):
+        out.append(f"站内汇率 {old['fx']:g}→{new['fx']:g}")
+    og, ng = old.get("groups") or {}, new.get("groups") or {}
+    moved = [(k, og[k], ng[k]) for k in sorted(set(og) & set(ng)) if _moved(og[k], ng[k])]
+    if moved:
+        out.append("分组倍率 " + "、".join(f"{k} ×{a:g}→×{b:g}" for k, a, b in moved[:2]) + (f" 等 {len(moved)} 组" if len(moved) > 2 else ""))
+    return out
+
+
+def update_config_changes(stations, now: datetime, state_path: Path | None = None, log_path: Path | None = None) -> dict[str, list[dict[str, Any]]]:
+    """Diff station-level fixed config against the previous build; keep a 30-day `{domain: [{run_at, text}]}` map."""
+    state_path = state_path or DATA / "station-config-state.json"
+    log_path = log_path or DATA / "station-config-changes.json"
+    prev: dict[str, Any] = load_json(state_path, {})
+    log: dict[str, list[dict[str, Any]]] = load_json(log_path, {})
+    run_at = now.isoformat(timespec="seconds")
+    cur: dict[str, Any] = {}
+    for dom, st in stations.items():
+        snap = station_config_snapshot(st)
+        cur[dom] = snap
+        if dom in prev:
+            txt = diff_station_config(prev[dom], snap)
+            if txt:
+                log.setdefault(dom, []).insert(0, {"run_at": run_at, "text": "；".join(txt)})
+    cutoff = (now - timedelta(days=30)).isoformat()
+    log = {d: [x for x in v if str(x.get("run_at") or "") >= cutoff][:10] for d, v in log.items()}
+    log = {d: v for d, v in sorted(log.items()) if v}
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    state_path.write_text(json.dumps({**prev, **cur}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    log_path.write_text(json.dumps(log, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    for dom, st in stations.items():
+        st["config_changes"] = log.get(dom, [])
     return log
 
 
@@ -2123,6 +2393,24 @@ def build_about(site: Site, cfg: dict[str, Any]) -> None:
 <h2>六、利益披露与独立性声明</h2>
 <p>本站（<code>agentied.work</code>）由 Agentied 团队维护，团队同时运营自营中转站 <code>agentied.top</code>；站内部分第三方外链可能包含推广返佣参数（均标明 <code>rel="sponsored nofollow noopener"</code> 及「含返佣」提示）。</p>
 <p><b>零优待原则</b>：自营站与所有合作或非合作第三方站点执行完全相同的公开抓取、分层封顶、否决与探针实测代码，不存在任何手工加分、白名单豁免或付费买分。任何价格、标签或实测异常均可按客观证据提交复核纠错。</p>
+
+<h2>七、开放数据、站点规格档案卡与三值缓存口径</h2>
+<p>全部在榜站点的归一化固定规格公开为 <a href="/data/stations.json"><code>/data/stations.json</code></a>（列式紧凑 JSON：<code>cols</code> 给出列名、<code>col_desc</code> 给出字段说明、<code>rows</code> 每行一家站点，按信誉排名排序）与 <a href="/data/stations.csv"><code>/data/stations.csv</code></a>（同内容的扁平表）。脚本、表格软件与 AI Agent 可直接读取；<a href="/compare/">并排对比页</a> 与 <a href="/stations/">排行榜</a> 均提供一键下载。</p>
+<table class="plain">
+<thead><tr><th>字段组</th><th>内容</th><th>来源与清洗</th></tr></thead>
+<tbody>
+<tr><td>计费与汇率口径</td><td>充值比例、充值模式（折价额度 / 按汇率直充 / 自定义比例）、站内汇率、额度单位 <code>quota_per_unit</code>、显示币种</td><td><code>/api/status</code> 公开设置；站内汇率在 4–12 之外（例如 1）时按参考汇率 7.25 判定充值模式</td></tr>
+<tr><td>接入与官方入口</td><td>API Base URL、文档链接、充值入口、系统版本</td><td>剔除 localhost / 内网 IP / example.com / 非 http(s) 地址，以及 New API 模板默认的 <code>newapi.pro</code> 文档与上游仓库链接（站点自身位于该根域时除外）</td></tr>
+<tr><td>账号与风控门槛</td><td>邮箱验证、Turnstile 人机校验、GitHub / Linux.do / Telegram 登录</td><td>只读公开开关，不采集任何用户或密钥信息</td></tr>
+<tr><td>协议与缓存覆盖</td><td>原生协议、缓存读 / 缓存写公开覆盖率、公开分组数、有效型号数</td><td>覆盖率 = 公开缓存价的 token 型号 ÷ 可缓存 token 型号（不含「不适用」）</td></tr>
+<tr><td>6 大旗舰价格</td><td>常规按量分组最低价的输入 / 输出 / 缓存读 / 缓存写与分组倍率</td><td>¥ / 百万 token；异常低价、免费与福利分组不参与</td></tr>
+</tbody></table>
+<ul>
+<li><b>三值缓存口径</b>：缓存价格只显示三种状态——<b>免费</b>（站点明确配置 ×0）、<b>未公开</b>（站点没有填写，<b>不等于免费</b>）、<b>不适用</b>（生图、向量、按次计费或型号不支持缓存）。New API 的结构体默认零值（同一型号的写缓存同样为 0、或全站统一填 0 而没有任何正缓存倍率）一律归为「未公开」，不会误显示成免费。</li>
+<li><b>缓存写</b>：同时读取 <code>create_cache_ratio</code> / <code>cache_creation_ratio</code> / <code>cache_creation_12h_ratio</code> 倍率字段与 <code>billing_expr</code> 表达式中的 <code>cc</code> / <code>cw</code> 项。</li>
+<li><b>公式溯源</b>：站点页「原始倍率与公式视角」逐行给出可复核推导，例如 <code>模型×1.5 × 2 × 分组×0.4 × 充值¥1 = ¥1.2</code>；推导结果与表中输入价误差小于 1e-5。</li>
+<li><b>最近变动</b>：每次构建比对上一轮的充值比例、站内汇率与分组倍率，近 30 天的变动显示在站点规格档案卡中。</li>
+</ul>
 </section>"""
     site.page("/about/", "评分与计价方法", "API 中转站 Stage 0/1/2 分层信誉评分、防踩雷推荐规则、7:2:1 缓存成本换算与利益披露说明。", body, crumbs=[("评分方法", "/about/")], priority=0.5)
 
@@ -2216,7 +2504,7 @@ def build_seo_files(site: Site, model_pages, stations, n_stage0: int) -> None:
         for p, lm, pr in sorted(site.urls, key=lambda x: -x[2])
     )
     write(DIST / "sitemap.xml", f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap.9">{urls}</urlset>\n'.replace("sitemap.9", "sitemap/0.9"))
-    write(DIST / "robots.txt", f"User-agent: *\nAllow: /\nDisallow: /data/\n\nSitemap: {site.url('/sitemap.xml')}\n")
+    write(DIST / "robots.txt", f"User-agent: *\nAllow: /\nAllow: /data/stations.json\nAllow: /data/stations.csv\nDisallow: /data/\n\nSitemap: {site.url('/sitemap.xml')}\n")
     lines = [
         f"# {site.name}", "", f"> {site.cfg['description']}", "",
         f"数据更新时间：{fmt_cst(site.now)}（北京时间）。收录 {len(stations)} 家公开报价站、{n_stage0} 家 Stage 0 仅建档闭源站、{len(model_pages)} 个型号。",
@@ -2229,7 +2517,9 @@ def build_seo_files(site: Site, model_pages, stations, n_stage0: int) -> None:
         "", "## 主要页面",
         f"- [月度成本算账器与主备选站助手]({site.url('/calc/')})：官方直连 vs 常规中转 vs 80/20 混合路由，自动给出 1 主 + 1 备站点组合",
         f"- [LLM 模型真伪鉴别与协议自测工具]({site.url('/verify/')})：支持在线无状态边缘接口（POST /api/verify）与本机脚本，L1/L2/L3 三档动态种子抽检，分别给出真伪特征分与智商保真分",
-        f"- [中转站分层评分排行]({site.url('/stations/')})",
+        f"- [中转站分层评分排行]({site.url('/stations/')})：多维筛选（协议 / 登录门槛 / 缓存公开 / 充值模式 / 质量）与勾选对比",
+        f"- [中转站并排对比]({site.url('/compare/')})：2–4 家站点固定规格与 6 大旗舰模型价格逐行对齐，支持「只看差异项」与 ?s=域名1,域名2 分享链接",
+        f"- [开放数据 stations.json]({site.url('/data/stations.json')})：全部在榜站点的归一化固定规格 + 旗舰价格（列式紧凑 JSON，字段说明见 col_desc；CSV 镜像 {site.url('/data/stations.csv')}）",
         f"- [全部模型]({site.url('/models/')})",
         f"- [调价动态]({site.url('/changes/')})",
         f"- [评分与计价方法及利益披露]({site.url('/about/')})",

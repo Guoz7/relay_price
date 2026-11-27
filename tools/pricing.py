@@ -16,14 +16,24 @@ V1.0 multi-group & self-admitted caveat extraction:
 - Emits one representative Quote per lane present ("standard" | "promo" | "welfare"),
   while attaching every selectable group in `all_groups` so buyers can inspect full group spreads.
 
+V1.1 canonical fixed-field schema (no change to input/output math, so ALGO_VERSION stays put):
+- Raw ratio provenance on every Quote (model / completion / cache / cache-write ratio, billing mode & expr).
+- Strict three-valued cache semantics (`cache_status`): "priced" | "free" (explicit ×0) | "unknown"
+  (undisclosed or Go-struct-zero default) | "na" (per-call, media-only, or the station says no cache).
+- Cache write unified from `create_cache_ratio` / `cache_creation_ratio` / `cache_creation_12h_ratio`
+  and from `cc` / `cw` terms inside `billing_expr`.
+- Placeholder / template / loopback URLs in /api/status are dropped by `sanitize_station_url`.
+
 Everything here is pure (no I/O) so it can be unit-tested.
 """
 
 from __future__ import annotations
 
+import ipaddress
 import re
 from dataclasses import dataclass, field, asdict
 from typing import Any
+from urllib.parse import urlsplit
 
 ALGO_VERSION = 7  # bump when normalization changes, so the change log never reports algorithm changes as price moves
 PLACEHOLDER_RATIO = 37.5  # New API default ratio for unconfigured models -> no real price
@@ -54,6 +64,142 @@ ENDPOINT_LABELS = {
     "video": "视频",
     "embeddings": "Embedding",
 }
+
+MEDIA_ENDPOINTS = {"image", "video", "embeddings"}
+CACHE_WRITE_KEYS = (
+    "create_cache_ratio", "cache_creation_ratio", "cache_write_ratio",
+    "cache_creation_ratio_5m", "cache_creation_5m_ratio", "create_cache_ratio_5m", "cache_creation_12h_ratio",
+)
+CACHE_STATUS_LABELS = {"priced": "已公开", "free": "免费 · ×0", "unknown": "未公开", "na": "不适用"}
+TAG_MAX, TAG_LEN = 6, 16
+EXPR_MAX = 600
+
+# ---------------------------------------------------------------- dirty URL sanitizer
+_BLOCK_HOSTS = {"localhost", "0.0.0.0", "127.0.0.1", "::1", "example.com", "example.org", "example.net", "your-domain.com", "yourdomain.com"}
+_TEMPLATE_HOST_ROOTS = ("newapi.pro",)  # New API template docs: newapi.pro, docs.newapi.pro
+_TEMPLATE_REPO_PREFIXES = ("github.com/quantumnous", "github.com/songquanpeng")
+_BARE_HOST_RE = re.compile(r"^[a-z0-9-]+(?:\.[a-z0-9-]+)+(?::\d+)?(?:[/?#]|$)", re.I)
+
+
+def _root_domain(host: str) -> str:
+    parts = [p for p in (host or "").lower().strip(".").split(".") if p]
+    return ".".join(parts[-2:]) if len(parts) >= 2 else ".".join(parts)
+
+
+def sanitize_station_url(url: Any, station_domain: str | None = None) -> str | None:
+    """Return a clean absolute http(s) URL, or None for placeholders, loopback/private hosts and upstream templates.
+
+    Relative paths ("/docs") are resolved against the station domain. Upstream template defaults
+    (newapi.pro docs, QuantumNous / songquanpeng repos) are dropped unless the station itself lives on that root.
+    """
+    if not isinstance(url, str):
+        return None
+    u = url.strip()
+    if not u or any(ch in u for ch in ' \t\n"<>{}'):
+        return None
+    own = (station_domain or "").strip().lower().strip(".")
+    if u.startswith("//"):
+        u = "https:" + u
+    elif u.startswith("/"):
+        if not own:
+            return None
+        u = f"https://{own}{u}"
+    elif "://" not in u:
+        if not _BARE_HOST_RE.match(u):
+            return None
+        u = "https://" + u
+    try:
+        parts = urlsplit(u)
+        host = (parts.hostname or "").lower().strip(".")
+        _ = parts.port
+    except ValueError:
+        return None
+    if parts.scheme.lower() not in ("http", "https") or not host:
+        return None
+    bare = host[4:] if host.startswith("www.") else host
+    if bare in _BLOCK_HOSTS or bare.endswith((".localhost", ".local", ".example.com", ".internal")) or "." not in bare:
+        return None
+    try:
+        ip = ipaddress.ip_address(bare)
+        if ip.is_private or ip.is_loopback or ip.is_unspecified or ip.is_link_local or ip.is_reserved:
+            return None
+    except ValueError:
+        pass
+    own_root = _root_domain(own)
+    for root in _TEMPLATE_HOST_ROOTS:
+        if (bare == root or bare.endswith("." + root)) and own_root != root:
+            return None
+    path = (bare + (parts.path or "")).lower()
+    if any(path.startswith(pre) for pre in _TEMPLATE_REPO_PREFIXES) and own_root != "github.com":
+        return None
+    return u[:240]
+
+
+def clean_tags(raw: Any) -> list[str]:
+    """Station-defined model tags (comma string or list) -> short de-duplicated list."""
+    if isinstance(raw, str):
+        items = re.split(r"[,，;；|]", raw)
+    elif isinstance(raw, list):
+        items = [x for x in raw if isinstance(x, str)]
+    else:
+        return []
+    out: list[str] = []
+    for t in items:
+        t = re.sub(r"\s+", " ", t).strip()
+        if t and len(t) <= TAG_LEN and t not in out:
+            out.append(t)
+        if len(out) >= TAG_MAX:
+            break
+    return out
+
+
+def compact_expr(expr: Any) -> str | None:
+    if not isinstance(expr, str) or not expr.strip():
+        return None
+    return re.sub(r"\s+", " ", expr.strip())[:EXPR_MAX]
+
+
+def _num(v: Any) -> float | None:
+    if isinstance(v, bool):
+        return None
+    if isinstance(v, (int, float)):
+        return float(v)
+    if isinstance(v, str):
+        try:
+            return float(v.strip())
+        except ValueError:
+            return None
+    return None
+
+
+def cache_write_ratio_of(m: dict[str, Any]) -> float | None:
+    """First positive cache-write ratio among the known New API / fork field names."""
+    for k in CACHE_WRITE_KEYS:
+        v = _num(m.get(k))
+        if v is not None and v > 0:
+            return v
+    return None
+
+
+def cache_zero_kind(m: dict[str, Any], keyed_share: float, station_has_positive: bool) -> str:
+    """Classify an explicit `cache_ratio == 0` (Experiment A).
+
+    - "na":     the station says this model has no cache read (`supports_cache_read: false`) or it is per-call.
+    - "struct": Go-struct-zero default (companion cache-write field also exactly 0, the field is emitted on
+                ~every model by a non-omitempty fork, or the station never discloses any positive cache ratio).
+    - "free":   a deliberate ×0 on an omitempty-style station that does price cache reads elsewhere.
+    """
+    if m.get("supports_cache_read") is False:
+        return "na"
+    qt = m.get("quota_type")
+    if qt in (1, "1"):
+        return "na"
+    for k in CACHE_WRITE_KEYS:
+        if k in m and _num(m.get(k)) == 0:
+            return "struct"
+    if keyed_share >= 0.95 or not station_has_positive:
+        return "struct"
+    return "free"
 
 
 def extract_caveats(group: str | None, desc: str | None) -> list[str]:
@@ -106,6 +252,8 @@ class ExprQuote:
     output_usd: float | None = None
     cache_usd: float | None = None
     call_usd: float | None = None
+    cache_write_usd: float | None = None  # `cc` / `cw` (cache creation) coefficient of the chosen tier
+    has_cache_term: bool = False  # tier declares a `cr` term (so 0 means an explicit free cache read)
     tier_name: str | None = None
     tiers: int = 0
     time_based: bool = False
@@ -146,12 +294,15 @@ def parse_billing_expr(expr: str | None) -> ExprQuote:
         fm = _FIXED_RE.search(body)
         terms = {k: float(v) for k, v in _TERM_RE.findall(body)}
         if "p" in terms or "c" in terms:
+            cw = next((terms[k] for k in ("cc", "cw", "cc5m", "cc1h") if k in terms), None)
             token_cands.append(
                 ExprQuote(
                     kind="token",
                     input_usd=terms.get("p"),
                     output_usd=terms.get("c"),
                     cache_usd=terms.get("cr"),
+                    cache_write_usd=cw,
+                    has_cache_term="cr" in terms,
                     tier_name=name,
                 )
             )
@@ -206,6 +357,18 @@ class Quote:
     flags: list[str] = field(default_factory=list)
     endpoints: list[str] = field(default_factory=list)
     all_groups: list[dict[str, Any]] = field(default_factory=list)
+    # ---- V1.1 fixed billing fields (raw provenance; never alters input/output math)
+    model_ratio: float | None = None  # raw model_ratio (or group_price base price); None for expr / per-call
+    completion_ratio: float | None = None  # raw completion_ratio; None = not set (New API bills output ×1)
+    cache_ratio: float | None = None  # sanitized: None when Go-struct-zero default / undisclosed
+    cache_write_ratio: float | None = None  # unified create_cache_ratio / cache_creation_ratio / *_12h
+    cache_write_usd: float | None = None
+    cache_write_cny: float | None = None
+    model_price: float | None = None  # raw per-call USD price
+    billing_mode: str | None = None
+    billing_expr: str | None = None  # whitespace-collapsed raw expression (capped)
+    tags: list[str] = field(default_factory=list)
+    cache_status: str = "unknown"  # "priced" | "free" | "unknown" | "na"
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -317,6 +480,7 @@ def _collect_ratio_groups(
     base_call: float | None,
     kind: str,
     model_welfare: bool,
+    base_cw: float | None = None,
 ) -> tuple[list[dict[str, Any]], bool]:
     """Collect every selectable group with effective USD prices, lane, and caveats.
 
@@ -354,7 +518,7 @@ def _collect_ratio_groups(
         lane = "welfare" if (free or welf) else ("promo" if cav else "standard")
         return [{
             "kind": kind, "group": g0, "ratio": None, "eff_ratio": 1.0, "desc": d0,
-            "in": base_in, "out": base_out, "cache": base_cache, "call": base_call,
+            "in": base_in, "out": base_out, "cache": base_cache, "call": base_call, "cw": base_cw,
             "free": free, "welfare": welf, "caveats": cav, "lane": lane,
         }], False
 
@@ -365,12 +529,13 @@ def _collect_ratio_groups(
         out_u = None if base_out is None else base_out * r
         cache_u = None if base_cache is None else base_cache * r
         call_u = None if base_call is None else base_call * r
+        cw_u = None if base_cw is None else base_cw * r
         free = (r == 0) or all((v or 0) == 0 for v in (in_u, out_u, cache_u, call_u))
         welf = model_welfare or wg or r == 0
         lane = "welfare" if (free or welf) else ("promo" if cav else "standard")
         out.append({
             "kind": kind, "group": g, "ratio": r, "eff_ratio": r, "desc": d,
-            "in": in_u, "out": out_u, "cache": cache_u, "call": call_u,
+            "in": in_u, "out": out_u, "cache": cache_u, "call": call_u, "cw": cw_u,
             "free": free, "welfare": welf, "caveats": cav, "lane": lane,
         })
     return out, True
@@ -413,18 +578,24 @@ def _collect_group_price(
             hit = e.get("cache_hits_ratio")
             cr_e = float(e["completion_ratio"]) if isinstance(e.get("completion_ratio"), (int, float)) else cr
             in_u, out_u = base_in * r, base_in * cr_e * r
-            cache_u = (base_in * float(hit) * r) if isinstance(hit, (int, float)) and 0 < hit < 1 else None
+            hit_ok = isinstance(hit, (int, float)) and 0 < hit < 1
+            cache_u = (base_in * float(hit) * r) if hit_ok else None
+            cwr = cache_write_ratio_of(e)
+            cw_u = base_in * cwr * r if cwr else None
             call_u, kind = None, "token"
+            prov = {"mr": price, "crr": cr_e if isinstance(e.get("completion_ratio"), (int, float)) or isinstance(completion_ratio, (int, float)) else None,
+                    "cache_r": float(hit) if hit_ok else None, "cwr": cwr, "mp": None}
         else:
-            in_u = out_u = cache_u = None
+            in_u = out_u = cache_u = cw_u = None
             call_u, kind = price * r, "call"
+            prov = {"mr": None, "crr": None, "cache_r": None, "cwr": None, "mp": price}
         free = (r == 0) or all((v or 0) == 0 for v in (in_u, out_u, cache_u, call_u))
         welf = model_welfare or wg or r == 0
         lane = "welfare" if (free or welf) else ("promo" if cav else "standard")
         cands.append({
             "kind": kind, "group": g, "ratio": r, "eff_ratio": r, "desc": desc,
-            "in": in_u, "out": out_u, "cache": cache_u, "call": call_u,
-            "free": free, "welfare": welf, "caveats": cav, "lane": lane,
+            "in": in_u, "out": out_u, "cache": cache_u, "call": call_u, "cw": cw_u,
+            "free": free, "welfare": welf, "caveats": cav, "lane": lane, **prov,
         })
     return cands
 
@@ -478,6 +649,7 @@ def normalize_station(domain: str, pricing: dict[str, Any], status: dict[str, An
             "total_models": len(data),
         }
     )
+    meta.update(station_billing_meta(domain, status, price))
 
     def cny(v: float | None) -> float | None:
         return None if (v is None or price is None) else v * price
@@ -485,6 +657,9 @@ def normalize_station(domain: str, pricing: dict[str, Any], status: dict[str, An
     quotes: list[Quote] = []
     parsed_models = 0
     station_endpoints: set[str] = set()
+    dict_models = [m for m in data if isinstance(m, dict)]
+    keyed_share = (sum(1 for m in dict_models if "cache_ratio" in m) / len(dict_models)) if dict_models else 0.0
+    has_pos_cache = any((_num(m.get("cache_ratio")) or 0) > 0 for m in dict_models)
     for m in data:
         if not isinstance(m, dict):
             continue
@@ -502,13 +677,21 @@ def normalize_station(domain: str, pricing: dict[str, Any], status: dict[str, An
         base_flags: list[str] = []
         kind = None
         peak: tuple[float | None, float | None] | None = None
-        in_u = out_u = cache_u = call_u = None
+        in_u = out_u = cache_u = call_u = cw_u = None
+        used_expr = False
+        cache_na = m.get("supports_cache_read") is False
+        prov: dict[str, Any] = {"mr": None, "crr": None, "cache_r": None, "cwr": None, "mp": None}
         if expr:
             eq = parse_billing_expr(expr)
             if eq.kind == "token":
                 kind, in_u, out_u, cache_u = "token", eq.input_usd, eq.output_usd, eq.cache_usd
+                if cache_u is not None and cache_u <= 0:
+                    cache_u = 0.0 if eq.has_cache_term else None
+                cw_u = eq.cache_write_usd if (eq.cache_write_usd or 0) > 0 else None
+                used_expr = True
             elif eq.kind == "call":
                 kind, call_u = "call", eq.call_usd
+                used_expr = True
             if eq.time_based:
                 base_flags.append("分时计价")
                 if eq.kind == "token" and eq.max_input_usd is not None and eq.max_input_usd != eq.input_usd:
@@ -532,6 +715,7 @@ def normalize_station(domain: str, pricing: dict[str, Any], status: dict[str, An
                 if qt == 1:
                     if isinstance(mp, (int, float)):
                         kind, call_u = "call", float(mp)
+                        prov["mp"] = float(mp)
                 elif isinstance(mr, (int, float)):
                     if float(mr) == PLACEHOLDER_RATIO:
                         meta["dropped_placeholder"] += 1
@@ -539,21 +723,38 @@ def normalize_station(domain: str, pricing: dict[str, Any], status: dict[str, An
                     kind = "token"
                     in_u = float(mr) * 2.0
                     out_u = in_u * (float(cr) if isinstance(cr, (int, float)) else 1.0)
-                    if isinstance(cache_r, (int, float)):
-                        cache_u = in_u * float(cache_r)
+                    prov["mr"] = float(mr)
+                    prov["crr"] = float(cr) if isinstance(cr, (int, float)) else None
+                    c_num = _num(cache_r)
+                    if c_num is not None and c_num > 0:
+                        cache_u, prov["cache_r"] = in_u * c_num, c_num
+                    elif c_num == 0:
+                        zk = cache_zero_kind(m, keyed_share, has_pos_cache)
+                        if zk == "free":
+                            cache_u, prov["cache_r"] = 0.0, 0.0
+                        elif zk == "na":
+                            cache_na = True
+                    cwr = cache_write_ratio_of(m)
+                    if cwr:
+                        cw_u, prov["cwr"] = in_u * cwr, cwr
             if kind is None:
                 meta["dropped_unknown"] += 1
                 continue
             eg = m.get("enable_groups") if isinstance(m.get("enable_groups"), list) else []
             eg = [str(g) for g in eg]
             cands, ratio_known = _collect_ratio_groups(
-                eg, group_ratio, usable_group, gmeta, in_u, out_u, cache_u, call_u, kind, model_welfare
+                eg, group_ratio, usable_group, gmeta, in_u, out_u, cache_u, call_u, kind, model_welfare, base_cw=cw_u
             )
 
         parsed_models += 1
         raw_eps = [str(x) for x in (m.get("supported_endpoint_types") or []) if isinstance(x, str)]
         ep_tags = endpoint_tags(raw_eps)
         station_endpoints.update(ep_tags)
+        if ep_tags and set(ep_tags) <= MEDIA_ENDPOINTS:
+            cache_na = True
+        bmode = m.get("billing_mode") if isinstance(m.get("billing_mode"), str) and m.get("billing_mode").strip() else None
+        tags = clean_tags(m.get("tags"))
+        expr_c = compact_expr(expr) if used_expr else None
 
         def cand_sort_key(c: dict[str, Any]) -> tuple[float, str]:
             val = c["in"] if c["kind"] == "token" else c["call"]
@@ -609,6 +810,7 @@ def normalize_station(domain: str, pricing: dict[str, Any], status: dict[str, An
                     flags.append(f"高峰档 ¥{_fmt(cny(pi))} / ¥{_fmt(cny(po))}")
                 else:
                     flags.append(f"高峰档 ${_fmt(pi)} / ${_fmt(po)}")
+            pv = pick if used_gp else prov
             q = Quote(
                 domain=domain,
                 model=name,
@@ -633,8 +835,162 @@ def normalize_station(domain: str, pricing: dict[str, Any], status: dict[str, An
                 flags=flags,
                 endpoints=raw_eps,
                 all_groups=all_groups,
+                model_ratio=_r(pv.get("mr"), 10),
+                completion_ratio=_r(pv.get("crr"), 10),
+                cache_ratio=_r(pv.get("cache_r"), 10),
+                cache_write_ratio=_r(pv.get("cwr"), 10),
+                cache_write_usd=_r(pick.get("cw")),
+                cache_write_cny=_r(cny(pick.get("cw"))),
+                model_price=_r(pv.get("mp"), 10),
+                billing_mode=bmode[:24] if bmode else ("tiered_expr" if used_expr else None),
+                billing_expr=expr_c,
+                tags=tags,
+                cache_status=cache_status_of(pick["kind"], pick["cache"], cache_na),
             )
             quotes.append(q)
     meta["parsed"] = parsed_models
     meta["endpoints"] = sorted(station_endpoints)
+    meta.update(cache_coverage(quotes))
     return quotes, meta
+
+
+# ---------------------------------------------------------------- station billing semantics
+REFERENCE_USD_CNY = 7.25  # fallback when the station's usd_exchange_rate is not a plausible CNY rate (e.g. 1)
+FX_PLAUSIBLE = (4.0, 12.0)
+
+
+def fx_basis(fx: float | None) -> tuple[float, str]:
+    if fx is not None and FX_PLAUSIBLE[0] <= fx <= FX_PLAUSIBLE[1]:
+        return fx, "station"
+    return REFERENCE_USD_CNY, "reference"
+
+
+def topup_mode(price: float | None, fx: float | None) -> str:
+    """Classify the top-up model: discount (¥ per $1 below half the FX rate), fx (within ±15%), custom or unknown.
+
+    `fx` is the station's usd_exchange_rate when it is a plausible CNY rate, else the reference rate,
+    so a ¥1 = $1 station that sets usd_exchange_rate=1 is still classified as a discount-quota station.
+    """
+    if price is None:
+        return "unknown"
+    fx = fx_basis(fx)[0]
+    if price < fx * 0.5:
+        return "discount"
+    if abs(price - fx) <= fx * 0.15:
+        return "fx"
+    return "custom"
+
+
+TOPUP_MODE_LABELS = {"discount": "折价额度", "fx": "按汇率直充", "custom": "自定义比例", "unknown": "未公开"}
+
+
+def _opt_bool(st: dict[str, Any], key: str) -> bool | None:
+    v = st.get(key)
+    return bool(v) if isinstance(v, (bool, int)) and key in st else None
+
+
+def station_billing_meta(domain: str, status: dict[str, Any] | None, price: float | None) -> dict[str, Any]:
+    """Sanitized fixed station fields from /api/status (no secrets; dirty URLs dropped)."""
+    st = status if isinstance(status, dict) else {}
+    fx = _num(st.get("usd_exchange_rate"))
+    fx = fx if fx is not None and 0.5 <= fx <= 50 else None
+    qpu = _num(st.get("quota_per_unit"))
+    qpu = (int(qpu) if float(qpu).is_integer() else qpu) if qpu is not None and qpu > 0 else None
+    qdt = st.get("quota_display_type")
+    qdt = qdt.strip().upper()[:16] if isinstance(qdt, str) and qdt.strip() else None
+    sym = st.get("custom_currency_symbol")
+    sym = sym.strip()[:4] if isinstance(sym, str) and sym.strip() else None
+    ccr = _num(st.get("custom_currency_exchange_rate"))
+    out: dict[str, Any] = {
+        "usd_exchange_rate": fx,
+        "quota_per_unit": qpu,
+        "quota_display_type": qdt,
+        "custom_currency_symbol": sym,
+        "custom_currency_exchange_rate": ccr if ccr is not None and ccr > 0 else None,
+        "topup_mode": topup_mode(price, fx),
+        "fx_basis": fx_basis(fx)[1],
+        "email_verification": _opt_bool(st, "email_verification"),
+        "turnstile_check": _opt_bool(st, "turnstile_check"),
+        "docs_link": sanitize_station_url(st.get("docs_link"), domain),
+        "top_up_link": sanitize_station_url(st.get("top_up_link"), domain),
+        "server_address": sanitize_station_url(st.get("server_address"), domain),
+    }
+    for k in ("enable_online_topup", "aff_enabled", "wechat_login", "oidc_enabled"):
+        b = _opt_bool(st, k)
+        if b is not None:
+            out[k] = b
+    mt = _num(st.get("min_topup"))
+    if mt is not None and mt > 0:
+        out["min_topup"] = mt
+    qn = _num(st.get("quota_for_new_user"))
+    if qn is not None and qn > 0 and qpu:
+        out["new_user_usd"] = round(qn / float(qpu), 4)
+    return out
+
+
+def cache_status_of(kind: str, cache_val: float | None, na: bool) -> str:
+    if kind != "token":
+        return "na"
+    if cache_val is not None:
+        return "priced" if cache_val > 0 else "free"
+    return "na" if na else "unknown"
+
+
+def cache_coverage(quotes: list[Quote]) -> dict[str, int | None]:
+    """Share (%) of a station's token models (excluding 不适用) that disclose cache read / cache write prices."""
+    by_model: dict[str, Quote] = {}
+    for q in quotes:
+        if q.kind == "token" and q.model not in by_model:
+            by_model[q.model] = q
+    elig = [q for q in by_model.values() if q.cache_status != "na"]
+    if not elig:
+        return {"cache_read_coverage": None, "cache_write_coverage": None, "cache_eligible_models": 0}
+    rd = sum(1 for q in elig if q.cache_status in ("priced", "free"))
+    wr = sum(1 for q in elig if q.cache_write_usd is not None)
+    return {"cache_read_coverage": round(100 * rd / len(elig)), "cache_write_coverage": round(100 * wr / len(elig)),
+            "cache_eligible_models": len(elig)}
+
+
+# ---------------------------------------------------------------- formula provenance
+def _g(x: float) -> str:
+    return f"{x:.10g}"
+
+
+def format_formula(q: Quote, topup_price: float | None) -> str:
+    """Verifiable derivation of the headline price, e.g. `模型×1.5 × 2 × 分组×0.4 × 充值¥1 = ¥1.2`.
+
+    The first segment always multiplies out (within 1e-5) to `input_cny` (token) or `call_cny` (per call).
+    """
+    gr = q.group_ratio if q.group_ratio is not None else 1.0
+    g_txt = f"分组×{_g(gr)}" + ("" if q.group_ratio is not None else "（未公开·按1）")
+
+    def tail(v: float, per: str = "") -> str:
+        if topup_price is None:
+            return f" = ${_g(round(v, 6))}{per}（充值比例未公开）"
+        return f" × 充值¥{_g(topup_price)} = ¥{_g(round(v * topup_price, 6))}{per}"
+
+    extras: list[str] = []
+    if q.kind == "token" and q.model_ratio is not None:
+        head = f"模型×{_g(q.model_ratio)} × 2 × {g_txt}" + tail(q.model_ratio * 2 * gr)
+        extras.append(f"输出 = 输入 × 补全×{_g(q.completion_ratio)}" if q.completion_ratio is not None else "输出 = 输入 × 补全×1（默认）")
+        if q.cache_ratio is not None:
+            extras.append(f"缓存读 = 输入 × 缓存×{_g(q.cache_ratio)}")
+        if q.cache_write_ratio is not None:
+            extras.append(f"缓存写 = 输入 × 写缓存×{_g(q.cache_write_ratio)}")
+    elif q.billing_expr:
+        eq = parse_billing_expr(q.billing_expr)
+        tier = f"「{eq.tier_name}」" if eq.tier_name else ""
+        if q.kind == "token" and eq.input_usd is not None:
+            head = f"表达式{tier} p×{_g(eq.input_usd)} × {g_txt}" + tail(eq.input_usd * gr)
+            for k, v in (("c", eq.output_usd), ("cr", eq.cache_usd), ("cc", eq.cache_write_usd)):
+                if v is not None:
+                    extras.append(f"{k}×{_g(v)}")
+        elif q.kind == "call" and eq.call_usd is not None:
+            head = f"表达式{tier} 按次${_g(eq.call_usd)} × {g_txt}" + tail(eq.call_usd * gr, "/次")
+        else:
+            return ""
+    elif q.kind == "call" and q.model_price is not None:
+        head = f"按次${_g(q.model_price)} × {g_txt}" + tail(q.model_price * gr, "/次")
+    else:
+        return ""
+    return head + ("；" + "；".join(extras) if extras else "")

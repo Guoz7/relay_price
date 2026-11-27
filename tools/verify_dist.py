@@ -24,6 +24,7 @@ SMOKE = {  # path -> text that must appear
     "/": "API",
     "/calc/": 'id="calc-app"',
     "/verify/": 'id="verify-app"',
+    "/compare/": 'id="compare-app"',
     "/en/": "API Price Radar",
     "/scenes/": "Claude Code",
     "/scenes/claude-code/": "ANTHROPIC_BASE_URL",
@@ -63,6 +64,35 @@ def _check_one(f: Path) -> tuple[list[str], int, str | None]:
     return errs, n_ld, ni
 
 
+STATIONS_JSON_MAX = 280 * 1024
+
+
+def check_open_data(dist: Path) -> list[str]:
+    """dist/data/stations.json: present, parses, <= 280 KB, column table with rows; CSV mirror present."""
+    errs: list[str] = []
+    p = dist / "data" / "stations.json"
+    if not p.exists():
+        return ["data/stations.json missing"]
+    raw = p.read_bytes()
+    if len(raw) > STATIONS_JSON_MAX:
+        errs.append(f"data/stations.json {len(raw)} bytes > {STATIONS_JSON_MAX}")
+    try:
+        obj = json.loads(raw.decode("utf-8"))
+    except ValueError as e:
+        return errs + [f"data/stations.json invalid ({e})"]
+    cols, rows = obj.get("cols") or [], obj.get("rows")
+    if not isinstance(rows, list) or not rows:
+        errs.append("data/stations.json: no rows")
+    elif any(not isinstance(r, list) or len(r) != len(cols) for r in rows):
+        errs.append("data/stations.json: row width != len(cols)")
+    for c in ("d", "score", "price", "fs"):
+        if c not in cols:
+            errs.append(f"data/stations.json: column {c} missing")
+    if not (dist / "data" / "stations.csv").exists():
+        errs.append("data/stations.csv missing")
+    return errs
+
+
 def check_files() -> list[str]:
     errs: list[str] = []
     pages = list(DIST.rglob("*.html"))
@@ -76,7 +106,7 @@ def check_files() -> list[str]:
                 noindex_paths.add(ni)
     try:
         locs = [e.text or "" for e in ET.parse(DIST / "sitemap.xml").getroot().iter("{http://www.sitemaps.org/schemas/sitemap/0.9}loc")]
-        for req in ("/submit/", "/scenes/", "/scenes/claude-code/", "/calc/", "/verify/", "/en/"):
+        for req in ("/submit/", "/scenes/", "/scenes/claude-code/", "/calc/", "/verify/", "/compare/", "/en/"):
             if not any(x.endswith(req) for x in locs):
                 errs.append(f"sitemap.xml: {req} missing")
         if any("example.com" in x for x in locs):
@@ -94,6 +124,11 @@ def check_files() -> list[str]:
         errs.append("GITHUB_README.md missing")
     if not (DIST / "data" / "calc.json").exists():
         errs.append("data/calc.json missing")
+    errs += check_open_data(DIST)
+    llms = (DIST / "llms.txt").read_text(encoding="utf-8")
+    for req in ("/compare/", "/data/stations.json"):
+        if req not in llms:
+            errs.append(f"llms.txt: {req} missing")
     print(f"files: {len(pages)} html pages ({len(noindex_paths)} noindex), {n_ld} JSON-LD blocks, {len(locs)} sitemap URLs, {len(errs)} problems")
     return errs
 

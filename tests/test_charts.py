@@ -57,6 +57,22 @@ class ChartTests(unittest.TestCase):
         self.assertEqual(C.station_price_strip_svg([]), "")
         self.assertEqual(C.station_price_strip_svg([dict(model="m", p10=1, p90=2)]), "")
 
+    def test_strip_label_fits_longest_flagship_name(self):
+        rows = [dict(model=m, p10=1.0, p25=2.0, p50=3.0, p75=5.0, p90=9.0, std=2.5) for m in FLAGSHIPS]
+        root = self.assertSvg(C.station_price_strip_svg(rows), 3500)
+        labels = [t.text for t in root.iter("text") if t.get("x") == "4" and t.text in FLAGSHIPS]
+        self.assertIn("deepseek-v4.1-flash", labels)
+        self.assertEqual(root.get("viewBox"), f"0 0 454 {root.get('viewBox').split()[3]}")
+        self.assertTrue(all(float(p.get("cx")) >= 132 for p in root.iter("circle")))
+
+    def test_histogram_top_headroom_for_markers(self):
+        svg = C.score_histogram_svg([66.0] * 50 + [70.0] * 10, median=66, cap=74.0)
+        root = self.assertSvg(svg, 2500)
+        counts = [float(t.get("y")) for t in root.iter("text") if (t.text or "").isdigit() and t.text in ("50", "10")]
+        self.assertTrue(counts)
+        self.assertGreaterEqual(min(counts), 32)  # tallest bar count label sits >= 10px below the 中位 label (y=22)
+        self.assertIn("中位 66", svg)
+
     def test_price_impulses_scale_window_and_empty_state(self):
         imp = [["2026-11-26", 140.0, 0.0], ["2026-11-20", 5.0, -30.0], ["2026-10-01", 80.0, 0.0], ["bad", 9, 0]]
         svg = C.price_impulse_svg(imp, NOW)

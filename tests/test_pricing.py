@@ -138,5 +138,40 @@ class StationTests(unittest.TestCase):
         self.assertEqual(P.canonical_model("claude-sonnet-5【官转】"), "claude-sonnet-5")
 
 
+class FixedFieldTests(unittest.TestCase):
+    PRICING = {
+        "data": [
+            {"model_name": "claude-sonnet-5-5", "quota_type": 0, "model_ratio": 1.5, "completion_ratio": 5, "cache_ratio": 0.1,
+             "cache_creation_ratio": 1.25, "tags": "chat, 官转,  ", "enable_groups": ["default"]},
+            {"model_name": "gpt-6-astra", "quota_type": 0, "model_ratio": 1.25, "cache_ratio": 0, "create_cache_ratio": 0,
+             "enable_groups": ["default"]},
+            {"model_name": "ds", "billing_expr": 'tier("base", p * 0.5 + c * 2 + cr * 0 + cw * 0.6)', "enable_groups": ["default"]},
+        ],
+        "group_ratio": {"default": 0.5},
+    }
+
+    def test_fixed_billing_fields_captured(self):
+        qs, meta = P.normalize_station("x.com", self.PRICING, {"price": 2, "docs_link": "https://docs.newapi.pro"})
+        by = {q.model: q for q in qs}
+        s = by["claude-sonnet-5-5"]
+        self.assertEqual((s.model_ratio, s.completion_ratio, s.cache_ratio, s.cache_write_ratio), (1.5, 5.0, 0.1, 1.25))
+        self.assertAlmostEqual(s.cache_write_cny, 1.5 * 2 * 0.5 * 2 * 1.25)
+        self.assertEqual(s.cache_status, "priced")
+        self.assertEqual(s.tags, ["chat", "官转"])
+        g = by["gpt-6-astra"]
+        self.assertEqual((g.cache_status, g.cache_cny, g.completion_ratio), ("unknown", None, None))
+        d = by["ds"]
+        self.assertEqual((d.cache_status, d.cache_cny, d.billing_mode), ("free", 0.0, "tiered_expr"))
+        self.assertAlmostEqual(d.cache_write_cny, 0.6 * 0.5 * 2)
+        self.assertIsNone(meta["docs_link"])
+        self.assertEqual(meta["topup_mode"], "discount")
+
+    def test_formula_matches_input_price(self):
+        qs, _ = P.normalize_station("x.com", self.PRICING, {"price": 2})
+        s = next(q for q in qs if q.model == "claude-sonnet-5-5")
+        self.assertTrue(P.format_formula(s, 2).startswith("模型×1.5 × 2 × 分组×0.5 × 充值¥2 = ¥3"))
+        self.assertLess(abs(s.model_ratio * 2 * s.group_ratio * 2 - s.input_cny), 1e-5)
+
+
 if __name__ == "__main__":
     unittest.main()

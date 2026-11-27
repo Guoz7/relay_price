@@ -207,8 +207,17 @@ def _slim_status(status: dict[str, Any] | None) -> dict[str, Any] | None:
         "display_in_currency", "custom_currency_symbol", "custom_currency_exchange_rate", "version",
         "linuxdo_oauth", "github_oauth", "telegram_oauth", "email_verification", "turnstile_check",
         "top_up_link", "server_address", "docs_link",
+        # public site settings (read-only, never user/admin secrets)
+        "enable_online_topup", "min_topup", "quota_for_new_user", "aff_enabled", "wechat_login", "oidc_enabled",
+        "uptime_kuma", "uptime_kuma_enabled",
     )
-    return {k: status.get(k) for k in keep if k in status}
+    out = {k: status.get(k) for k in keep if k in status and not isinstance(status.get(k), (dict, list))}
+    chats = status.get("chats")
+    if isinstance(chats, list):  # keep client names only; drop link templates that may embed {key}/{address}
+        names = [str(k)[:40] for c in chats if isinstance(c, dict) for k in c.keys()]
+        if names:
+            out["chats"] = names[:12]
+    return out
 
 
 def cmd_fetch(args: argparse.Namespace) -> None:

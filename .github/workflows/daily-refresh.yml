@@ -58,6 +58,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add README.md data/stations-state.json data/changes.json data/last-run.json data/intel.json data/model-specs.json
+          for f in data/station-config-state.json data/station-config-changes.json; do
+            [ -f "$f" ] && git add "$f"
+          done
           if ! git diff --cached --quiet; then
             git commit -m "chore: daily price refresh & README rankings [skip ci]"
             git push

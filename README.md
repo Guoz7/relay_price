@@ -11,6 +11,8 @@
 
 - [月度成本算账器与主备选站助手（官方直连 vs 中转 vs 80/20 混合路由）](https://agentied.work/calc/)
 - [LLM 模型真伪鉴别与协议自测工具（Thinking 签名 / Tool-Calling / 缓存验真）](https://agentied.work/verify/)
+- [中转站并排对比（2–4 家固定规格 + 6 大旗舰价格，只看差异项 / 分享链接）](https://agentied.work/compare/)
+- [开放数据 stations.json（全部在榜站点归一化规格，供脚本与 AI Agent 读取）](https://agentied.work/data/stations.json) ｜ [CSV](https://agentied.work/data/stations.csv)
 - [Claude Code 编程中转站推荐](https://agentied.work/scenes/claude-code/)（Anthropic 原生协议 + 7:2:1 缓存成本）
 - [DeepSeek API 中转与性价比对比](https://agentied.work/scenes/deepseek/)（缓存读价 + 分时高低峰提示）
 - [Codex / GPT-6 系列中转站推荐](https://agentied.work/scenes/codex-gpt/)（OpenAI Responses 协议 + 多分组价差）
@@ -91,6 +93,8 @@
 | `tools/probes.py` | V2A 低成本真实调用探针（连通/TTFT/TPOT/工具调用/缓存命中/账单实扣偏差）+ 复用 verify_model 的 `auth`/`iq`/`context` 真伪与智商抽检模式、预算熔断（`--max-calls`、每站 `daily_call_cap`）与 24h/7d 双窗口聚合器 |
 | `tools/scenes.py` | 4 大场景导购页生成器（Claude Code / DeepSeek / Codex·GPT / Gemini·生图视频） |
 | `tools/calc_page.py` | `/calc/` 交互式月度总账、80/20 混合路由省钱与 1 主 + 1 备选站助手生成器 |
+| `tools/compare_page.py` | 开放数据 `/data/stations.json` + `/data/stations.csv`（列式紧凑、≤ 280 KB）与 `/compare/` 纯前端并排对比矩阵（默认预载 Top 3、只看差异项、`?s=` 分享链接） |
+| `tools/profile_schema.py` | 全量原始快照字段审计：覆盖率、零值率、枚举、脏占位链接、`billing_expr` 变量表，以及缓存三值语义 / 字段展示门槛 / stations.json 体积三项实验与硬性不变量 |
 | `tools/verify_page.py` | `/verify/` LLM 模型真伪鉴别页（支持在线边缘无状态验真与本机开源脚本双模式） |
 | `tools/verify_model.py` | 本机零依赖 LLM 真伪与智商抽检 CLI：Mulberry32 动态种子出题，`--tier l1_auth/l2_iq/l3_deep`，输出真伪特征分 `auth_score` 与智商保真分 `iq_score`，可用 `--reference-url` 同种子差分比对官方端点；与 `functions/api/verify.js` 1:1 对齐 |
 | `functions/api/verify.js` | Cloudflare Pages 无状态边缘验真接口（`POST /api/verify`，严格 SSRF 防护、绝不落盘 API Key） |

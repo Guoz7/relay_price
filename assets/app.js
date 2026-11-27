@@ -238,6 +238,103 @@
     });
   });
 
+  // ---------- station page: 人民币价格视角 <-> 原始倍率与公式视角 (pure CSS class toggle, no DOM rebuild)
+  Array.prototype.forEach.call(document.querySelectorAll(".filters .view-bar"), function (vb) {
+    var scope = vb.parentNode.parentNode, vbtns = vb.querySelectorAll("button[data-view]");
+    Array.prototype.forEach.call(vbtns, function (btn) {
+      btn.addEventListener("click", function () {
+        scope.classList.toggle("view-ratio", btn.dataset.view === "ratio");
+        Array.prototype.forEach.call(vbtns, function (b) {
+          b.classList.toggle("on", b === btn);
+          b.setAttribute("aria-pressed", b === btn ? "true" : "false");
+        });
+      });
+    });
+  });
+
+  // ---------- /stations/ multi-facet filter (AND across pressed chips) + live counter
+  var facets = document.getElementById("facets");
+  if (facets) {
+    var rankT = facets.parentNode.querySelector("table.rank");
+    var fchips = facets.querySelectorAll("button.chip[data-f]");
+    var fcount = document.getElementById("facet-count");
+    var applyFacets = function () {
+      var want = [];
+      Array.prototype.forEach.call(fchips, function (c) { if (c.getAttribute("aria-pressed") === "true") want.push(c.dataset.f); });
+      var shown = 0, total = 0;
+      if (rankT) Array.prototype.forEach.call(rankT.tBodies[0].rows, function (tr) {
+        var td = tr.querySelector("td[data-f]");
+        if (!td) return;
+        total++;
+        var toks = " " + td.dataset.f + " ";
+        var ok = want.every(function (t) { return toks.indexOf(" " + t + " ") >= 0; });
+        tr.classList.toggle("hidden-row", !ok);
+        if (ok) shown++;
+      });
+      if (fcount) fcount.textContent = "当前显示 " + shown + " / " + total + " 家站点" + (want.length && !shown ? "，没有同时满足的站点，试试减少条件" : "");
+      facets.classList.toggle("active", want.length > 0);
+    };
+    Array.prototype.forEach.call(fchips, function (c) {
+      c.addEventListener("click", function () {
+        c.setAttribute("aria-pressed", c.getAttribute("aria-pressed") === "true" ? "false" : "true");
+        applyFacets();
+      });
+    });
+    var freset = document.getElementById("facet-reset");
+    if (freset) freset.addEventListener("click", function () {
+      Array.prototype.forEach.call(fchips, function (c) { c.setAttribute("aria-pressed", "false"); });
+      applyFacets();
+    });
+  }
+
+  // ---------- /stations/ compare checkboxes -> sticky bar -> /compare/?s=dom1,dom2
+  var cmpBar = document.getElementById("cmp-bar");
+  if (cmpBar) {
+    var CMP_MAX = 4, picked = [], pickedNames = {};
+    var cmpGo = document.getElementById("cmp-go"), cmpN = document.getElementById("cmp-n");
+    var cmpNames = document.getElementById("cmp-names"), cmpMsg = document.getElementById("cmp-msg");
+    var updCmp = function () {
+      cmpN.textContent = String(picked.length);
+      cmpNames.textContent = picked.map(function (d) { return pickedNames[d] || d; }).join("、");
+      cmpBar.hidden = picked.length === 0;
+      if (picked.length >= 2) {
+        cmpGo.href = "/compare/?s=" + picked.map(encodeURIComponent).join(",");
+        cmpGo.removeAttribute("aria-disabled");
+        cmpMsg.textContent = "";
+      } else {
+        cmpGo.href = "/compare/";
+        cmpGo.setAttribute("aria-disabled", "true");
+        cmpMsg.textContent = picked.length ? "再选 1 家即可对比" : "";
+      }
+    };
+    var cmpBoxes = document.querySelectorAll("input[data-cmp]");
+    Array.prototype.forEach.call(cmpBoxes, function (cb) {
+      if (cb.checked && picked.length < CMP_MAX) { picked.push(cb.dataset.cmp); pickedNames[cb.dataset.cmp] = cb.dataset.name; }
+      else cb.checked = false;
+      cb.addEventListener("change", function () {
+        var d = cb.dataset.cmp;
+        if (cb.checked) {
+          if (picked.length >= CMP_MAX) {
+            cb.checked = false;
+            cmpMsg.textContent = "最多并排对比 4 家，请先取消一家";
+            cmpBar.classList.remove("shake"); void cmpBar.offsetWidth; cmpBar.classList.add("shake");
+            return;
+          }
+          picked.push(d); pickedNames[d] = cb.dataset.name;
+        } else {
+          picked = picked.filter(function (x) { return x !== d; });
+        }
+        updCmp();
+      });
+    });
+    cmpGo.addEventListener("click", function (e) { if (cmpGo.getAttribute("aria-disabled")) e.preventDefault(); });
+    document.getElementById("cmp-clear").addEventListener("click", function () {
+      Array.prototype.forEach.call(cmpBoxes, function (cb) { cb.checked = false; });
+      picked = []; updCmp();
+    });
+    updCmp();
+  }
+
   // ---------- submit form generator (local only, supports Email + GitHub Issue dual channel)
   var form = document.getElementById("sub-form");
   if (form) {
