@@ -64,32 +64,91 @@ def _check_one(f: Path) -> tuple[list[str], int, str | None]:
     return errs, n_ld, ni
 
 
-STATIONS_JSON_MAX = 280 * 1024
+JARGON = ("P10–P90", "IQR", "对数轴", "Turnstile", "quota_per_unit", "billing_expr", "OpenAI Responses", "Stage 1 封顶")
+_STRIP_RE = re.compile(
+    r'<details class="(?:adv-drawer|groups)"[^>]*>.*?</details>|<script\b[^>]*>.*?</script>',
+    re.S)
+CMP_FORBIDDEN = ("server_address", "docs_link", "top_up_link", "quota_per_unit", "usd_exchange_rate", "group_ratio",
+                 "billing_expr", '"api"', '"docs"', '"topup"', '"qpu"', '"fx"', '"ver"')
 
 
-def check_open_data(dist: Path) -> list[str]:
-    """dist/data/stations.json: present, parses, <= 280 KB, column table with rows; CSV mirror present."""
+def first_screen_text(html: str) -> str:
+    """Visible markup minus the collapsed power-user drawers and every <script> block."""
+    return _STRIP_RE.sub("", html)
+
+
+def jargon_hits(html: str) -> list[str]:
+    body = first_screen_text(html)
+    return [w for w in JARGON if w in body]
+
+
+def check_zero_download(dist: Path) -> list[str]:
+    """No bulk data export: nothing under dist/data/, no download buttons, robots keeps /data/ disallowed."""
     errs: list[str] = []
-    p = dist / "data" / "stations.json"
-    if not p.exists():
-        return ["data/stations.json missing"]
-    raw = p.read_bytes()
-    if len(raw) > STATIONS_JSON_MAX:
-        errs.append(f"data/stations.json {len(raw)} bytes > {STATIONS_JSON_MAX}")
-    try:
-        obj = json.loads(raw.decode("utf-8"))
-    except ValueError as e:
-        return errs + [f"data/stations.json invalid ({e})"]
-    cols, rows = obj.get("cols") or [], obj.get("rows")
-    if not isinstance(rows, list) or not rows:
-        errs.append("data/stations.json: no rows")
-    elif any(not isinstance(r, list) or len(r) != len(cols) for r in rows):
-        errs.append("data/stations.json: row width != len(cols)")
-    for c in ("d", "score", "price", "fs"):
-        if c not in cols:
-            errs.append(f"data/stations.json: column {c} missing")
-    if not (dist / "data" / "stations.csv").exists():
-        errs.append("data/stations.csv missing")
+    for name in ("stations.json", "stations.csv"):
+        if (dist / "data" / name).exists():
+            errs.append(f"data/{name} must not be published (zero-download policy)")
+    data_dir = dist / "data"
+    if data_dir.exists() and any(data_dir.rglob("*")):
+        errs.append("dist/data/ must stay empty (zero-download policy)")
+    robots = dist / "robots.txt"
+    if robots.exists():
+        txt = robots.read_text(encoding="utf-8")
+        if "Allow: /data/" in txt:
+            errs.append("robots.txt: Allow: /data/ present")
+        if "Disallow: /data/" not in txt:
+            errs.append("robots.txt: Disallow: /data/ missing")
+    else:
+        errs.append("robots.txt missing")
+    st = dist / "stations" / "index.html"
+    if st.exists():
+        html = st.read_text(encoding="utf-8")
+        for bad in ("下载 JSON", "导出 CSV", "/data/stations.json", "/data/stations.csv"):
+            if bad in html:
+                errs.append(f"stations/index.html: {bad} present")
+        for need in ('id="bubble-data"', 'id="bubble-chart"', 'id="facets"'):
+            if need not in html:
+                errs.append(f"stations/index.html: {need} missing")
+    else:
+        errs.append("stations/index.html missing")
+    cp = dist / "compare" / "index.html"
+    if cp.exists():
+        html = cp.read_text(encoding="utf-8")
+        for need in ('id="compare-app"', 'id="cmp-data"'):
+            if need not in html:
+                errs.append(f"compare/index.html: {need} missing")
+        for bad in ("/data/stations.json", "下载 JSON", "导出 CSV", "data-src="):
+            if bad in html:
+                errs.append(f"compare/index.html: {bad} present")
+        m = re.search(r'<script type="application/json" id="cmp-data">(.*?)</script>', html, re.S)
+        if m:
+            blob = m.group(1)
+            for bad in CMP_FORBIDDEN:
+                if bad in blob:
+                    errs.append(f"compare/index.html: cmp-data exposes {bad}")
+            try:
+                json.loads(blob)
+            except ValueError as e:
+                errs.append(f"compare/index.html: cmp-data invalid ({e})")
+    else:
+        errs.append("compare/index.html missing")
+    return errs
+
+
+def check_plain_language(dist: Path, sample: int = 40) -> list[str]:
+    """First-screen jargon guard on /stations/, /compare/ and a sample of /site/*/ pages."""
+    errs: list[str] = []
+    pages = [dist / "stations" / "index.html", dist / "compare" / "index.html"]
+    site_pages = sorted((dist / "site").glob("*/index.html")) if (dist / "site").exists() else []
+    if site_pages:
+        step = max(1, len(site_pages) // sample)
+        pages += site_pages[::step][:sample]
+    for f in pages:
+        if not f.exists():
+            continue
+        hits = jargon_hits(f.read_text(encoding="utf-8"))
+        if hits:
+            errs.append(f"{f.relative_to(dist).as_posix()}: first-screen jargon {hits}")
     return errs
 
 
@@ -122,13 +181,18 @@ def check_files() -> list[str]:
         errs.append("llms.txt: /submit/ missing")
     if not (DIST / "GITHUB_README.md").exists():
         errs.append("GITHUB_README.md missing")
-    if not (DIST / "data" / "calc.json").exists():
-        errs.append("data/calc.json missing")
-    errs += check_open_data(DIST)
+    calc = DIST / "calc" / "index.html"
+    if not calc.exists() or 'id="calc-data"' not in calc.read_text(encoding="utf-8"):
+        errs.append("calc/index.html: inline calc-data missing")
+    if not (DIST / "search-index.json").exists():
+        errs.append("search-index.json missing")
+    errs += check_zero_download(DIST)
+    errs += check_plain_language(DIST)
     llms = (DIST / "llms.txt").read_text(encoding="utf-8")
-    for req in ("/compare/", "/data/stations.json"):
-        if req not in llms:
-            errs.append(f"llms.txt: {req} missing")
+    if "/compare/" not in llms:
+        errs.append("llms.txt: /compare/ missing")
+    if "/data/" in llms:
+        errs.append("llms.txt: still advertises /data/ downloads")
     print(f"files: {len(pages)} html pages ({len(noindex_paths)} noindex), {n_ld} JSON-LD blocks, {len(locs)} sitemap URLs, {len(errs)} problems")
     return errs
 

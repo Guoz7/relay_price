@@ -189,8 +189,8 @@ def main() -> None:
         print(f"warn: litellm fetch failed: {e}", file=sys.stderr)
     md = normalize_models_dev(md_raw)
     ll = normalize_litellm(ll_raw)
-    # Keep entries that match our live search.json (or raw snapshots in CI) so committed JSON stays compact (~220 KB).
-    search_p = ROOT / "dist" / "data" / "search.json"
+    # Keep entries that match our live search-index.json (or raw snapshots in CI) so committed JSON stays compact (~220 KB).
+    search_p = ROOT / "dist" / "search-index.json"
     filt: set[str] | None = None
     if search_p.exists():
         try:

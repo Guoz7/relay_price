@@ -144,7 +144,10 @@ class ModelSpecsAndPagesTests(unittest.TestCase):
             dist = Path(td)
             calc_page.build_calc(site, model_pages, stations, specs, helpers, dist)
             en_page.build_en(site, model_pages, stations, specs, 59, helpers)
-            data = json.loads((dist / "data" / "calc.json").read_text(encoding="utf-8"))
+            self.assertFalse((dist / "data").exists())
+            inline = re.search(r'<script type="application/json" id="calc-data">(.*?)</script>', site.pages["/calc/"]["body"], re.S)
+            self.assertIsNotNone(inline)
+            data = json.loads(inline.group(1))
             self.assertEqual(len(data["models"]), 1)
             self.assertEqual([p["dom"] for p in data["models"][0]["picks"]], ["a.test", "b.test"])
             self.assertIn("/calc/", site.pages)
@@ -154,7 +157,7 @@ class ModelSpecsAndPagesTests(unittest.TestCase):
             body = site.pages["/calc/"]["body"]
             self.assertIn('id="c-table"', body)
             self.assertIn('title="\'+esc(p.name)+\' · \'+esc(p.dom)+\'"', body)
-            scripts = [m for m in re.findall(r"<script(?![^>]*ld\+json)[^>]*>(.*?)</script>", body, re.S) if m.strip()]
+            scripts = [m for m in re.findall(r"<script(?![^>]*(?:ld\+json|application/json))[^>]*>(.*?)</script>", body, re.S) if m.strip()]
             self.assertTrue(scripts)
             js_path = dist / "calc_inline.js"
             js_path.write_text("\n".join(scripts), encoding="utf-8")

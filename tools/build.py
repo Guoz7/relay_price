@@ -37,6 +37,8 @@ sys.path.insert(0, str(TOOLS))
 import calc_page  # noqa: E402
 import charts as CH  # noqa: E402
 import compare_page as CP  # noqa: E402
+import consumer as CM  # noqa: E402
+import dashboard as DB  # noqa: E402
 import en_page  # noqa: E402
 import export_readme  # noqa: E402
 import model_specs as MS  # noqa: E402
@@ -46,6 +48,7 @@ import scenes  # noqa: E402
 import scoring as S  # noqa: E402
 import station_insights as SI  # noqa: E402
 import submit_page  # noqa: E402
+import timeseries as TS  # noqa: E402
 import verify_page  # noqa: E402
 
 ROOT = TOOLS.parent
@@ -133,12 +136,28 @@ def grade_badge(score: float | None) -> str:
 
 def stage_badge(stage: int, failed_veto: bool = False) -> str:
     if stage == 2 and not failed_veto:
-        return '<span class="badge ok">Stage 2 · 实测认证</span>'
+        return '<span class="badge ok">已通过真实调用实测</span>'
     if stage == 2 and failed_veto:
-        return '<span class="badge danger">Stage 2 · 实测降级</span>'
+        return '<span class="badge danger">实测未达标（最高 C 级）</span>'
     if stage == 0:
-        return '<span class="badge warn">Stage 0 · 仅建档</span>'
-    return '<span class="badge">Stage 1 · 未实测</span>'
+        return '<span class="badge warn">仅建档（未公开报价）</span>'
+    return '<span class="badge">仅公开报价（未人工实测，最高 B 级）</span>'
+
+
+def plain_stage(sc: Any) -> str:
+    if sc.stage == 2 and not sc.cap_reason:
+        return "已通过真实调用实测"
+    if sc.stage == 2:
+        return "实测未达标（最高 C 级）"
+    return "仅抓取公开报价（未人工实测，最高 B 级）"
+
+
+PLAIN_EP = {**P.ENDPOINT_LABELS, "anthropic": "Claude 原生接口", "openai": "OpenAI 通用接口", "openai-response": "Codex 新版接口",
+            "gemini": "Gemini 原生接口", "image": "AI 生图", "video": "AI 视频", "embeddings": "知识库向量"}
+PLAIN_DIM_SHORT = {"stability": "在线", "longevity": "资历", "transparency": "透明", "reputation": "口碑", "latency": "速度",
+                   "price_stability": "防暗涨", "purity_protocol": "干净", "probe": "实测"}
+PLAIN_DIM_LONG = {"stability": "接口稳定", "longevity": "开站资历", "transparency": "价格透明", "reputation": "社区口碑",
+                  "latency": "响应速度", "price_stability": "防暗涨", "purity_protocol": "分组干净", "probe": "真实实测"}
 
 
 # ---------------------------------------------------------------- data load
@@ -498,6 +517,7 @@ def compute_station_scores(stations, by_station, intel, run_stats, cfg, probe_ma
     return S.market_medians(scores)
 
 
+SEARCH_INDEX = "search-index.json"
 FLAGSHIP_MODELS = ("claude-sonnet-5-5", "claude-opus-5-5", "gpt-6-astra", "gpt-6.1-sol", "deepseek-v4.1-flash", "gemini-4-carbon")
 
 
@@ -674,7 +694,7 @@ class Site:
             f'<p>Unprobed relays are hard-capped at Stage 1 (Grade B / 74). Only relays passing 7-day real-call probes unlock Stage 2 (A/S). Prices come from read-only public APIs and official models.dev / LiteLLM baselines; verify with small top-ups first.</p>'
             f'<p>Built {fmt_cst(self.now)} (UTC+8) · <a href="/calc/">TCO Calculator</a> · <a href="/verify/">Model Verifier</a> · <a href="/about/">Methodology &amp; Disclosure</a> · <a href="/submit/">Submit / Correct</a> · <a href="/">中文主站</a> · <a href="/sitemap.xml">Sitemap</a></p>'
             if is_en else
-            f'<p>未接入真金白银探针实测的站点统一封顶 Stage 1（最高 B 级 74 分），仅实测达标站点解锁 A/S 认证。价格按站点公开只读接口、分组倍率与公开充值比例换算，未计入卡密折扣与活动；请以站点实时页面为准，大额充值前先小额测试。</p>'
+            f'<p>没有经过真实调用实测的站点最高只给 B 级（74 分），实测达标才能拿到 A / S 级。价格按站点公开只读接口、分组倍率与公开充值比例换算，未计入卡密折扣与活动；请以站点实时页面为准，大额充值前先小额测试。</p>'
             f'<p>本页生成于 {fmt_cst(self.now)}（北京时间）· <a href="/scenes/">场景选站</a> · <a href="/calc/">月度算账器</a> · <a href="/verify/">模型验真</a> · <a href="/about/">评分方法与利益披露</a> · <a href="/submit/">提交收录 / 纠错</a> · <a href="/en/">English</a> · <a href="/changes.xml">RSS</a> · <a href="/sitemap.xml">Sitemap</a></p>'
         )
         search_ph = "Search models, e.g. claude-sonnet-5-5 / gpt-6-astra" if is_en else "搜模型，如 deepseek-v4.1-flash / claude-sonnet-5-5"
@@ -752,7 +772,7 @@ def filter_bar(tid: str, *, show_mode: bool = True, show_ep: bool = True, show_v
         '<label>协议 <select data-ep="1">'
         '<option value="">全部协议</option>'
         '<option value="anthropic">Anthropic</option>'
-        '<option value="openai-response">OpenAI Responses</option>'
+        '<option value="openai-response">OpenAI 新版接口（Codex 等）</option>'
         '<option value="openai">OpenAI Chat</option>'
         '<option value="gemini">Gemini</option>'
         '<option value="image">生图</option>'
@@ -889,7 +909,7 @@ def quote_table(
         ratio = "" if q.group_ratio is None else f"×{q.group_ratio:g}"
         desc = f' title="{E(q.group_desc[:200])}"' if q.group_desc else ""
         eps = P.endpoint_tags(q.endpoints)
-        ep_pills = "".join(f'<span class="badge ep">{E(P.ENDPOINT_LABELS.get(x, x))}</span>' for x in eps[:3])
+        ep_pills = "".join(f'<span class="badge ep">{E(PLAIN_EP.get(x, x))}</span>' for x in eps[:3])
         cav_pills = "".join(f'<span class="badge caveat">{E(c)}</span>' for c in q.caveats)
         pills = f'<div class="bd">{ep_pills}{cav_pills}</div>' if (ep_pills or cav_pills) else ""
         more = _group_btn(q) if show_station else ""
@@ -1027,7 +1047,7 @@ def probe_panel(sc: S.StationScore) -> str:
     cache_r = f"{pr['cache_hit_rate']:.0%}" if pr.get("cache_hit_rate") is not None else "—"
     return (
         f'<section class="probe-card">'
-        f'<h3>Stage 2 真实调用探针证据 <small>近 {pr.get("window_days", 7)} 天 {pr.get("total_samples", 0)} 次实测 · 最后探测 {E(fmt_cst(parse_dt(pr.get("last_probed_at"))))}</small></h3>'
+        f'<h3>真实调用实测证据 <small>近 {pr.get("window_days", 7)} 天 {pr.get("total_samples", 0)} 次实测 · 最后探测 {E(fmt_cst(parse_dt(pr.get("last_probed_at"))))}</small></h3>'
         f'<div class="kpis">'
         f'<div><b>{pr.get("success_rate", 0):.1%}</b><span>真实成功率</span></div>'
         f'<div><b>{ttft}</b><span>中位首字 TTFT（TPOT {tpot}）</span></div>'
@@ -1075,7 +1095,7 @@ def score_panel(st: dict[str, Any], cfg: dict[str, Any], market_dims: dict[str, 
         wl_tag = '<b class="badge warn">短板拖累</b> ' if key in pen else ""
         li_cls = ' class="wl"' if key in pen else ""
         lis.append(
-            f'<li{li_cls}><span class="dl">{S.DIM_LABELS[key]}<small>{w.get(key, 0)}%</small></span>'
+            f'<li{li_cls}><span class="dl">{PLAIN_DIM_LONG.get(key, S.DIM_LABELS[key])}<small>{w.get(key, 0)}%</small></span>'
             f'<span class="bar"><i style="width:{d.score:.0f}%"></i></span><b>{d.score:.0f}</b>'
             f'<small class="ev">{wl_tag}{E(d.evidence)}{"（缺数据，按中性值计）" if (not d.known and "样本不足" not in d.evidence and "未" not in d.evidence and "无" not in d.evidence and "尚" not in d.evidence) else ""}</small></li>'
         )
@@ -1083,7 +1103,7 @@ def score_panel(st: dict[str, Any], cfg: dict[str, Any], market_dims: dict[str, 
     p_cls = "" if pd.known else "pending"
     p_wt = f"{int(S.PROBE_BLEND_WEIGHT * 100)}%" if sc.stage == 2 else "未计"
     lis.append(
-        f'<li class="{p_cls}"><span class="dl">实测<small>{p_wt}</small></span>'
+        f'<li class="{p_cls}"><span class="dl">真实实测<small>{p_wt}</small></span>'
         f'<span class="bar"><i style="width:{pd.score if pd.known else 0:.0f}%"></i></span>'
         f'<b>{f"{pd.score:.0f}" if pd.known else "—"}</b>'
         f'<small class="ev">{E(pd.evidence)}</small></li>'
@@ -1091,7 +1111,7 @@ def score_panel(st: dict[str, Any], cfg: dict[str, Any], market_dims: dict[str, 
     cap_line = ""
     formula = f"加权均值 {sc.linear_total:.1f}" + (f" − 短板拖累 {sc.penalty:.1f}" if sc.penalty else "")
     if sc.stage == 1 and sc.raw_total - sc.total >= 0.05:
-        cap_line = f'<small class="muted">{formula} = 公开信号分 {sc.raw_total:.1f} → 未实测平滑封顶 {sc.total:.1f}（上限 74）</small>'
+        cap_line = f'<small class="muted">{formula} = 公开信号分 {sc.raw_total:.1f} → 还没人工实测，按规则压到 {sc.total:.1f}（最高 74 分）</small>'
     elif sc.cap_reason:
         cap_line = f'<small class="badge danger">{E(sc.cap_reason)}</small>'
     elif sc.penalty:
@@ -1102,13 +1122,13 @@ def score_panel(st: dict[str, Any], cfg: dict[str, Any], market_dims: dict[str, 
         pct_line = (f'<span class="pct-line"><span class="badge {pcls}">超过全网 {sc.percentile:.0f}% 站点</span>'
                     f'<small class="muted" title="按缺失维度与证据样本估算的分数不确定度">±{sc.uncertainty:.1f} · 证据完整度 {sc.completeness:.0%}</small></span>')
     radar = CH.station_radar_svg(
-        {k: sc.dims[k].score for k in keys}, market_dims, labels=S.DIM_LABELS, order=S.DIM_ORDER, penalized=pen,
+        {k: sc.dims[k].score for k in keys}, market_dims, labels=PLAIN_DIM_SHORT, order=S.DIM_ORDER, penalized=pen,
         name=str(st.get("display_name") or "本站")[:16],
     )
     return (
         f'<section class="score-card"><div class="big">{grade_badge(sc.total)}<span class="num">{sc.total:.0f}</span>'
         f'{stage_badge(sc.stage, bool(sc.cap_reason and sc.stage == 2))}'
-        f'<small>站点信誉分 {sc.total:.1f} · 置信度{sc.confidence}</small>{pct_line}{cap_line}{radar}</div><ul class="dims">{"".join(lis)}</ul></section>'
+        f'<small>综合靠谱分 {sc.total:.1f} · 证据可信度{sc.confidence}</small>{pct_line}{cap_line}{radar}</div><ul class="dims">{"".join(lis)}</ul></section>'
         + probe_panel(sc)
     )
 
@@ -1199,6 +1219,14 @@ def build(cfg: dict[str, Any]) -> dict[str, Any]:
     market_dims = compute_station_scores(stations, by_station, intel, run_stats, cfg, probe_map,
                                          stability_map=stability_map, now=now, monitored=monitored)
     compute_quote_scores(by_model, stations, cfg)
+    try:
+        ledger = TS.update_ledger(DATA, now)
+    except Exception as e:  # noqa: BLE001  (the 30-day ledger must never break a build)
+        _log(f"timeseries ledger skipped: {type(e).__name__} {e}")
+        ledger = TS.empty_ledger()
+    cx = consumer_context(stations, by_station, specs, cfg, changes, ledger=ledger, intel=intel, run_stats=run_stats,
+                          stability_map=stability_map, monitored=monitored)
+    _log(f"consumer context ready ({len(ledger['s'])} stations in 30-day ledger)")
 
     def dedupe_per_lane(qs: list[P.Quote]) -> list[P.Quote]:
         """One representative row per (station, billing kind, lane): cheapest within that lane."""
@@ -1234,9 +1262,9 @@ def build(cfg: dict[str, Any]) -> dict[str, Any]:
     build_model_pages(site, model_pages, stations, cfg, specs)
     market_px = flagship_market(by_model, specs, cfg)
     build_station_pages(site, stations, by_station, intel, changes, cfg, run_stats=run_stats, stability_map=stability_map,
-                        reviews_map=reviews_map, market_dims=market_dims, market_px=market_px)
+                        reviews_map=reviews_map, market_dims=market_dims, market_px=market_px, cx=cx)
     build_closed_station_pages(site, closed_stations)
-    fam_order, fam_models = build_indexes(site, model_pages, stations, by_station, closed_stations, cfg, min_st, intel=intel, stability_map=stability_map)
+    fam_order, fam_models = build_indexes(site, model_pages, stations, by_station, closed_stations, cfg, min_st, intel=intel, stability_map=stability_map, cx=cx)
     build_changes(site, changes, stations, model_pages)
     build_about(site, cfg)
     submit_page.build_submit(site, cfg, len(stations), load_json(DATA / "mine-last.json", None), n_stage0=len(closed_stations))
@@ -1249,12 +1277,9 @@ def build(cfg: dict[str, Any]) -> dict[str, Any]:
     scenes.build_scenes(site, model_pages, stations, helpers)
     calc_page.build_calc(site, model_pages, stations, specs, helpers, DIST)
     verify_page.build_verify(site)
-    open_payload = CP.fit_payload(CP.stations_payload(stations, by_station, intel, stability_map, now, FLAGSHIP_MODELS, cfg["base_url"]))
-    open_json = CP.dumps(open_payload)
-    write(DIST / "data" / "stations.json", open_json)
-    write(DIST / "data" / "stations.csv", CP.stations_csv(open_payload))
-    _log(f"stations.json {len(open_json.encode('utf-8')) / 1024:.1f} KB ({len(open_payload['rows'])} stations)")
-    CP.build_compare(site, open_payload)
+    cmp_payload = CP.stations_payload(stations, by_station, intel, stability_map, now, FLAGSHIP_MODELS)
+    _log(f"compare inline data {CP.gz_size(cmp_payload) / 1024:.1f} KB gzipped ({len(cmp_payload['rows'])} stations)")
+    CP.build_compare(site, cmp_payload)
     en_page.build_en(site, model_pages, stations, specs, len(closed_stations), helpers)
     build_home(site, cfg, model_pages, stations, closed_stations, fam_order, fam_models, changes)
     site.page("/404.html", "页面不存在", "页面不存在",
@@ -1274,18 +1299,8 @@ def build(cfg: dict[str, Any]) -> dict[str, Any]:
             "v": sorted({q.model for q in mp["rows"]} - {canon})[:8],
         })
     idx.sort(key=lambda x: -x["n"])
-    write(DIST / "data" / "search.json", json.dumps(idx, ensure_ascii=False, separators=(",", ":")))
-    write(DIST / "data" / "summary.json", json.dumps({
-        "generated_at": now.isoformat(),
-        "stations": len(stations),
-        "stage0_stations": len(closed_stations),
-        "stage2_stations": sum(1 for st in stations.values() if st["score"].stage == 2),
-        "models": len(model_pages),
-        "indexed_models": sum(1 for mp in model_pages.values() if mp["indexed"]),
-        "quotes": len(quotes),
-        "station_config_changes": sum(len(v) for v in config_log.values()),
-        "open_data": ["/data/stations.json", "/data/stations.csv"],
-    }, ensure_ascii=False))
+    write(DIST / SEARCH_INDEX, json.dumps(idx, ensure_ascii=False, separators=(",", ":")))
+    _log(f"station config changes this run: {sum(len(v) for v in config_log.values())}")
     build_seo_files(site, model_pages, stations, len(closed_stations))
     export_readme.export_github_readme(
         site, model_pages, stations, len(closed_stations), helpers,
@@ -1296,7 +1311,7 @@ def build(cfg: dict[str, Any]) -> dict[str, Any]:
     inow = str(cfg.get("indexnow_key") or "").strip()
     if inow:
         write(DIST / f"{inow}.txt", inow + "\n")
-    write(DIST / "_headers", "/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n/data/*\n  Cache-Control: public, max-age=600\n/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n")
+    write(DIST / "_headers", f"/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n/{SEARCH_INDEX}\n  Cache-Control: public, max-age=600\n/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n")
     site.flush()
     _log("flushed HTML, swapping dist")
     swap_dist(DIST, final_dist)
@@ -1579,8 +1594,8 @@ def _station_bento(
     last_up = f'<dt>最近涨价</dt><dd>{E(str(stab["last_up_at"])[:10])}</dd>' if stab.get("last_up_at") else ""
     card_price = (
         '<div class="bcard">'
-        f'<div class="bcard-h"><h3>价格稳定性（近 30 日）</h3><span class="badge {stab["cls"]}">{E(stab["label"])}</span></div>'
-        f'<div class="gauge"><b class="{band}">{score}</b><span>/ 100 稳定分</span>{_meter(score, band, "价格稳定分")}</div>'
+        f'<div class="bcard-h"><h3>防暗涨记录（近 30 天）</h3><span class="badge {stab["cls"]}">{E(stab["label"])}</span></div>'
+        f'<div class="gauge"><b class="{band}">{score}</b><span>/ 100 防暗涨分</span>{_meter(score, band, "防暗涨分")}</div>'
         + CH.price_impulse_svg(stab.get("impulses") or [], now)
         + (f'<div class="bd">{"".join(chips)}</div>' if chips else "")
         + f'<p class="bnote">{E(stab["volatility_summary"])}</p>'
@@ -1620,14 +1635,14 @@ def _station_bento(
     lm_cls = "muted" if lpct is None else ("ok" if lpct >= 50 else ("info" if lpct >= 17 else "warn"))
     card_domain = (
         '<div class="bcard">'
-        f'<div class="bcard-h"><h3>域名时长与基础设施</h3><span class="badge {age_cls}">{E(age_s)}</span></div>'
-        f'<div class="lmeter">{_meter(lpct, lm_cls, "域名时长（满格 3 年）")}'
+        f'<div class="bcard-h"><h3>开站时长与知名度</h3><span class="badge {age_cls}">{E(age_s)}</span></div>'
+        f'<div class="lmeter">{_meter(lpct, lm_cls, "开站时长（满格 3 年）")}'
         '<div class="ticks" aria-hidden="true"><span>0</span><span>1 年</span><span>2 年</span><span>3 年+</span></div></div>'
         '<dl class="bkv">'
         f'<dt>主域名注册</dt><dd>{E(str(reg_at))} · {E(age_long)}</dd>'
         f'<dt>到期 / 注册商</dt><dd>{E(str(exp_at))}{exp_badge} · {E(registrar)}</dd>'
         f'<dt>全球流量排名</dt><dd>{E(rank_s)}</dd>'
-        f'<dt>30日接口可用</dt><dd>{E(uptime_s)}</dd>'
+        f'<dt>近 30 天巡检在线率</dt><dd>{E(uptime_s)}</dd>'
         '</dl></div>'
     )
 
@@ -1640,7 +1655,7 @@ def _station_bento(
     verify_href = f"/verify/?base_url={quote(f'https://{dom}', safe='')}&model={quote(sample_model, safe='')}"
     pr = sc.probe
     if pr:
-        auth_badge = f'<span class="badge {"danger" if sc.cap_reason else "ok"}">Stage 2 探针已接入</span>'
+        auth_badge = f'<span class="badge {"danger" if sc.cap_reason else "ok"}">已接入真实调用实测</span>'
         fid_dl = (
             f'<dt>已验证档位</dt><dd>{E(str(pr.get("verified_tier") or "L0"))} · 真伪 {_pct(pr.get("auth_pass_rate"))} · '
             f'智商 {_pct(pr.get("iq_pass_rate"))} · 篡改被接受 {int(pr.get("tamper_accepted_count") or 0)} 次</dd>'
@@ -1654,14 +1669,14 @@ def _station_bento(
             f'<dt>真实调用率</dt><dd>{pr.get("success_rate", 0):.1%}（{pr.get("total_samples", 0)} 次样本）</dd>'
         )
     else:
-        auth_badge = '<span class="badge">Stage 1 未官测</span>'
+        auth_badge = '<span class="badge">仅公开报价（未人工实测）</span>'
         auth_dl = (
-            '<dt>真伪验真状态</dt><dd>尚未纳入 7 日官测探针池（已验证档位 L0，评级封顶 B 级 74 分）</dd>'
-            '<dt>自带 Key 自测</dt><dd>L1 签名回传与篡改负检、动态工具与缓存；L2 加测状态机追踪、逻辑推理与复合指令；L3 加测长文多跳防截断</dd>'
+            '<dt>真伪验真状态</dt><dd>还没有经过 7 天真实调用实测，所以最高只给 B 级（74 分）</dd>'
+            '<dt>自己测一测</dt><dd>用你自己的 Key 在验真页抽检：是不是真模型、有没有降智、长文会不会被截断</dd>'
         )
     card_auth = (
         '<div class="bcard">'
-        f'<div class="bcard-h"><h3>LLM 模型真伪与智商抽检</h3>{auth_badge}</div>'
+        f'<div class="bcard-h"><h3>模型真伪与降智抽检</h3>{auth_badge}</div>'
         f'<dl class="bkv">{auth_dl}</dl>'
         f'<div><a class="btn sm primary" href="{verify_href}">现场抽检这家站的真伪与智商 →</a></div>'
         '</div>'
@@ -1718,7 +1733,7 @@ def _station_bento(
         f'<div><a class="btn sm" href="{rev_issue_url}" target="_blank" rel="noopener">提交我的实测评价 / 避雷证据 →</a></div>'
         '</div>'
     )
-    return f'<section class="bento-4" aria-label="站点高级详情">{card_price}{card_domain}{card_auth}{card_rev}</section>'
+    return f'<section class="bento-4" aria-label="站点详情卡片">{card_price}{card_domain}{card_auth}{card_rev}</section>'
 
 
 def price_strip_section(rows: list[dict[str, Any]]) -> str:
@@ -1727,7 +1742,7 @@ def price_strip_section(rows: list[dict[str, Any]]) -> str:
         return ""
     return (
         '<section class="chart-card"><h3>旗舰模型价格定位 <small class="muted">输入价 ¥/百万 token</small></h3>' + svg
-        + '<p class="muted">灰带为全网常规分组 P10–P90，深色段为 P25–P75，竖线为中位；蓝点为本站常规最低价，橙点为本站特惠/逆向最低价，虚线即同站价差；紫线为官方参考价（» 表示超出坐标）。便宜程度不计入信誉分。</p></section>'
+        + '<p class="muted">灰带是全网大多数站点的价格范围，深色段是中间一半站点，竖线是中位价；蓝点是本站常规价，橙点是本站特惠/逆向价，紫线是官方价。</p></section>'
     )
 
 
@@ -1823,11 +1838,166 @@ def fact_sheet(dom: str, st: dict[str, Any], qs: list[P.Quote]) -> str:
     )
 
 
+BAR_MODELS = tuple(dict.fromkeys(list(TS.TRACKED) + list(FLAGSHIP_MODELS)))
+BAR_LABELS = {**TS.LABELS, "gpt-6.1-sol": "GPT-6.1 Sol", "gemini-4-carbon": "Gemini 4 Carbon"}
+
+
+def consumer_context(stations, by_station, specs, cfg, changes, *, ledger: dict[str, Any] | None = None, intel=None,
+                     run_stats=None, stability_map=None, monitored: bool = True) -> dict[str, Any]:
+    """Everything the plain-language Layer 1 needs: price anchors, peers, flagship lanes, 30-day ledger and change events."""
+    rate = float(cfg.get("usd_cny_rate", 7.25))
+    cm = CM.compute_metrics(stations, by_station, specs or {}, rate)
+    for dom, st in stations.items():
+        st["cm"] = cm[dom]
+    chg: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
+    for c in sorted(changes or [], key=lambda x: x.get("run_at") or "", reverse=True):
+        if c.get("type") in ("up", "down") and c.get("domain"):
+            canon = P.canonical_model(str(c.get("model") or ""))
+            if canon in TS.TRACKED:
+                chg[(c["domain"], canon)].append(c)
+    return {
+        "cm": cm, "peers": CM.compute_peers(cm), "lanes": CM.model_lanes(by_station, BAR_MODELS),
+        "official": {m: CM.official_lane((specs or {}).get(m), rate) for m in BAR_MODELS},
+        "ledger": ledger or TS.empty_ledger(), "chg": chg, "intel": intel or {}, "run_stats": run_stats or {},
+        "stab": stability_map or {}, "monitored": monitored,
+    }
+
+
+def _uptime_pct(st: dict[str, Any], dom: str, run_stats: dict[str, Any]) -> float | None:
+    rs = merged_run_stats(st, dom, run_stats)
+    return 100.0 * rs["successes"] / rs["attempts"] if rs["attempts"] else None
+
+
+def ledger_series(led: dict[str, Any], dom: str, aliases: list[str] | tuple[str, ...] = ()) -> list[list[Any]]:
+    """30-day ledger points of a station merged with its mirror domains (checks are logged per fetched host)."""
+    rows: dict[str, list[Any]] = {}
+    for d in [dom, *aliases]:
+        for pt in TS.station_series(led, d):
+            if len(pt) < 5:
+                continue
+            cur = rows.get(pt[0])
+            if cur is None:
+                rows[pt[0]] = [pt[0], pt[1], pt[2], pt[3], list(pt[4] or [None] * len(TS.TRACKED))]
+                continue
+            for k in (1, 2, 3):
+                if cur[k] is None:
+                    cur[k] = pt[k]
+            cur[4] = [a if a is not None else b for a, b in zip(cur[4], pt[4] or [None] * len(cur[4]))]
+    return [rows[k] for k in sorted(rows)]
+
+
+def _trend_models(dom: str, cx: dict[str, Any], peers: list[str], aliases: list[str] | tuple[str, ...] = ()) -> list[dict[str, Any]]:
+    led = cx["ledger"]
+    series = ledger_series(led, dom, aliases)
+    peer_series = {p: TS.station_series(led, p) for p in peers}
+    market = TS.market_series(led)
+    mine_now = (cx["cm"].get(dom) or {}).get("prices") or {}
+    out = []
+    for i, canon in enumerate(TS.TRACKED):
+        pts = [(pt[0], pt[4][i]) for pt in series if len(pt) > 4 and pt[4] and pt[4][i] is not None]
+        if canon not in mine_now and not pts:
+            continue
+        ref, ref_label = [], "同行均价"
+        peer_at: dict[str, list[float]] = defaultdict(list)
+        for ps in peer_series.values():
+            for pt in ps:
+                if len(pt) > 4 and pt[4] and pt[4][i] is not None:
+                    peer_at[pt[0]].append(pt[4][i])
+        if peer_at:
+            ref = [(ts, statistics.fmean(v)) for ts, v in sorted(peer_at.items())]
+        else:
+            ref = [(row[0], row[1 + i]) for row in market if len(row) > 1 + i and row[1 + i] is not None]
+            ref_label = "全网中位价"
+        lanes = cx["lanes"].get(canon) or {}
+        peer_now, peer_lbl = CM.peer_reference(lanes, peers, "in")
+        evs = []
+        for c in cx["chg"].get((dom, canon), [])[:4]:
+            up = c["type"] == "up"
+            evs.append(("warn" if up else "ok", f'{str(c.get("run_at") or "")[5:10]} {"涨价" if up else "降价"} {_chg_price(c.get("old"))}→{_chg_price(c.get("new"))}'))
+        out.append({
+            "model": canon, "label": TS.LABELS.get(canon, canon), "points": pts, "ref": ref,
+            "ref_label": ref_label if len(pts) >= DB.MIN_CURVE_POINTS else peer_lbl,
+            "mine": (lanes.get(dom) or {}).get("in", mine_now.get(canon)), "peer": peer_now,
+            "official": (cx["official"].get(canon) or {}).get("in"), "events": evs,
+        })
+    return out
+
+
+def _bar_rows(dom: str, cx: dict[str, Any], peers: list[str]) -> list[dict[str, Any]]:
+    rows = []
+    for canon in BAR_MODELS:
+        lanes = cx["lanes"].get(canon) or {}
+        mine = lanes.get(dom)
+        if not mine:
+            continue
+        off = cx["official"].get(canon) or {}
+        chat_ref, lbl = CM.peer_reference(lanes, peers, "chat")
+        cache_ref, _ = CM.peer_reference(lanes, peers, "cache")
+        rows.append({"label": BAR_LABELS.get(canon, canon), "peer_label": lbl,
+                     "chat": (mine["chat"], chat_ref, off.get("chat")), "cache": (mine["cache"], cache_ref, off.get("cache"))})
+    return rows[:6]
+
+
+def _peer_row(d: str, stations, cx: dict[str, Any], mine_idx: float | None, me: bool = False) -> dict[str, Any]:
+    st = stations[d]
+    sc = st["score"]
+    m = cx["cm"].get(d) or {}
+    days = (cx["intel"].get(d) or {}).get("domain_age_days")
+    stab = cx["stab"].get(d) or SI.default_stability()
+    delta, delta_cls = CM.pct_delta(mine_idx, m.get("mkt_idx"))
+    return {"dom": d, "name": str(st.get("display_name") or d)[:24], "me": me, "score": sc.total, "grade_html": grade_badge(sc.total),
+            "disc": CM.fmt_discount_short(m.get("off_pct")), "delta": delta, "delta_cls": delta_cls,
+            "age_txt": SI.fmt_domain_age(days)[0], "age_pct": SI.longevity_pct(days),
+            "stab": int(stab.get("stability_score", 100)), "uptime": _uptime_pct(st, d, cx["run_stats"])}
+
+
+def consumer_layer1(dom: str, st: dict[str, Any], stations, cx: dict[str, Any]) -> tuple[str, str]:
+    """(verdict strip for the hero, dashboard + price bars + peer comparison) for one priced station."""
+    sc: S.StationScore = st["score"]
+    m = cx["cm"].get(dom) or {}
+    pinfo = cx["peers"].get(dom) or {}
+    peers = [p for p in pinfo.get("peers") or [] if p in stations]
+    it = cx["intel"].get(dom) or {}
+    stab = {**SI.default_stability(), **(cx["stab"].get(dom) or {})}
+    rs = merged_run_stats(st, dom, cx["run_stats"])
+    caveat_groups = sum(1 for g in (st.get("groups") or []) if g.get("selectable") and not g.get("welfare") and g.get("caveats"))
+    greens, warns = CM.verdict_tags(
+        stage=sc.stage, failed=bool(sc.cap_reason and sc.stage == 2), age_days=it.get("domain_age_days"),
+        ups=int(stab.get("ups") or 0), sharp=int(stab.get("sharp_events") or 0), monitored=cx["monitored"],
+        cache_cov=st.get("cache_read_coverage"), attempts=int(rs["attempts"]), successes=int(rs["successes"]),
+        caveat_groups=caveat_groups, consecutive_failures=int(st.get("consecutive_failures") or 0))
+    verdict = DB.verdict_card(grade_html=grade_badge(sc.total), score=sc.total, headline=CM.price_headline(m), greens=greens,
+                              warns=warns, chips=CM.client_chips(st.get("endpoints")))
+    aliases = list(st.get("aliases") or [])
+    dash = DB.dashboard(DB.heartbeat_card(ledger_series(cx["ledger"], dom, aliases)),
+                        DB.price_trend_card(_trend_models(dom, cx, peers, aliases), TS.LABELS.values()))
+    bars = DB.price_bars(_bar_rows(dom, cx, peers))
+    mine_idx = m.get("mkt_idx")
+    rows = [_peer_row(dom, stations, cx, mine_idx, me=True)] + [_peer_row(p, stations, cx, mine_idx) for p in peers]
+
+    def alt(d: str | None, kind: str) -> dict[str, Any] | None:
+        if not d or d not in stations:
+            return None
+        md = cx["cm"].get(d) or {}
+        shared = len((m.get("models") or frozenset()) & (md.get("models") or frozenset()))
+        if kind == "cheaper":
+            delta, _ = CM.pct_delta(mine_idx, md.get("mkt_idx"))
+            why = f"共同在卖 {shared} 款型号，整体{delta}"
+        else:
+            why = f"共同在卖 {shared} 款型号，靠谱分高 {stations[d]['score'].total - sc.total:.0f} 分（{stations[d]['score'].grade} 级）"
+        return {"dom": d, "name": str(stations[d].get("display_name") or d)[:24], "why": why}
+
+    href = "/compare/?s=" + ",".join(quote(x, safe="") for x in [dom] + peers[:2])
+    pk = DB.peer_pk(rows, cheaper=alt(pinfo.get("cheaper"), "cheaper"), safer=alt(pinfo.get("safer"), "safer"), compare_href=href)
+    return verdict, dash + bars + pk
+
+
 def build_station_pages(
     site: Site, stations, by_station, intel, changes, cfg,
     *, run_stats: dict[str, Any] | None = None, stability_map: dict[str, Any] | None = None,
     reviews_map: dict[str, list[dict[str, Any]]] | None = None,
     market_dims: dict[str, float] | None = None, market_px: dict[str, dict[str, Any]] | None = None,
+    cx: dict[str, Any] | None = None,
 ) -> None:
     now = site.now
     market_px = market_px or {}
@@ -1855,7 +2025,7 @@ def build_station_pages(
         for q in qs:
             fam_counts[q.family] += 1
         fam_txt = "、".join(f"{P.FAMILY_LABELS.get(f, f)} {n}" for f, n in sorted(fam_counts.items(), key=lambda x: -x[1])[:6])
-        ep_pills = "".join(f'<span class="badge ep">{E(P.ENDPOINT_LABELS.get(e, e))}</span>' for e in (st.get("endpoints") or []))
+        ep_pills = "".join(f'<span class="badge ep">{E(PLAIN_EP.get(e, e))}</span>' for e in (st.get("endpoints") or []))
         tbl = quote_table(site, qs, stations, show_model=True, show_station=False, table_id="s")
         tp = st.get("topup_price")
         aliases = st.get("aliases") or []
@@ -1885,15 +2055,19 @@ def build_station_pages(
             oauth_tags.append("支持 Telegram 登录")
 
         bento_html = _station_bento(dom, st, qs, it, run_stats.get(dom) or {}, stability_map.get(dom), reviews_map.get(dom) or [], now=now)
-        strip_html = price_strip_section(station_price_rows(qs, market_px))
+        verdict_html, layer1_html = consumer_layer1(dom, st, stations, cx) if cx else ("", "")
         body = f"""
 <section class="hero sm">
-  <p class="eyebrow">站点口碑档案 · {E(sc.stage_label)}</p>
+  <p class="eyebrow">站点体检档案 · {E(plain_stage(sc))}</p>
   <h1>{E(name)} 靠谱吗？ <small>{E(dom)}</small></h1>
   <p class="lead">{health}</p>
+  {verdict_html}
+</section>
+{layer1_html}
+<section class="detail-block" aria-label="评分明细与站点详情">
+  <h2>评分明细与站点详情</h2>
   {score_panel(st, cfg, market_dims)}
   {bento_html}
-  {strip_html}
   <div class="kpis">
     <div><b>{E(f"¥{tp:g}" if tp is not None else "未知")}</b><span>{E(st.get("topup_note") or "")}</span></div>
     <div><b>{st.get("parsed", len(qs))}</b><span>有效定价型号</span></div>
@@ -1904,7 +2078,9 @@ def build_station_pages(
   {('<div class="bd">' + ep_pills + '</div>') if ep_pills else ''}
   <p class="muted">型号分布：{E(fam_txt)}{('；收录来源：' + E('、'.join(srcs[:8])) + ('…' if len(srcs) > 8 else '')) if srcs else ''}</p>
 </section>
+<details class="adv-drawer"><summary>给进阶用户核对：站点原始规格参数（充值汇率、额度单位、API 地址、风控项）</summary>
 {fact_sheet(dom, st, qs)}
+</details>
 <details class="groups"><summary>全部分组倍率与自认标签（{len(groups)}）</summary>
 <div class="tbl-wrap"><table class="plain"><thead><tr><th>分组</th><th class="n">倍率</th><th>状态 / 提醒</th><th>站点原文说明</th></tr></thead><tbody>{g_rows}</tbody></table></div></details>
 {chg_html}
@@ -1951,22 +2127,25 @@ RANK_DIMS = ("stability", "longevity", "transparency", "reputation", "latency", 
 
 
 FACETS = (
-    ("协议", (("ep-a", "Anthropic"), ("ep-r", "OpenAI Responses"), ("ep-g", "Gemini"))),
-    ("登录与门槛", (("lx", "Linux.do 登录"), ("gh", "GitHub 登录"), ("nots", "免 Turnstile"))),
-    ("计费与缓存", (("cr", "公开缓存读"), ("cw", "公开缓存写"), ("disc", "折价额度站"), ("fx", "汇率直充站"))),
-    ("质量", (("stab", "价格平稳 ≥80"), ("age1", "域名 ≥1年"), ("gb", "B 级及以上"))),
+    ("按使用场景", (("ep-a", "写代码 / Claude Code"), ("ep-o", "日常聊天 / 翻译"), ("ep-g", "Gemini 模型"), ("cw", "长对话省钱缓存"))),
+    ("按选站偏好", (("cheap", "省钱优选（前 30% 便宜）"), ("age1", "老牌稳用（1 年以上）"), ("stab", "近期没涨价"),
+                ("gb", "高分优先（B 级+）"), ("easy", "好注册（支持快捷登录）"))),
 )
 
 
-def station_facets(st: dict[str, Any], sc: S.StationScore, stab_v: int, days: Any) -> str:
-    """Space-separated facet tokens for the /stations/ multi-facet filter (AND across selected chips)."""
+def station_facets(st: dict[str, Any], sc: S.StationScore, stab: dict[str, Any] | None, days: Any) -> str:
+    """Space-separated facet tokens for the /stations/ scenario filter and bubble map (AND across selected chips)."""
     eps = set(st.get("endpoints") or [])
+    stab = stab or SI.default_stability()
+    chp = (st.get("cm") or {}).get("cheaper_pct")
     toks = [t for t, ok in (
-        ("ep-a", "anthropic" in eps), ("ep-r", "openai-response" in eps), ("ep-g", "gemini" in eps),
-        ("lx", bool(st.get("linuxdo_oauth"))), ("gh", bool(st.get("github_oauth"))), ("nots", st.get("turnstile_check") is False),
-        ("cr", (st.get("cache_read_coverage") or 0) > 0), ("cw", (st.get("cache_write_coverage") or 0) > 0),
-        ("disc", st.get("topup_mode") == "discount"), ("fx", st.get("topup_mode") == "fx"),
-        ("stab", stab_v >= 80), ("age1", isinstance(days, (int, float)) and days >= 365), ("gb", sc.grade in ("S", "A", "B")),
+        ("ep-a", "anthropic" in eps), ("ep-o", "openai" in eps or "openai-response" in eps), ("ep-g", "gemini" in eps),
+        ("cw", (st.get("cache_read_coverage") or 0) > 0),
+        ("cheap", isinstance(chp, (int, float)) and chp >= 70),
+        ("age1", isinstance(days, (int, float)) and days >= 365),
+        ("stab", int(stab.get("ups") or 0) == 0 and int(stab.get("stability_score", 100)) >= 80),
+        ("gb", sc.grade in ("S", "A", "B")),
+        ("easy", bool(st.get("github_oauth") or st.get("linuxdo_oauth") or st.get("telegram_oauth"))),
     ) if ok]
     return " ".join(toks)
 
@@ -1982,8 +2161,6 @@ def facet_bar(total: int) -> str:
         f'<div class="facets" id="facets" data-total="{total}">{groups}'
         f'<div class="fc-foot"><output id="facet-count" aria-live="polite">当前显示 {total} / {total} 家站点</output>'
         '<button type="button" class="btn sm" id="facet-reset">重置筛选</button>'
-        '<a class="btn sm" href="/data/stations.json" download>下载 JSON</a>'
-        '<a class="btn sm" href="/data/stations.csv" download>导出 CSV</a>'
         '<a class="btn sm primary" href="/compare/">并排对比 →</a></div></div>'
     )
 
@@ -1998,12 +2175,20 @@ def compare_bar() -> str:
     )
 
 
+def _dims_tip(sc: S.StationScore) -> str:
+    parts = [f"{PLAIN_DIM_LONG.get(k, S.DIM_LABELS.get(k, k))} {sc.dims[k].score:.0f}" + ("" if sc.dims[k].known else "（证据不足）")
+             for k in S.DIM_ORDER if k in sc.dims]
+    return "分项：" + " · ".join(parts)
+
+
 def station_rank_table(
     stations, by_station, now, limit: int | None = None, compact: bool = False,
     intel: dict[str, Any] | None = None, stability_map: dict[str, Any] | None = None,
+    run_stats: dict[str, Any] | None = None,
 ) -> str:
     intel = intel or {}
     stability_map = stability_map or {}
+    run_stats = run_stats or {}
     items = sorted(
         stations.items(),
         key=lambda kv: (-kv[1]["score"].stage, -kv[1]["score"].total, -kv[1]["score"].raw_total, kv[0]),
@@ -2014,50 +2199,54 @@ def station_rank_table(
     for i, (dom, st) in enumerate(items, 1):
         sc: S.StationScore = st["score"]
         tp = st.get("topup_price")
-        dims = "" if compact else "".join(
-            (f'<td class="n" data-v="{sc.dims[k].score:.1f}"><span class="{"" if sc.dims[k].known else "muted"}">{sc.dims[k].score:.0f}</span></td>'
-             if k in sc.dims else '<td class="n" data-v="na"><span class="muted">—</span></td>')
-            for k in RANK_DIMS
-        )
-        extra_cols = ""
-        facet_attr = ""
-        cmp_cell = ""
-        if not compact:
-            days = (intel.get(dom) or {}).get("domain_age_days")
-            age_s, _, age_cls = SI.fmt_domain_age(days)
-            sb = stability_map.get(dom) or SI.default_stability()
-            sb_v = int(sb.get("stability_score", 100))
-            sb_band = sb.get("cls") or SI.stability_band(sb_v)
-            sb_tip = E(f'{sb.get("label", "")}：{sb.get("volatility_summary", "")}')
-            age_v = days if isinstance(days, (int, float)) and days >= 0 else "na"
-            extra_cols = (
-                f'<td class="n" data-v="{age_v}"><span class="badge {age_cls}">{E(age_s)}</span></td>'
-                f'<td class="n" data-v="{sb_v}" title="{sb_tip}"><span class="sbar {sb_band}" style="--v:{sb_v}%">{sb_v}</span></td>'
+        n_models = st.get("parsed", len(by_station.get(dom, [])))
+        score_cell = (f'<td class="sc" data-v="{sc.total}" title="{E(_dims_tip(sc))}">{grade_badge(sc.total)} <b>{sc.total:.1f}</b>'
+                      f'<small>{E(plain_stage(sc))}</small></td>')
+        name_cell = f'<td class="st" data-v="{E(dom)}"><a href="/site/{E(dom)}/">{E(st["display_name"])}</a><small>{E(dom)}</small></td>'
+        if compact:
+            rows.append(
+                f'<tr><td class="n" data-v="{i}">{i}</td>{name_cell}{score_cell}'
+                f'<td class="n" data-v="{tp if tp is not None else 9e9}">{E(f"¥{tp:g}/$1" if tp is not None else "未知")}</td></tr>'
             )
-            facet_attr = f' data-f="{station_facets(st, sc, sb_v, days)}"'
-            cmp_cell = (f'<td class="cmp"><input type="checkbox" data-cmp="{E(dom)}" data-name="{E(str(st["display_name"])[:24])}"'
-                        f' aria-label="加入对比：{E(st["display_name"])}"></td>')
-        st_lbl = "Stage 2 实测" if (sc.stage == 2 and not sc.cap_reason) else ("Stage 2 降级" if sc.stage == 2 else "Stage 1 未实测")
-        rows.append(
-            f'<tr><td class="n" data-v="{i}"{facet_attr}>{i}</td>'
-            f'<td class="st" data-v="{E(dom)}"><a href="/site/{E(dom)}/">{E(st["display_name"])}</a><small>{E(dom)}</small></td>'
-            f'<td class="sc" data-v="{sc.total}">{grade_badge(sc.total)} <b>{sc.total:.1f}</b><small>{st_lbl} · 置信度{sc.confidence}</small></td>'
-            f'{dims}{extra_cols}'
-            f'<td class="n" data-v="{tp if tp is not None else 9e9}">{E(f"¥{tp:g}/$1" if tp is not None else "未知")}</td>'
-            + ("" if compact else f'<td class="n" data-v="{st.get("parsed", len(by_station.get(dom, [])))}">{st.get("parsed", len(by_station.get(dom, [])))}</td>'
-               f'<td class="t" data-v="{int(st["fetched_at"].timestamp())}">{E(ago(st["fetched_at"], now))}</td>')
-            + cmp_cell + "</tr>"
+            continue
+        days = (intel.get(dom) or {}).get("domain_age_days")
+        age_s, _, age_cls = SI.fmt_domain_age(days)
+        sb = stability_map.get(dom) or SI.default_stability()
+        sb_v = int(sb.get("stability_score", 100))
+        sb_band = sb.get("cls") or SI.stability_band(sb_v)
+        sb_tip = E(f'{sb.get("label", "")}：{sb.get("volatility_summary", "")}')
+        age_v = days if isinstance(days, (int, float)) and days >= 0 else "na"
+        cm = st.get("cm") or {}
+        off, chp = cm.get("off_pct"), cm.get("cheaper_pct")
+        price_cell = (
+            f'<td class="pr" data-v="{off:.2f}"><span class="badge {"ok" if off < 95 else ("" if off <= 105 else "danger")}">{E(CM.fmt_discount_short(off))}</span>'
+            + (f'<small>{E(CM.fmt_cheaper(chp))}</small>' if chp is not None else "") + "</td>"
+            if isinstance(off, (int, float)) else '<td class="pr" data-v="na"><span class="muted">暂无比价基线</span></td>'
         )
-    dim_heads = "" if compact else "".join(f'<th data-type="n" data-first="desc"><button type="button">{S.DIM_LABELS[k]}</button></th>' for k in RANK_DIMS)
-    extra_heads = "" if compact else '<th data-type="n" data-first="desc"><button type="button">域名时长</button></th><th data-type="n" data-first="desc" title="0–100，越高越稳定；近 30 日涨价次数与幅度扣分"><button type="button">价格稳定</button></th>'
+        up = _uptime_pct(st, dom, run_stats)
+        up_cell = (f'<td class="n" data-v="{up:.1f}"><span class="sbar {SI.stability_band(up)}" style="--v:{up:.0f}%">{up:.0f}%</span></td>'
+                   if up is not None else '<td class="n" data-v="na"><span class="muted">累积中</span></td>')
+        rows.append(
+            f'<tr><td class="n" data-v="{i}" data-f="{station_facets(st, sc, sb, days)}">{i}</td>{name_cell}{score_cell}{price_cell}'
+            f'<td class="n" data-v="{sb_v}" title="{sb_tip}"><span class="sbar {sb_band}" style="--v:{sb_v}%">{sb_v}</span></td>'
+            f'<td class="n" data-v="{age_v}"><span class="badge {age_cls}">{E(age_s)}</span></td>'
+            f'{up_cell}<td class="n" data-v="{n_models}">{n_models}</td>'
+            f'<td class="cmp"><input type="checkbox" data-cmp="{E(dom)}" data-name="{E(str(st["display_name"])[:24])}"'
+            f' aria-label="加入对比：{E(st["display_name"])}"></td></tr>'
+        )
+    head = ('<div class="tbl-wrap"><table class="qt sortable rank"><thead><tr>'
+            '<th data-type="n"><button type="button">#</button></th><th data-type="s"><button type="button">站点</button></th>'
+            '<th data-type="n" aria-sort="descending" title="0–100 综合靠谱分，悬停分数可看分项"><button type="button">靠谱度</button></th>')
+    if compact:
+        return head + '<th data-type="n"><button type="button">充值比例</button></th></tr></thead><tbody>' + "".join(rows) + "</tbody></table></div>"
     return (
-        '<div class="tbl-wrap"><table class="qt sortable rank"><thead><tr>'
-        '<th data-type="n"><button type="button">#</button></th><th data-type="s"><button type="button">站点</button></th>'
-        '<th data-type="n" aria-sort="descending"><button type="button">信誉分</button></th>'
-        f'{dim_heads}{extra_heads}'
-        '<th data-type="n"><button type="button">充值比例</button></th>'
-        + ("" if compact else '<th data-type="n" data-first="desc"><button type="button">型号</button></th><th data-type="n" data-first="desc"><button type="button">更新</button></th>'
-           '<th class="cmp" scope="col" title="勾选 2–4 家站点后并排对比">对比</th>')
+        head
+        + '<th data-type="n" title="约为官网价的几折；越低越省钱"><button type="button">相对价格</button></th>'
+        '<th data-type="n" data-first="desc" title="0–100，越高越稳定；近 30 天涨价次数与幅度扣分"><button type="button">防暗涨</button></th>'
+        '<th data-type="n" data-first="desc"><button type="button">开站时长</button></th>'
+        '<th data-type="n" data-first="desc" title="站内定时巡检公开接口的成功比例"><button type="button">近 30 天在线</button></th>'
+        '<th data-type="n" data-first="desc"><button type="button">型号数</button></th>'
+        '<th class="cmp" scope="col" title="勾选 2–4 家站点后并排对比">对比</th>'
         + "</tr></thead><tbody>" + "".join(rows) + "</tbody></table></div>"
     )
 
@@ -2091,8 +2280,11 @@ def model_list(items: list[tuple[str, dict[str, Any]]], stations) -> str:
 
 def build_indexes(
     site: Site, model_pages, stations, by_station, closed_stations, cfg, min_st,
-    *, intel: dict[str, Any] | None = None, stability_map: dict[str, Any] | None = None,
+    *, intel: dict[str, Any] | None = None, stability_map: dict[str, Any] | None = None, cx: dict[str, Any] | None = None,
 ):
+    intel = intel or {}
+    stability_map = stability_map or {}
+    run_stats = (cx or {}).get("run_stats") or {}
     fam_models: dict[str, list[tuple[str, dict[str, Any]]]] = defaultdict(list)
     for canon, mp in model_pages.items():
         fam_models[mp["family"]].append((canon, mp))
@@ -2121,9 +2313,17 @@ def build_indexes(
         if st["score"].stage == 2:
             n_stage2 += 1
     gtxt = " · ".join(f"{g} 级 {grades.get(g, 0)} 家" for g in ("S", "A", "B", "C", "D"))
-    totals = [st["score"].total for st in stations.values()]
-    hist = CH.score_histogram_svg(totals, median=statistics.median(totals) if totals else None, cap=S.STAGE1_CAP)
-    hist_html = f'<div class="chart-card"><h3>全网信誉分分布 <small class="muted">{len(totals)} 家 · 每 5 分一档</small></h3>{hist}</div>' if hist else ""
+    bubble_rows = []
+    for dom, st in stations.items():
+        cm = st.get("cm") or {}
+        days = (intel.get(dom) or {}).get("domain_age_days")
+        bubble_rows.append({
+            "dom": dom, "name": st["display_name"], "grade": st["score"].grade, "score": st["score"].total,
+            "cheaper_pct": cm.get("cheaper_pct"), "off_pct": cm.get("off_pct"), "age_days": days,
+            "uptime": _uptime_pct(st, dom, run_stats), "n_models": st.get("parsed") or cm.get("n_models") or 0,
+            "facets": station_facets(st, st["score"], stability_map.get(dom), days),
+        })
+    bubble_html = DB.bubble_section(DB.bubble_payload(bubble_rows), len(stations))
     closed_html = ""
     if closed_stations:
         c_rows = "".join(
@@ -2140,11 +2340,13 @@ def build_indexes(
     site.page(
         "/stations/", "AI API 中转站分层评分排行榜",
         f"{len(stations)} 家 AI API 中转站分层信誉评分排行（实测认证 {n_stage2} 家，公开校验 {len(stations) - n_stage2} 家，另含 {len(closed_stations)} 家仅建档闭源站）：{gtxt}。",
-        f'<section class="hero sm"><h1>AI API 中转站分层评分排行榜</h1>'
-        f'<p class="lead">未接入真实调用探针的站点按 <b>Stage 1 平滑封顶（严格低于 74 分，最高 B 级）</b>，仅实测达标解锁 A/S 认证。公开分七维：{E(S.summarize_weights(w))}，关键信任维度低于健康线另计短板拖累。当前分布：{gtxt}。<a href="/about/">评分方法 →</a></p>'
-        f'<p class="muted">「价格稳定」为近 30 日公开报价的 0–100 稳定分：降价与 &lt;2% 舍入微调不扣分，涨价按调价次数与幅度扣分；「纯净」为分组纯净度与协议完备度。数值列首次点击即按从高到低排序，未知值始终排在末尾。</p>{hist_html}</section>'
+        f'<section class="hero sm"><h1>AI API 中转站靠谱度排行榜</h1>'
+        f'<p class="lead">先看图找到“既靠谱又便宜”的站，再用下面的场景按钮缩小范围。只抓取公开报价、还没人工实测的站最高只给 B 级（低于 74 分）；'
+        f'通过真实调用实测才可能拿到 A/S 级。当前分布：{gtxt}。<a href="/about/">评分方法 →</a></p>'
+        f'<p class="muted">「相对价格」是热门型号价格约为官网价的几折；「防暗涨」越高说明近 30 天越少偷偷涨价；「近 30 天在线」是站内定时巡检能打开接口的比例。数值列首次点击按从高到低排序，未知值始终排在末尾。</p></section>'
+        + bubble_html
         + facet_bar(len(stations))
-        + station_rank_table(stations, by_station, site.now, intel=intel, stability_map=stability_map)
+        + station_rank_table(stations, by_station, site.now, intel=intel, stability_map=stability_map, run_stats=run_stats)
         + compare_bar()
         + closed_html,
         crumbs=[("站点排行", "/stations/")], priority=0.9,
@@ -2394,8 +2596,8 @@ def build_about(site: Site, cfg: dict[str, Any]) -> None:
 <p>本站（<code>agentied.work</code>）由 Agentied 团队维护，团队同时运营自营中转站 <code>agentied.top</code>；站内部分第三方外链可能包含推广返佣参数（均标明 <code>rel="sponsored nofollow noopener"</code> 及「含返佣」提示）。</p>
 <p><b>零优待原则</b>：自营站与所有合作或非合作第三方站点执行完全相同的公开抓取、分层封顶、否决与探针实测代码，不存在任何手工加分、白名单豁免或付费买分。任何价格、标签或实测异常均可按客观证据提交复核纠错。</p>
 
-<h2>七、开放数据、站点规格档案卡与三值缓存口径</h2>
-<p>全部在榜站点的归一化固定规格公开为 <a href="/data/stations.json"><code>/data/stations.json</code></a>（列式紧凑 JSON：<code>cols</code> 给出列名、<code>col_desc</code> 给出字段说明、<code>rows</code> 每行一家站点，按信誉排名排序）与 <a href="/data/stations.csv"><code>/data/stations.csv</code></a>（同内容的扁平表）。脚本、表格软件与 AI Agent 可直接读取；<a href="/compare/">并排对比页</a> 与 <a href="/stations/">排行榜</a> 均提供一键下载。</p>
+<h2>七、站点规格档案卡与三值缓存口径</h2>
+<p>本站只做在线查看，<b>不提供批量数据下载或导出</b>。每家站点的固定规格在站点档案页底部的「给进阶用户核对」抽屉中展开查看；想在几家之间做决定，可用 <a href="/compare/">并排对比页</a>（仅展示对比所需的消费者口径指标，不含 API 地址、额度单位与分组倍率等原始配置）或 <a href="/stations/">排行榜</a> 的场景筛选。档案卡字段口径如下：</p>
 <table class="plain">
 <thead><tr><th>字段组</th><th>内容</th><th>来源与清洗</th></tr></thead>
 <tbody>
@@ -2504,7 +2706,7 @@ def build_seo_files(site: Site, model_pages, stations, n_stage0: int) -> None:
         for p, lm, pr in sorted(site.urls, key=lambda x: -x[2])
     )
     write(DIST / "sitemap.xml", f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap.9">{urls}</urlset>\n'.replace("sitemap.9", "sitemap/0.9"))
-    write(DIST / "robots.txt", f"User-agent: *\nAllow: /\nAllow: /data/stations.json\nAllow: /data/stations.csv\nDisallow: /data/\n\nSitemap: {site.url('/sitemap.xml')}\n")
+    write(DIST / "robots.txt", f"User-agent: *\nAllow: /\nDisallow: /data/\nDisallow: /{SEARCH_INDEX}\n\nSitemap: {site.url('/sitemap.xml')}\n")
     lines = [
         f"# {site.name}", "", f"> {site.cfg['description']}", "",
         f"数据更新时间：{fmt_cst(site.now)}（北京时间）。收录 {len(stations)} 家公开报价站、{n_stage0} 家 Stage 0 仅建档闭源站、{len(model_pages)} 个型号。",
@@ -2517,9 +2719,8 @@ def build_seo_files(site: Site, model_pages, stations, n_stage0: int) -> None:
         "", "## 主要页面",
         f"- [月度成本算账器与主备选站助手]({site.url('/calc/')})：官方直连 vs 常规中转 vs 80/20 混合路由，自动给出 1 主 + 1 备站点组合",
         f"- [LLM 模型真伪鉴别与协议自测工具]({site.url('/verify/')})：支持在线无状态边缘接口（POST /api/verify）与本机脚本，L1/L2/L3 三档动态种子抽检，分别给出真伪特征分与智商保真分",
-        f"- [中转站分层评分排行]({site.url('/stations/')})：多维筛选（协议 / 登录门槛 / 缓存公开 / 充值模式 / 质量）与勾选对比",
-        f"- [中转站并排对比]({site.url('/compare/')})：2–4 家站点固定规格与 6 大旗舰模型价格逐行对齐，支持「只看差异项」与 ?s=域名1,域名2 分享链接",
-        f"- [开放数据 stations.json]({site.url('/data/stations.json')})：全部在榜站点的归一化固定规格 + 旗舰价格（列式紧凑 JSON，字段说明见 col_desc；CSV 镜像 {site.url('/data/stations.csv')}）",
+        f"- [中转站靠谱度排行]({site.url('/stations/')})：「省钱 vs 靠谱」分布图 + 按使用场景 / 选站偏好筛选与勾选对比",
+        f"- [中转站并排对比]({site.url('/compare/')})：2–4 家站点的靠谱分、约官网几折、注册门槛与 6 大热门模型价格逐行对齐，支持「只看差异项」与 ?s=域名1,域名2 分享链接（仅在线查看，不提供批量下载）",
         f"- [全部模型]({site.url('/models/')})",
         f"- [调价动态]({site.url('/changes/')})",
         f"- [评分与计价方法及利益披露]({site.url('/about/')})",

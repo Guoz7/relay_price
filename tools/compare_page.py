@@ -1,58 +1,48 @@
-"""Open station dataset (`/data/stations.json` + `/data/stations.csv`) and the `/compare/` side-by-side matrix.
+"""`/compare/` side-by-side matrix for ordinary users (display-only, zero downloads).
 
-The dataset is a compact column-oriented table: `cols` names every field once and each station is a
-positional row, so ~760 stations with fixed specs + 6 flagship price cells stay well under 280 KB.
-`/compare/` is a pure client-side page that loads this file (no extra build-time HTML per station pair).
+The page embeds one compact column-oriented JSON block (`<script type="application/json" id="cmp-data">`) holding only
+consumer-facing display metrics: no API addresses, docs / top-up links, quota units, site exchange rates, group ratios,
+billing formulas or system versions, and nothing is fetched from `/data/`. `cols` names every field once and each
+station is a positional row so ~760 stations stay around 25 KB gzipped.
 """
 
 from __future__ import annotations
 
-import csv
-import io
+import gzip
 import json
-from html import escape as E
 from datetime import datetime
+from html import escape as E
 from typing import Any
 
 import pricing as P
 import scoring as S
 
-SCHEMA_VERSION = 1
-MAX_BYTES = 280 * 1024
+SCHEMA_VERSION = 2
+MAX_GZ_BYTES = 40 * 1024
 EP_CODES = {"anthropic": "a", "openai": "o", "openai-response": "r", "gemini": "g", "image": "i", "video": "v", "embeddings": "e"}
 COLS: list[tuple[str, str]] = [
-    ("d", "域名"),
-    ("n", "站点名"),
-    ("rank", "信誉排名"),
-    ("score", "信誉分（Stage 1 封顶 74）"),
+    ("d", "域名（行序即靠谱度排名）"),
+    ("n", "站点名，null=与域名相同"),
+    ("score", "综合靠谱分 0–100"),
     ("grade", "等级 S/A/B/C/D"),
-    ("stage", "认证阶段 1=公开校验 2=实测"),
-    ("pct", "全网百分位（超过 N% 站点）"),
-    ("dims", "7 维子分 [稳定,资历,透明,口碑,延迟,价稳,纯净]，null=证据不足"),
-    ("stab", "价格稳定分 0–100"),
-    ("age", "主域名注册天数"),
-    ("price", "充值比例：¥ / $1 额度"),
-    ("mode", "充值模式 discount|fx|custom|unknown"),
-    ("fx", "站内汇率 usd_exchange_rate"),
-    ("cur", "显示币种 quota_display_type"),
-    ("qpu", "额度单位 quota_per_unit"),
-    ("ver", "系统版本"),
-    ("api", "API Base URL（已清洗；省略 https:// 前缀）"),
-    ("docs", "文档链接（已清洗；省略 https:// 前缀）"),
-    ("topup", "充值链接（已清洗；省略 https:// 前缀）"),
-    ("login", "登录方式 [GitHub,Linux.do,Telegram] 1/0"),
-    ("email", "邮箱验证 1/0，null=未公开"),
-    ("ts", "Turnstile 人机校验 1/0，null=未公开"),
-    ("eps", "协议代码 a=Anthropic o=OpenAI Chat r=OpenAI Responses g=Gemini i=生图 v=视频 e=Embedding"),
-    ("crc", "缓存读公开覆盖率 %"),
-    ("cwc", "缓存写公开覆盖率 %"),
-    ("groups", "公开分组数"),
-    ("models", "有效定价型号数"),
-    ("upd", "数据更新时间 unix 秒"),
-    ("cfg", "最近充值比例/汇率/分组倍率变动 [YYYY-MM-DD, 说明] 或 null"),
-    ("fs", "旗舰常规价 [[旗舰序号, 输入, 输出, 缓存读, 缓存写, 分组(\"\"=default), 分组倍率]]；¥/百万 token；缓存 null=未公开 \"na\"=不适用"),
+    ("stage", "1=仅公开报价 2=已真实调用实测 3=实测未达标"),
+    ("pct", "超过全网 N% 站点"),
+    ("stab", "防暗涨分 0–100"),
+    ("age", "开站月数"),
+    ("off", "约为官网价的百分比"),
+    ("chp", "比全网 N% 同行便宜"),
+    ("price", "充值 ¥ 换 $1 额度"),
+    ("mode", "充值方式 discount|fx|custom|unknown"),
+    ("login", "快捷登录 [GitHub,Linux.do,Telegram] 1/0"),
+    ("email", "注册需邮箱验证 1/0，null=未公开"),
+    ("eps", "能接的软件类型代码"),
+    ("crc", "公开缓存读取价的型号占比 %"),
+    ("models", "在售型号数"),
+    ("fs", "热门模型日常价 [[序号, 输入, 输出, 缓存读取]]；¥/百万 token；缓存 null=未公开 \"na\"=不适用"),
 ]
 COL_NAMES = [c for c, _ in COLS]
+FORBIDDEN_KEYS = ("server_address", "docs_link", "top_up_link", "quota_per_unit", "usd_exchange_rate", "group_ratio",
+                  "billing_expr", "version", "api", "docs", "topup", "qpu", "fx", "ver")
 
 
 def _s(v: Any, sig: int = 4) -> Any:
@@ -61,21 +51,6 @@ def _s(v: Any, sig: int = 4) -> Any:
         return None
     f = float(f"{float(v):.{sig}g}")
     return int(f) if f.is_integer() and abs(f) < 1e15 else f
-
-
-def _url(v: Any) -> str | None:
-    """Drop the implicit `https://` scheme (clients add it back); plain http:// URLs keep their scheme."""
-    if not v:
-        return None
-    s = str(v)
-    return s[8:] if s.startswith("https://") else s
-
-
-def full_url(v: Any) -> str:
-    if not v:
-        return ""
-    s = str(v)
-    return s if s.startswith(("http://", "https://")) else "https://" + s
 
 
 def _b(v: Any) -> int | None:
@@ -87,16 +62,16 @@ def rank_order(stations: dict[str, dict[str, Any]]) -> list[str]:
                                                                     -kv[1]["score"].raw_total, kv[0]))]
 
 
-def _cache_cell(q: P.Quote, val: float | None, write: bool = False) -> Any:
+def _cache_cell(q: P.Quote, val: float | None) -> Any:
     if q.cache_status == "na":
         return "na"
     if val is None:
         return None
-    return _s(val)
+    return _s(val, 3)
 
 
 def flagship_cells(qs: list[P.Quote], flagships: tuple[str, ...] | list[str]) -> list[list[Any]]:
-    """Cheapest standard-lane (non-anomalous, CNY-convertible) token quote per flagship model."""
+    """Cheapest standard-lane (non-anomalous, CNY-convertible) token quote per flagship model (no group names / ratios)."""
     out: list[list[Any]] = []
     for i, canon in enumerate(flagships):
         cand = [q for q in qs if q.canonical == canon and q.kind == "token" and q.lane == "standard"
@@ -104,163 +79,103 @@ def flagship_cells(qs: list[P.Quote], flagships: tuple[str, ...] | list[str]) ->
         if not cand:
             continue
         q = min(cand, key=lambda x: (1 if (x.anomaly or x.low_outlier) else 0, x.input_cny, str(x.group or "")))
-        out.append([i, _s(q.input_cny), _s(q.output_cny), _cache_cell(q, q.cache_cny), _cache_cell(q, q.cache_write_cny, True),
-                    ("" if (q.group or "default") == "default" else str(q.group)[:16]), _s(q.group_ratio)])
+        out.append([i, _s(q.input_cny, 3), _s(q.output_cny, 3), _cache_cell(q, q.cache_cny)])
     return out
 
 
-def last_config_change(st: dict[str, Any]) -> list[str] | None:
-    chg = st.get("config_changes") or []
-    if not chg:
-        return None
-    c = chg[0]
-    return [str(c.get("run_at") or "")[:10], str(c.get("text") or "")[:48]]
+def _stage(sc: S.StationScore) -> int:
+    if sc.stage == 2:
+        return 3 if sc.cap_reason else 2
+    return 1
 
 
-def station_row(dom: str, st: dict[str, Any], qs: list[P.Quote], rank: int, it: dict[str, Any],
+def station_row(dom: str, st: dict[str, Any], qs: list[P.Quote], it: dict[str, Any],
                 stab: dict[str, Any] | None, flagships) -> list[Any]:
     sc: S.StationScore = st["score"]
-    dims = [(int(round(sc.dims[k].score)) if (k in sc.dims and sc.dims[k].known) else None) for k in S.DIM_ORDER]
     age = it.get("domain_age_days")
-    f = st.get("fetched_at")
-    groups = [g for g in (st.get("groups") or []) if g.get("selectable")]
+    cm = st.get("cm") or {}
+    name = str(st.get("display_name") or dom)[:24]
     row = {
         "d": dom,
-        "n": str(st.get("display_name") or dom)[:40],
-        "rank": rank,
+        "n": None if name == dom else name,
         "score": _s(sc.total, 3),
         "grade": sc.grade,
-        "stage": sc.stage,
+        "stage": _stage(sc),
         "pct": None if sc.percentile is None else int(round(sc.percentile)),
-        "dims": dims,
         "stab": int((stab or {}).get("stability_score", 100)),
-        "age": int(age) if isinstance(age, (int, float)) and age >= 0 else None,
-        "price": _s(st.get("topup_price")),
+        "age": int(age) // 30 if isinstance(age, (int, float)) and age >= 0 else None,
+        "off": _s(cm.get("off_pct"), 3),
+        "chp": None if cm.get("cheaper_pct") is None else int(round(cm["cheaper_pct"])),
+        "price": _s(st.get("topup_price"), 3),
         "mode": st.get("topup_mode") or "unknown",
-        "fx": _s(st.get("usd_exchange_rate")),
-        "cur": st.get("quota_display_type"),
-        "qpu": _s(st.get("quota_per_unit"), 8),
-        "ver": (str(st.get("version"))[:24] if st.get("version") else None),
-        "api": _url(st.get("server_address")),
-        "docs": _url(st.get("docs_link")),
-        "topup": _url(st.get("top_up_link")),
         "login": [_b(st.get("github_oauth")) or 0, _b(st.get("linuxdo_oauth")) or 0, _b(st.get("telegram_oauth")) or 0],
         "email": _b(st.get("email_verification")),
-        "ts": _b(st.get("turnstile_check")),
         "eps": "".join(EP_CODES[e] for e in (st.get("endpoints") or []) if e in EP_CODES),
-        "crc": st.get("cache_read_coverage"),
-        "cwc": st.get("cache_write_coverage"),
-        "groups": len(groups),
+        "crc": _s(st.get("cache_read_coverage"), 2),
         "models": int(st.get("parsed") or len({q.model for q in qs})),
-        "upd": int(f.timestamp()) if isinstance(f, datetime) else None,
-        "cfg": last_config_change(st),
         "fs": flagship_cells(qs, flagships),
     }
     return [row[c] for c in COL_NAMES]
 
 
 def stations_payload(stations: dict[str, dict[str, Any]], by_station: dict[str, list[P.Quote]], intel: dict[str, Any],
-                     stability_map: dict[str, Any], now: datetime, flagships, base_url: str = "") -> dict[str, Any]:
-    rows = [station_row(d, stations[d], by_station.get(d, []), i, intel.get(d) or {}, stability_map.get(d), flagships)
-            for i, d in enumerate(rank_order(stations), 1)]
+                     stability_map: dict[str, Any], now: datetime, flagships) -> dict[str, Any]:
+    rows = [station_row(d, stations[d], by_station.get(d, []), intel.get(d) or {}, stability_map.get(d), flagships)
+            for d in rank_order(stations)]
     return {
         "v": SCHEMA_VERSION,
         "generated_at": now.isoformat(timespec="seconds"),
-        "source": (base_url.rstrip("/") + "/compare/") if base_url else "/compare/",
-        "note": "只读公开 /api/status + /api/pricing 归一化结果；价格为人民币/百万 token（常规按量分组最低价），以站点实时页面为准。",
         "flagships": list(flagships),
-        "dim_keys": list(S.DIM_ORDER),
         "cols": COL_NAMES,
-        "col_desc": {c: d for c, d in COLS},
         "rows": rows,
     }
 
 
 def dumps(payload: dict[str, Any]) -> str:
-    return json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+    """JSON safe to embed inside <script type="application/json"> (no `</script>` break-out)."""
+    return json.dumps(payload, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c")
 
 
-def _csv_cell(v: Any) -> Any:
-    if v is None:
-        return ""
-    if v == "na":
-        return "n/a"
-    return v
+def gz_size(payload: dict[str, Any]) -> int:
+    return len(gzip.compress(dumps(payload).encode("utf-8"), mtime=0))
 
 
-def stations_csv(payload: dict[str, Any]) -> str:
-    """Flat CSV mirror of stations.json (dims / login / flagships expanded into columns)."""
-    cols = payload["cols"]
-    ix = {c: i for i, c in enumerate(cols)}
-    dim_keys = payload.get("dim_keys") or list(S.DIM_ORDER)
-    flags = payload.get("flagships") or []
-    head: list[str] = []
-    for c in cols:
-        if c == "dims":
-            head += [f"dim_{k}" for k in dim_keys]
-        elif c == "login":
-            head += ["login_github", "login_linuxdo", "login_telegram"]
-        elif c == "cfg":
-            head += ["cfg_date", "cfg_change"]
-        elif c == "fs":
-            for m in flags:
-                head += [f"{m}_in", f"{m}_out", f"{m}_cache_read", f"{m}_cache_write", f"{m}_group", f"{m}_group_ratio"]
-        else:
-            head.append(c)
-    buf = io.StringIO()
-    w = csv.writer(buf, lineterminator="\n")
-    w.writerow(head)
-    for r in payload["rows"]:
-        out: list[Any] = []
-        for c in cols:
-            v = r[ix[c]]
-            if c == "dims":
-                out += [_csv_cell(x) for x in (v or [None] * len(dim_keys))]
-            elif c == "login":
-                out += [_csv_cell(x) for x in (v or [None] * 3)]
-            elif c == "cfg":
-                out += [_csv_cell(x) for x in (v or [None, None])]
-            elif c == "fs":
-                cells: dict[int, list[Any]] = {int(x[0]): x[1:] for x in (v or [])}
-                for i in range(len(flags)):
-                    out += [_csv_cell(x) for x in cells.get(i, [None] * 6)]
-            elif c in ("api", "docs", "topup"):
-                out.append(full_url(v))
-            else:
-                out.append(_csv_cell(v))
-        w.writerow(out)
-    return buf.getvalue()
 COMPARE_JS = r"""
 (function () {
   "use strict";
   var app = document.getElementById("compare-app");
   if (!app) return;
   var MAX = 4;
-  var DIMS = __DIMS__;
-  var EP = { a: "Anthropic", o: "OpenAI Chat", r: "OpenAI Responses", g: "Gemini", i: "生图", v: "视频", e: "Embedding" };
-  var MODE = { discount: "折价额度", fx: "按汇率直充", custom: "自定义比例", unknown: "未公开" };
-  var data = null, ix = {}, byDom = {}, sel = [], note = "";
+  var EP = { a: "Claude Code / Cursor", o: "ChatBox / Cherry Studio", r: "Codex 等新版客户端", g: "Gemini 客户端", i: "AI 生图", v: "AI 视频", e: "知识库检索" };
+  var MODE = { discount: "折价额度（充得越多越便宜）", fx: "按汇率直充", custom: "站点自定义比例", unknown: "未公开" };
+  var STAGE = { 1: "仅公开报价（未人工实测，最高 B 级）", 2: "已通过真实调用实测", 3: "实测未达标（最高 C 级）" };
+  var data = null, ix = {}, byDom = {}, rankOf = {}, sel = [], note = "";
   var $ = function (id) { return document.getElementById(id); };
   var head = $("cmp-head"), body = $("cmp-body"), chips = $("cmp-chips"), status = $("cmp-status");
   var q = $("cmp-q"), sug = $("cmp-sug"), diff = $("cmp-diff"), copyBtn = $("cmp-copy");
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
-  function get(r, c) { return r[ix[c]]; }
+  function get(r, c) {
+    if (c === "rank") return rankOf[r[ix.d]];
+    var v = r[ix[c]];
+    return (c === "n" && v == null) ? r[ix.d] : v;
+  }
   function money(v) {
     if (v == null) return "";
     if (v >= 1) return "¥" + (+v.toFixed(2));
     if (v >= 0.01) return "¥" + (+v.toFixed(4));
     return "¥" + (+v.toFixed(6));
   }
-  function full(u) { return u ? (/^https?:\/\//.test(u) ? u : "https://" + u) : ""; }
   function muted(t) { return '<span class="muted">' + esc(t) + "</span>"; }
   function say(t) { status.textContent = t; }
   function cell(t, k, n) { return { t: t, k: k == null ? t : k, n: (typeof n === "number" && isFinite(n)) ? n : null }; }
   function yn(v, yes, no) { return v == null ? cell(muted("未公开"), "?") : cell(v ? yes : no, v ? "1" : "0"); }
-  function link(u) {
-    if (!u) return cell(muted("未公开"), "");
-    var f = full(u);
-    return cell('<a class="ext" href="' + esc(f) + '" rel="nofollow noopener" target="_blank">' + esc(u.slice(0, 48)) + "</a>", f);
+  function disc(p) {
+    if (p == null) return "暂无统一比价基线";
+    if (p < 10) return "不到官网 1 折";
+    if (p < 95) return "约官网 " + (p / 10).toFixed(1) + " 折";
+    if (p <= 105) return "约等于官网价";
+    return "高于官网（约 " + (p / 100).toFixed(1) + " 倍）";
   }
   function price(v, cacheish) {
     if (v === "na") return cell(muted("不适用"), "na");
@@ -268,9 +183,9 @@ COMPARE_JS = r"""
     if (v === 0 && cacheish) return cell('<span class="badge free">免费</span>', "0", 0);
     return cell(money(v), String(v), v);
   }
-  function age(d) {
-    if (d == null) return cell(muted("未知"), "");
-    return cell(d >= 365 ? (d / 365).toFixed(1) + " 年" : d + " 天", String(d), d);
+  function age(m) {
+    if (m == null) return cell(muted("未知"), "");
+    return cell(m >= 12 ? (m / 12).toFixed(1) + " 年" : (m < 1 ? "不到 1 个月" : m + " 个月"), String(m), m);
   }
   function flag(r, i) {
     var fs = get(r, "fs") || [];
@@ -281,60 +196,42 @@ COMPARE_JS = r"""
   function sections() {
     var S = [];
     var base = [
-      { l: "信誉分 / 等级", best: "max", f: function (r) { return cell("<b>" + get(r, "score") + "</b> " + esc(get(r, "grade")) + " 级 · Stage " + get(r, "stage"), String(get(r, "score")), get(r, "score")); } },
-      { l: "信誉排名", best: "min", f: function (r) { return cell("#" + get(r, "rank"), String(get(r, "rank")), get(r, "rank")); } },
-      { l: "全网百分位", best: "max", f: function (r) { var p = get(r, "pct"); return p == null ? cell(muted("—"), "") : cell("超过 " + p + "% 站点", String(p), p); } }
+      { l: "综合靠谱分 / 等级", best: "max", f: function (r) { return cell("<b>" + get(r, "score") + "</b> " + esc(get(r, "grade")) + " 级", String(get(r, "score")), get(r, "score")); } },
+      { l: "体检方式", f: function (r) { var s = get(r, "stage"); return cell(esc(STAGE[s] || "—"), String(s)); } },
+      { l: "靠谱度排名", best: "min", f: function (r) { return cell("第 " + get(r, "rank") + " 名", String(get(r, "rank")), get(r, "rank")); } },
+      { l: "在全网的位置", best: "max", f: function (r) { var p = get(r, "pct"); return p == null ? cell(muted("—"), "") : cell("超过 " + p + "% 站点", String(p), p); } }
     ];
-    (data.dim_keys || []).forEach(function (k, i) {
-      base.push({ l: "子分 · " + (DIMS[k] || k), best: "max", f: function (r) { var v = (get(r, "dims") || [])[i]; return v == null ? cell(muted("证据不足"), "") : cell(String(v), String(v), v); } });
-    });
-    base.push({ l: "价格稳定分", best: "max", f: function (r) { var v = get(r, "stab"); return cell(String(v), String(v), v); } });
-    base.push({ l: "域名时长", best: "max", f: function (r) { return age(get(r, "age")); } });
-    S.push(["基础信誉与分位", base]);
-    S.push(["计费与汇率口径", [
-      { l: "充值比例", best: "min", f: function (r) { var p = get(r, "price"); return p == null ? cell(muted("未公开"), "") : cell("¥" + p + " / $1", String(p), p); } },
-      { l: "充值模式", f: function (r) { var m = get(r, "mode") || "unknown"; return cell(esc(MODE[m] || m), m); } },
-      { l: "站内汇率", f: function (r) { var v = get(r, "fx"); return v == null ? cell(muted("未公开"), "") : cell(String(v), String(v)); } },
-      { l: "显示币种", f: function (r) { var v = get(r, "cur"); return v ? cell("<code>" + esc(v) + "</code>", v) : cell(muted("未公开"), ""); } },
-      { l: "额度单位", f: function (r) { var v = get(r, "qpu"); return v ? cell(Number(v).toLocaleString() + " 额度 = $1", String(v)) : cell(muted("未公开"), ""); } },
-      { l: "最近汇率 / 分组倍率变动", f: function (r) { var c = get(r, "cfg"); return c ? cell(esc(c[0]) + " " + esc(c[1]), c.join(" ")) : cell(muted("近 30 天无"), ""); } }
+    base.push({ l: "防暗涨记录", best: "max", f: function (r) { var v = get(r, "stab"); return cell(String(v) + " 分", String(v), v); } });
+    base.push({ l: "开站时长", best: "max", f: function (r) { return age(get(r, "age")); } });
+    S.push(["靠谱程度", base]);
+    S.push(["价格水平", [
+      { l: "相对官网价", best: "min", f: function (r) { var p = get(r, "off"); return p == null ? cell(muted(disc(null)), "") : cell(esc(disc(p)), String(p), p); } },
+      { l: "比全网同行便宜", best: "max", f: function (r) { var p = get(r, "chp"); return p == null ? cell(muted("—"), "") : cell("比 " + p + "% 同行便宜", String(p), p); } },
+      { l: "充值比例", best: "min", f: function (r) { var p = get(r, "price"); return p == null ? cell(muted("未公开"), "") : cell("¥" + p + " 换 $1 额度", String(p), p); } },
+      { l: "充值方式", f: function (r) { var m = get(r, "mode") || "unknown"; return cell(esc(MODE[m] || m), m); } }
     ]]);
-    S.push(["接入与账号门槛", [
-      { l: "系统版本", f: function (r) { var v = get(r, "ver"); return v ? cell("<code>" + esc(v) + "</code>", v) : cell(muted("未公开"), ""); } },
-      { l: "API 地址", f: function (r) { var v = get(r, "api"); return v ? cell("<code>" + esc(full(v)) + "</code>", full(v)) : cell(muted("未公开"), ""); } },
-      { l: "文档链接", f: function (r) { return link(get(r, "docs")); } },
-      { l: "充值入口", f: function (r) { return link(get(r, "topup")); } },
-      { l: "登录方式", f: function (r) {
+    S.push(["注册与使用", [
+      { l: "快捷登录", f: function (r) {
         var g = get(r, "login") || [0, 0, 0], names = ["GitHub", "Linux.do", "Telegram"], on = [];
         names.forEach(function (n, i) { if (g[i]) on.push(n); });
         return on.length ? cell(esc(on.join(" · ")), on.join(",")) : cell(muted("仅账号密码"), "");
       } },
-      { l: "邮箱验证", f: function (r) { return yn(get(r, "email"), "需要", "不需要"); } },
-      { l: "Turnstile 人机校验", f: function (r) { return yn(get(r, "ts"), "开启", "未开启"); } }
+      { l: "注册要邮箱验证", f: function (r) { return yn(get(r, "email"), "需要", "不需要"); } },
+      { l: "能直接用在", f: function (r) { var e = get(r, "eps") || ""; var t = e.split("").map(function (c) { return EP[c] || c; }); return t.length ? cell(esc(t.join(" · ")), e) : cell(muted("未声明"), ""); } }
     ]]);
-    S.push(["协议与缓存覆盖", [
-      { l: "支持协议", f: function (r) { var e = get(r, "eps") || ""; var t = e.split("").map(function (c) { return EP[c] || c; }); return t.length ? cell(esc(t.join(" · ")), e) : cell(muted("未声明"), ""); } },
-      { l: "缓存读覆盖率", best: "max", f: function (r) { var v = get(r, "crc"); return v == null ? cell(muted("不适用"), "") : cell(v + "%", String(v), v); } },
-      { l: "缓存写覆盖率", best: "max", f: function (r) { var v = get(r, "cwc"); return v == null ? cell(muted("不适用"), "") : cell(v + "%", String(v), v); } },
-      { l: "公开分组数", f: function (r) { var v = get(r, "groups"); return cell(String(v), String(v)); } },
-      { l: "有效型号数", best: "max", f: function (r) { var v = get(r, "models"); return cell(String(v), String(v), v); } },
-      { l: "数据更新", f: function (r) { var u = get(r, "upd"); return u ? cell(new Date(u * 1000).toLocaleString("zh-CN", { hour12: false }), String(u)) : cell(muted("—"), ""); } }
+    S.push(["长对话缓存与规模", [
+      { l: "公开缓存读取价的型号", best: "max", f: function (r) { var v = get(r, "crc"); return v == null ? cell(muted("不适用"), "") : cell(v + "%", String(v), v); } },
+      { l: "在售型号数", best: "max", f: function (r) { var v = get(r, "models"); return cell(String(v), String(v), v); } }
     ]]);
     (data.flagships || []).forEach(function (m, i) {
-      var cols = [["常规输入", 1, false], ["输出", 2, false], ["缓存读", 3, true], ["缓存写", 4, true]];
+      var cols = [["日常输入价", 1, false], ["输出价", 2, false], ["长对话缓存读取价", 3, true]];
       var rows = cols.map(function (c) {
         return { l: c[0], best: "min", f: function (r) { var x = flag(r, i); return x ? price(x[c[1]], c[2]) : cell(muted("未上架"), "-"); } };
       });
-      rows.push({ l: "常规组名与倍率", f: function (r) {
-        var x = flag(r, i); if (!x) return cell(muted("—"), "-");
-        var g = x[5] || "default";
-        return cell("<code>" + esc(g) + "</code>" + (x[6] != null ? " ×" + x[6] : ""), g + "|" + x[6]);
-      } });
-      S.push(["旗舰 · " + m + "（¥ / 百万 token）", rows]);
+      S.push(["热门模型 · " + m + "（¥ / 百万 token）", rows]);
     });
     return S;
   }
-
   function render() {
     var n = sel.length, rs = sel.map(function (d) { return byDom[d]; });
     head.innerHTML = '<tr class="hd"><th scope="col" class="lbl">对比项</th>' + rs.map(function (r, i) {
@@ -374,7 +271,7 @@ COMPARE_JS = r"""
   function renderChips() {
     chips.innerHTML = sel.map(function (d) {
       var r = byDom[d];
-      return '<span class="cmp-chip">' + esc(get(r, "n")) + ' <small>#' + get(r, "rank") + '</small><button type="button" class="ic" data-rm="' + esc(d) + '" aria-label="移除 ' + esc(get(r, "n")) + '">×</button></span>';
+      return '<span class="cmp-chip">' + esc(get(r, "n")) + ' <small>第 ' + get(r, "rank") + ' 名</small><button type="button" class="ic" data-rm="' + esc(d) + '" aria-label="移除 ' + esc(get(r, "n")) + '">×</button></span>';
     }).join("") + (sel.length < MAX ? '<span class="muted cmp-left">还可添加 ' + (MAX - sel.length) + " 家</span>" : "");
   }
   function sync() {
@@ -442,77 +339,63 @@ COMPARE_JS = r"""
   });
 
   function boot() {
-    body.innerHTML = '<tr class="empty"><td colspan="2">正在加载 /data/stations.json …</td></tr>';
-    fetch(app.dataset.src || "/data/stations.json").then(function (r) {
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      return r.json();
-    }).then(function (d) {
-      data = d;
-      d.cols.forEach(function (c, i) { ix[c] = i; });
-      d.rows.forEach(function (r) { byDom[get(r, "d")] = r; });
-      var want = (new URLSearchParams(location.search).get("s") || "").split(",").map(function (s) { return s.trim().toLowerCase(); }).filter(function (s) { return byDom[s]; });
-      sel = want.filter(function (s, i) { return want.indexOf(s) === i; }).slice(0, MAX);
-      if (!sel.length) {
-        sel = d.rows.slice(0, 3).map(function (r) { return get(r, "d"); });
-        note = "未指定站点，已预载信誉排名前 3 的站点";
-      }
-      app.classList.add("ready");
-      renderChips();
-      render();
-    }).catch(function (err) {
-      body.innerHTML = '<tr class="empty"><td colspan="2">数据加载失败（' + esc(err.message) + '）。<button type="button" class="btn sm" id="cmp-retry">重试</button></td></tr>';
-      var rb = $("cmp-retry"); if (rb) rb.addEventListener("click", boot);
-    });
+    var el = $("cmp-data");
+    try {
+      data = JSON.parse(el ? el.textContent : "null");
+      if (!data || !data.cols) throw new Error("empty");
+    } catch (err) {
+      body.innerHTML = '<tr class="empty"><td colspan="2">对比数据读取失败，请刷新页面重试。</td></tr>';
+      return;
+    }
+    data.cols.forEach(function (c, i) { ix[c] = i; });
+    data.rows.forEach(function (r, i) { byDom[r[ix.d]] = r; rankOf[r[ix.d]] = i + 1; });
+    var want = (new URLSearchParams(location.search).get("s") || "").split(",").map(function (s) { return s.trim().toLowerCase(); }).filter(function (s) { return byDom[s]; });
+    sel = want.filter(function (s, i) { return want.indexOf(s) === i; }).slice(0, MAX);
+    if (!sel.length) {
+      sel = data.rows.slice(0, 3).map(function (r) { return get(r, "d"); });
+      note = "未指定站点，已预载靠谱度排名前 3 的站点";
+    }
+    app.classList.add("ready");
+    renderChips();
+    render();
   }
   boot();
 })();
 """
 
 
-def fit_payload(payload: dict[str, Any]) -> dict[str, Any]:
-    """Guarantee the open dataset stays within MAX_BYTES (drops the field glossary first, then config texts)."""
-    if len(dumps(payload).encode("utf-8")) <= MAX_BYTES:
-        return payload
-    payload = dict(payload, col_desc={"_": "字段说明见 /about/ 第七节"})
-    if len(dumps(payload).encode("utf-8")) > MAX_BYTES:
-        ci = payload["cols"].index("cfg")
-        payload["rows"] = [r[:ci] + [None] + r[ci + 1:] for r in payload["rows"]]
-    return payload
-
-
 def compare_js() -> str:
-    dims = {k: S.DIM_LABELS.get(k, k) for k in S.DIM_ORDER}
-    return COMPARE_JS.replace("__DIMS__", json.dumps(dims, ensure_ascii=False))
+    return COMPARE_JS
 
 
 def build_compare(site: Any, payload: dict[str, Any] | None = None) -> None:
-    n = len((payload or {}).get("rows") or [])
-    flags = "、".join((payload or {}).get("flagships") or [])
+    payload = payload or {"cols": COL_NAMES, "rows": [], "flagships": []}
+    n = len(payload.get("rows") or [])
+    flags = "、".join(payload.get("flagships") or [])
     n_txt = f"{n} 家在榜站点" if n else "全部在榜站点"
     body = (
-        '<section class="hero sm"><p class="eyebrow">并排对比 · 纯前端读取开放数据</p><h1>中转站并排对比</h1>'
-        f'<p class="lead">从 {n_txt}中挑 2–4 家，逐行对齐信誉分位、充值与汇率口径、接入与账号门槛、协议与缓存覆盖，以及 6 大旗舰模型的常规价'
-        f'{("（" + E(flags) + "）") if flags else ""}。未指定站点时自动预载信誉排名前 3。</p></section>'
-        '<div id="compare-app" class="cmp-app" data-src="/data/stations.json">'
+        '<section class="hero sm"><p class="eyebrow">并排对比 · 帮你在几家之间做决定</p><h1>中转站并排对比</h1>'
+        f'<p class="lead">从 {n_txt}中挑 2–4 家，逐行对齐靠谱分、相对官网的价格、注册门槛、能用的软件、长对话缓存，以及热门模型的日常价'
+        f'{("（" + E(flags) + "）") if flags else ""}。未指定站点时自动预载靠谱度排名前 3。</p></section>'
+        '<div id="compare-app" class="cmp-app">'
         '<div class="cmp-pick"><div class="search cmp-search" role="search">'
         '<input id="cmp-q" type="search" placeholder="搜索站点名或域名，回车加入对比" autocomplete="off" aria-label="搜索并添加站点" aria-controls="cmp-sug">'
         '<div id="cmp-sug" class="sug" hidden role="listbox"></div></div>'
         '<div id="cmp-chips" class="cmp-chips" aria-live="polite"></div></div>'
         '<div class="cmp-tools"><label class="sw"><input type="checkbox" id="cmp-diff"> 只看差异项</label>'
         '<button type="button" class="btn sm" id="cmp-copy">复制对比链接</button>'
-        '<a class="btn sm" href="/data/stations.json" download>下载 JSON</a>'
-        '<a class="btn sm" href="/data/stations.csv" download>导出 CSV</a>'
         '<span id="cmp-status" class="muted" role="status"></span></div>'
         '<div class="tbl-wrap"><table class="cmp-mx" id="cmp-mx"><thead id="cmp-head"></thead>'
-        '<tbody id="cmp-body"><tr class="empty"><td>正在加载对比数据…</td></tr></tbody></table></div>'
-        '<noscript><p class="muted">对比矩阵需要启用 JavaScript；也可直接下载 <a href="/data/stations.json">stations.json</a> 或 <a href="/data/stations.csv">stations.csv</a>。</p></noscript>'
+        '<tbody id="cmp-body"><tr class="empty"><td>正在整理对比数据…</td></tr></tbody></table></div>'
+        '<noscript><p class="muted">对比表需要启用 JavaScript；也可以逐家打开 <a href="/stations/">站点排行</a> 里的站点档案查看。</p></noscript>'
         '</div>'
-        '<p class="muted">口径：价格为常规按量分组最低价（¥ / 百万 token），异常低价、免费与福利分组不参与；缓存价「未公开」不等于免费，「不适用」表示该项不涉及。'
-        '字段说明见 <a href="/about/">评分方法第七节</a>；数据有误请 <a href="/submit/">提交纠错</a>。</p>'
+        '<p class="muted">口径：价格为常规按量分组的最低价（¥ / 百万 token），异常低价、免费与福利分组不参与；缓存价「未公开」不等于免费，「不适用」表示该项不涉及。'
+        '评分方法见 <a href="/about/">关于本站</a>；数据有误请 <a href="/submit/">提交纠错</a>。</p>'
+        f'<script type="application/json" id="cmp-data">{dumps(payload)}</script>'
         f"<script>{compare_js()}</script>"
     )
     site.page(
-        "/compare/", "AI API 中转站并排对比：充值比例、登录门槛、缓存与旗舰价格",
-        "并排对比 2–4 家 AI API 中转站：信誉分位、充值模式与汇率、API 地址与登录门槛、缓存读写覆盖率与 6 大旗舰模型价格，支持只看差异项与分享链接。",
+        "/compare/", "AI API 中转站并排对比：靠谱分、相对官网价格、注册门槛与热门模型价格",
+        "并排对比 2–4 家 AI API 中转站：综合靠谱分、约官网几折、比多少同行便宜、快捷登录与能用的软件、长对话缓存与热门模型价格，支持只看差异项与分享链接。",
         body, crumbs=[("站点排行", "/stations/"), ("并排对比", "/compare/")], priority=0.7,
     )

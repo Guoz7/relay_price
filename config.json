@@ -2,7 +2,7 @@
   "site_name": "API 比价雷达",
   "site_tagline": "AI 大模型 API 中转站评分与比价",
   "base_url": "https://agentied.work",
-  "description": "为 AI API 中转站做分层信誉校验与真实人民币比价：透明展示协议支持、多分组价差与缓存成本，未实测站点评级封顶 B 级，接入真金白银探针实测后解锁 A/S 认证，每日自动更新。",
+  "description": "为 AI API 中转站做分层信誉校验与真实人民币比价：透明展示协议支持、多分组价差与缓存成本，未实测站点评级封顶 B 级，接入真金白银探针实测后解锁 A/S 认证，每 6 小时自动更新。",
   "user_agent": "Mozilla/5.0 (compatible; RelayPriceBot/1.0; +https://agentied.work/about/)",
   "submit_url": "mailto:submit@agentied.work?subject=%E6%94%B6%E5%BD%95%2F%E7%BA%A0%E9%94%99",
   "github_issues_url": "https://github.com/Guoz7/relay_price/issues/new",

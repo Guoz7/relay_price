@@ -424,7 +424,7 @@ def score_probe(probe: dict[str, Any] | None) -> tuple[Dim, int, str]:
     if veto_reasons:
         return Dim("probe", p_score, "，".join(parts), known=True), 2, "；".join(veto_reasons) + "，触发降级封顶 C 级"
     if not probe.get("passed_stage2", samples >= 20):
-        return Dim("probe", p_score, "，".join(parts) + "（实测样本未满 20 次，暂按 Stage 1 封顶）", known=True), 1, "实测样本不足，暂封顶 B 级"
+        return Dim("probe", p_score, "，".join(parts) + "（实测样本未满 20 次，暂按未实测规则最高 B 级）", known=True), 1, "实测样本不足，暂封顶 B 级"
     return Dim("probe", p_score, "，".join(parts), known=True), 2, ""
 
 

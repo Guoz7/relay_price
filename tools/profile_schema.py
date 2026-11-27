@@ -344,20 +344,20 @@ def main() -> None:
         B.compute_station_scores(stations, by_station, intel, B.load_run_stats(now), cfg, probes.load_probe_summary(ROOT / "data"),
                                  stability_map=stab, now=now, monitored=len(list((ROOT / "data" / "history").glob("*.json.gz"))) >= 2)
         B.compute_quote_scores(by_model, stations, cfg)
-        payload = CP.stations_payload(stations, by_station, intel, stab, now, B.FLAGSHIP_MODELS, cfg.get("base_url", ""))
+        B.consumer_context(stations, by_station, B.MS.load_model_specs(ROOT / "data"), cfg, changes, intel=intel, stability_map=stab)
+        payload = CP.stations_payload(stations, by_station, intel, stab, now, B.FLAGSHIP_MODELS)
         raw = CP.dumps(payload).encode("utf-8")
-        csv_b = CP.stations_csv(payload).encode("utf-8")
+        gz = CP.gz_size(payload)
         n_fs = sum(len(r[CP.COL_NAMES.index("fs")]) for r in payload["rows"])
-        fs_cw = sum(1 for r in payload["rows"] for c in r[CP.COL_NAMES.index("fs")] if isinstance(c[4], (int, float)))
-        print(f"\n== 10. Experiment C · stations.json: {len(payload['rows'])} stations, {len(payload['cols'])} cols, {n_fs} flagship cells "
-              f"({fs_cw} with cache-write) → {len(raw):,} bytes ({len(raw) / 1024:.1f} KB, budget {CP.MAX_BYTES // 1024} KB) · CSV {len(csv_b) / 1024:.1f} KB")
-        report["exp_c"] = {"stations": len(payload["rows"]), "bytes": len(raw), "csv_bytes": len(csv_b), "flagship_cells": n_fs, "flagship_cache_write": fs_cw}
-        if len(raw) > CP.MAX_BYTES:
-            fails.append(f"stations.json {len(raw)} bytes > {CP.MAX_BYTES}")
-        leak = sum(1 for r in payload["rows"] for i in (CP.COL_NAMES.index("api"), CP.COL_NAMES.index("docs"), CP.COL_NAMES.index("topup"))
-                   if r[i] and leaked(CP.full_url(r[i]), r[0]))
+        fs_cr = sum(1 for r in payload["rows"] for c in r[CP.COL_NAMES.index("fs")] if isinstance(c[3], (int, float)))
+        print(f"\n== 10. Experiment C · /compare/ inline data: {len(payload['rows'])} stations, {len(payload['cols'])} cols, {n_fs} flagship cells "
+              f"({fs_cr} with cache-read) → {len(raw):,} bytes raw, {gz / 1024:.1f} KB gzipped (budget {CP.MAX_GZ_BYTES // 1024} KB)")
+        report["exp_c"] = {"stations": len(payload["rows"]), "bytes": len(raw), "gz_bytes": gz, "flagship_cells": n_fs, "flagship_cache_read": fs_cr}
+        if gz > CP.MAX_GZ_BYTES:
+            fails.append(f"compare inline data {gz} gz bytes > {CP.MAX_GZ_BYTES}")
+        leak = [k for k in CP.FORBIDDEN_KEYS if k in payload["cols"]]
         if leak:
-            fails.append(f"stations.json leaks {leak} dirty URLs")
+            fails.append(f"compare inline data exposes raw config columns {leak}")
 
     print("\n== Invariants: " + ("ALL PASS" if not fails else "FAIL"))
     for f in fails:

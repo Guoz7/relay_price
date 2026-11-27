@@ -211,20 +211,24 @@ class RenderTests(unittest.TestCase):
         html = B.station_rank_table(stations, {}, NOW, intel={"a.test": {"domain_age_days": 800}})
         self.assertEqual(html.count("<tr>"), html.count("</tr>"))
         f_a = re.search(r'data-f="([^"]*)">1<', html).group(1).split()
-        self.assertTrue({"ep-a", "ep-r", "gh", "nots", "cr", "cw", "disc", "stab", "age1"} <= set(f_a))
+        self.assertTrue({"ep-a", "ep-o", "cw", "stab", "age1", "easy"} <= set(f_a))
         f_b = re.search(r'data-f="([^"]*)">2<', html).group(1).split()
-        self.assertEqual(set(f_b) & {"ep-a", "gh", "nots", "cr", "disc", "age1"}, set())
-        self.assertIn("fx", f_b)
+        self.assertEqual(set(f_b) & {"ep-a", "cw", "age1", "easy", "gb"}, set())
+        self.assertIn("ep-o", f_b)
         self.assertIn('data-cmp="a.test"', html)
         self.assertIn('<th class="cmp" scope="col"', html)
         compact = B.station_rank_table(stations, {}, NOW, compact=True)
         self.assertNotIn("data-f=", compact)
         self.assertNotIn("data-cmp", compact)
         bar = B.facet_bar(2)
-        for txt in ("Anthropic", "OpenAI Responses", "Gemini", "Linux.do 登录", "GitHub 登录", "免 Turnstile", "公开缓存读", "公开缓存写",
-                    "折价额度站", "汇率直充站", "价格平稳 ≥80", "域名 ≥1年", "B 级及以上", "当前显示 2 / 2 家站点", "重置筛选",
-                    'href="/data/stations.json"', 'href="/data/stations.csv"'):
+        for txt in ("按使用场景", "按选站偏好", "写代码 / Claude Code", "日常聊天 / 翻译", "Gemini 模型", "长对话省钱缓存",
+                    "省钱优选（前 30% 便宜）", "老牌稳用（1 年以上）", "近期没涨价", "高分优先（B 级+）", "好注册（支持快捷登录）",
+                    "当前显示 2 / 2 家站点", "重置筛选", 'href="/compare/"'):
             self.assertIn(txt, bar)
+        for bad in ("下载 JSON", "导出 CSV", "/data/", "Turnstile", "OpenAI Responses"):
+            self.assertNotIn(bad, bar)
+        self.assertEqual({t for _, chips in B.FACETS for t, _ in chips},
+                         {"ep-a", "ep-o", "ep-g", "cw", "cheap", "age1", "stab", "gb", "easy"})
         self.assertEqual(bar.count("<div"), bar.count("</div>"))
         self.assertIn("已选", B.compare_bar())
         self.assertIn("开始并排对比", B.compare_bar())
@@ -248,17 +252,19 @@ class RenderTests(unittest.TestCase):
             self.assertEqual(st2["config_changes"][0]["run_at"][:10], "2026-11-27")
             self.assertEqual(json.loads(lp.read_text(encoding="utf-8")), log)
 
-    def test_about_documents_open_data_and_three_values(self):
+    def test_about_documents_no_download_and_three_values(self):
         site = DummySite()
         B.build_about(site, {})
         body = site.pages["/about/"]["body"]
-        for txt in ("/data/stations.json", "/data/stations.csv", "三值缓存口径", "未公开", "不适用", "cache_creation_ratio", "/compare/"):
+        for txt in ("不提供批量数据下载或导出", "三值缓存口径", "未公开", "不适用", "cache_creation_ratio", "/compare/"):
             self.assertIn(txt, body)
+        for bad in ("/data/stations.json", "/data/stations.csv", "下载 JSON", "导出 CSV"):
+            self.assertNotIn(bad, body)
         for tag in ("table", "tr", "ul", "li", "p", "section"):
             self.assertEqual(body.count(f"<{tag}>") + body.count(f"<{tag} "), body.count(f"</{tag}>"), tag)
 
 
-class OpenDataAndCompareTests(unittest.TestCase):
+class InlineCompareDataTests(unittest.TestCase):
     def _payload(self, n: int = 764):
         stations, by_station = {}, {}
         for i in range(n):
@@ -266,76 +272,96 @@ class OpenDataAndCompareTests(unittest.TestCase):
             qs, st = _station(dom, bias=(i % 37) - 18)
             st["server_address"] = f"https://api.{dom}"
             st["docs_link"] = f"https://docs.{dom}/guide"
+            st["cm"] = {"off_pct": 10.0 + i % 120, "cheaper_pct": (i * 7) % 101}
             st["config_changes"] = [{"run_at": "2026-11-20T00:00:00+00:00", "text": "分组倍率 default ×1→×1.2"}] if i % 5 == 0 else []
             stations[dom], by_station[dom] = st, qs
-        return CP.stations_payload(stations, by_station, {}, {}, NOW, B.FLAGSHIP_MODELS, "https://agentied.work")
+        return CP.stations_payload(stations, by_station, {}, {}, NOW, B.FLAGSHIP_MODELS)
 
-    def test_stations_json_schema_size_and_csv(self):
-        payload = CP.fit_payload(self._payload())
-        raw = CP.dumps(payload).encode("utf-8")
-        self.assertLessEqual(len(raw), CP.MAX_BYTES)
+    def test_display_only_schema_and_size_budget(self):
+        payload = self._payload()
+        raw = CP.dumps(payload)
+        self.assertLessEqual(CP.gz_size(payload), CP.MAX_GZ_BYTES)
         obj = json.loads(raw)
+        self.assertEqual(obj["v"], CP.SCHEMA_VERSION)
         self.assertEqual(obj["cols"], CP.COL_NAMES)
         self.assertEqual(len(obj["rows"]), 764)
         self.assertTrue(all(len(r) == len(obj["cols"]) for r in obj["rows"]))
+        for key in CP.FORBIDDEN_KEYS:
+            self.assertNotIn(key, obj["cols"])
+        for leak in ("https://api.relay", "docs.relay", "/topup", "quota_per_unit", "billing_expr", "v0.9.1", "group_ratio"):
+            self.assertNotIn(leak, raw)
         ix = {c: i for i, c in enumerate(obj["cols"])}
         r0 = obj["rows"][0]
-        self.assertEqual(r0[ix["rank"]], 1)
         self.assertEqual(r0[ix["mode"]], "discount")
         self.assertEqual(r0[ix["eps"]], "aor")
         self.assertEqual(r0[ix["login"]], [1, 0, 0])
-        self.assertFalse(str(r0[ix["api"]]).startswith("https://"))
+        self.assertIsInstance(r0[ix["off"]], (int, float))
+        self.assertTrue(0 <= r0[ix["chp"]] <= 100)
         fs = {c[0]: c for c in r0[ix["fs"]]}
         self.assertEqual(sorted(fs), [0, 2, 4, 5])
-        self.assertEqual(fs[0][1:5], [1.2, 6, 0.12, 1.5])
+        self.assertTrue(all(len(c) == 4 for c in fs.values()))
+        self.assertEqual(fs[0][1:4], [1.2, 6, 0.12])
         self.assertIsNone(fs[2][3])  # struct-zero → 未公开 (null), never 0
         self.assertEqual(fs[4][3], 0)  # explicit ×0 → 免费
-        self.assertEqual(fs[0][5], "")  # default group elided
-        ranks = [r[ix["score"]] for r in obj["rows"]]
-        self.assertEqual(ranks, sorted(ranks, reverse=True))
-        csv_txt = CP.stations_csv(payload)
-        lines = csv_txt.splitlines()
-        self.assertEqual(len(lines), 765)
-        self.assertIn("claude-sonnet-5-5_cache_write", lines[0])
-        self.assertIn("https://api.relay", lines[1])
-        self.assertEqual(len(lines[0].split(",")), len(lines[1].split(",")))
-        fat = dict(payload, rows=payload["rows"] * 2)
-        self.assertLessEqual(len(CP.dumps(CP.fit_payload(fat)).encode("utf-8")), len(CP.dumps(fat).encode("utf-8")))
+        scores = [r[ix["score"]] for r in obj["rows"]]
+        self.assertEqual(scores, sorted(scores, reverse=True))  # rank is implied by row order
+        self.assertFalse(hasattr(CP, "stations_csv"))
 
-    def test_compare_page_renders_and_js_parses(self):
+    def test_dumps_cannot_break_out_of_script(self):
+        payload = {"rows": [["x.test", "</script><script>alert(1)</script><!--"]]}
+        txt = CP.dumps(payload)
+        self.assertNotIn("</script>", txt)
+        self.assertNotIn("<!--", txt)
+        self.assertEqual(json.loads(txt), payload)
+
+    def test_compare_page_inline_data_and_js_parses(self):
         site = DummySite()
         payload = self._payload(5)
         CP.build_compare(site, payload)
-        pg = site.pages["/compare/"]
-        body = pg["body"]
-        for txt in ('id="compare-app"', 'data-src="/data/stations.json"', "只看差异项", "复制对比链接", "下载 JSON", "导出 CSV",
-                    'href="/submit/"', "预载信誉排名前 3", "claude-sonnet-5-5"):
+        body = site.pages["/compare/"]["body"]
+        for txt in ('id="compare-app"', 'id="cmp-data"', "只看差异项", "复制对比链接", 'href="/submit/"', "预载靠谱度排名前 3",
+                    "claude-sonnet-5-5"):
             self.assertIn(txt, body)
+        for bad in ("data-src", "/data/stations.json", "下载 JSON", "导出 CSV", "fetch(", "https://api.relay"):
+            self.assertNotIn(bad, body)
+        self.assertEqual(VD.jargon_hits(body), [])
         _balanced(self, body)
+        blob = re.search(r'<script type="application/json" id="cmp-data">(.*?)</script>', body, re.S).group(1)
+        self.assertEqual(json.loads(blob)["cols"], CP.COL_NAMES)
         js = re.findall(r"<script>(.*?)</script>", body, re.S)
         self.assertEqual(len(js), 1)
-        for marker in ("slice(0, 3)", "MAX = 4", "history.replaceState", '"?s="', "onlyDiff", "best", "data-rm", "data-mv"):
+        for marker in ("slice(0, 3)", "MAX = 4", "history.replaceState", '"?s="', "onlyDiff", "best", "data-rm", "data-mv",
+                       '$("cmp-data")', "JSON.parse"):
             self.assertIn(marker, js[0])
-        self.assertNotIn("__DIMS__", js[0])
+        for bad in ("Stage 1", "Turnstile", "quota_per_unit", "OpenAI Responses", "/data/"):
+            self.assertNotIn(bad, js[0])
         _node_check(self, js[0])
 
     def test_nav_links_compare(self):
         import inspect
         self.assertIn('<a href="/compare/">对比</a>', inspect.getsource(B.Site.page))
 
-    def test_verify_dist_open_data_check(self):
+    def test_verify_dist_zero_download_check(self):
         with tempfile.TemporaryDirectory() as td:
             d = Path(td)
-            self.assertEqual(VD.check_open_data(d), ["data/stations.json missing"])
+            site = DummySite()
+            CP.build_compare(site, self._payload(3))
+            (d / "compare").mkdir()
+            (d / "compare" / "index.html").write_text(site.pages["/compare/"]["body"], encoding="utf-8")
+            (d / "stations").mkdir()
+            (d / "stations" / "index.html").write_text('<div id="bubble-chart"></div><script type="application/json" id="bubble-data">{}</script>'
+                                                       + B.facet_bar(3), encoding="utf-8")
+            (d / "robots.txt").write_text("User-agent: *\nAllow: /\nDisallow: /data/\n", encoding="utf-8")
+            self.assertEqual(VD.check_zero_download(d), [])
             (d / "data").mkdir()
-            payload = self._payload(3)
-            (d / "data" / "stations.json").write_text(CP.dumps(payload), encoding="utf-8")
-            (d / "data" / "stations.csv").write_text(CP.stations_csv(payload), encoding="utf-8")
-            self.assertEqual(VD.check_open_data(d), [])
-            (d / "data" / "stations.json").write_text("x" * (VD.STATIONS_JSON_MAX + 1), encoding="utf-8")
-            errs = VD.check_open_data(d)
-            self.assertTrue(any("> 286720" in e for e in errs))
-            self.assertTrue(any("invalid" in e for e in errs))
+            (d / "data" / "stations.json").write_text("{}", encoding="utf-8")
+            (d / "data" / "stations.csv").write_text("a", encoding="utf-8")
+            (d / "robots.txt").write_text("User-agent: *\nAllow: /data/stations.json\n", encoding="utf-8")
+            (d / "stations" / "index.html").write_text('<a href="/data/stations.json">下载 JSON</a>', encoding="utf-8")
+            errs = " | ".join(VD.check_zero_download(d))
+            for frag in ("data/stations.json must not", "data/stations.csv must not", "dist/data/ must stay empty",
+                         "Allow: /data/ present", "Disallow: /data/ missing", "下载 JSON present", 'id="bubble-data" missing'):
+                self.assertIn(frag, errs)
         self.assertEqual(VD.SMOKE["/compare/"], 'id="compare-app"')
 
     def test_app_js_facets_compare_and_view_toggle(self):

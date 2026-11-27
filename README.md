@@ -1,9 +1,9 @@
 # API 比价雷达（https://agentied.work）
 
-> 为 AI API 中转站做分层信誉校验与真实人民币比价：透明展示协议支持、多分组价差与缓存成本，未实测站点评级封顶 B 级，接入真金白银探针实测后解锁 A/S 认证，每日自动更新。
+> 为 AI API 中转站做分层信誉校验与真实人民币比价：透明展示协议支持、多分组价差与缓存成本，未实测站点评级封顶 B 级，接入真金白银探针实测后解锁 A/S 认证，每 6 小时自动更新。
 
 <!-- AUTO-RANK-START -->
-- **官网（每日自动更新）**：[https://agentied.work](https://agentied.work/)
+- **官网（每 6 小时自动更新）**：[https://agentied.work](https://agentied.work/)
 - **最近构建**：2026-11-27 17:43（北京时间）｜ 收录 **683** 家公开报价站 + **54** 家 Stage 0 仅建档闭源站，覆盖 **2849** 个型号
 - **分层封顶**：未接入真金白银实测探针的站点统一 **Stage 1 封顶 B 级（74 分）**，绝不给未实测站点发 A/S 牌；常规推荐自动隔离自称 Kiro/Cursor/逆向/特惠及未核实极端低价分组。
 
@@ -11,8 +11,7 @@
 
 - [月度成本算账器与主备选站助手（官方直连 vs 中转 vs 80/20 混合路由）](https://agentied.work/calc/)
 - [LLM 模型真伪鉴别与协议自测工具（Thinking 签名 / Tool-Calling / 缓存验真）](https://agentied.work/verify/)
-- [中转站并排对比（2–4 家固定规格 + 6 大旗舰价格，只看差异项 / 分享链接）](https://agentied.work/compare/)
-- [开放数据 stations.json（全部在榜站点归一化规格，供脚本与 AI Agent 读取）](https://agentied.work/data/stations.json) ｜ [CSV](https://agentied.work/data/stations.csv)
+- [中转站并排对比（2–4 家靠谱分、约官网几折与 6 大热门模型价格，只看差异项 / 分享链接；仅在线查看）](https://agentied.work/compare/)
 - [Claude Code 编程中转站推荐](https://agentied.work/scenes/claude-code/)（Anthropic 原生协议 + 7:2:1 缓存成本）
 - [DeepSeek API 中转与性价比对比](https://agentied.work/scenes/deepseek/)（缓存读价 + 分时高低峰提示）
 - [Codex / GPT-6 系列中转站推荐](https://agentied.work/scenes/codex-gpt/)（OpenAI Responses 协议 + 多分组价差）
@@ -93,8 +92,11 @@
 | `tools/probes.py` | V2A 低成本真实调用探针（连通/TTFT/TPOT/工具调用/缓存命中/账单实扣偏差）+ 复用 verify_model 的 `auth`/`iq`/`context` 真伪与智商抽检模式、预算熔断（`--max-calls`、每站 `daily_call_cap`）与 24h/7d 双窗口聚合器 |
 | `tools/scenes.py` | 4 大场景导购页生成器（Claude Code / DeepSeek / Codex·GPT / Gemini·生图视频） |
 | `tools/calc_page.py` | `/calc/` 交互式月度总账、80/20 混合路由省钱与 1 主 + 1 备选站助手生成器 |
-| `tools/compare_page.py` | 开放数据 `/data/stations.json` + `/data/stations.csv`（列式紧凑、≤ 280 KB）与 `/compare/` 纯前端并排对比矩阵（默认预载 Top 3、只看差异项、`?s=` 分享链接） |
-| `tools/profile_schema.py` | 全量原始快照字段审计：覆盖率、零值率、枚举、脏占位链接、`billing_expr` 变量表，以及缓存三值语义 / 字段展示门槛 / stations.json 体积三项实验与硬性不变量 |
+| `tools/compare_page.py` | `/compare/` 纯前端并排对比矩阵：页内嵌入仅含展示指标的紧凑 JSON（约 25 KB gzip，不含 API 地址 / 额度单位 / 分组倍率等原始配置），默认预载 Top 3、只看差异项、`?s=` 分享链接；不提供任何批量下载 |
+| `tools/consumer.py` | 面向普通用户的价格锚点（约官网几折 · 比全网多少同行便宜）、同级别同行匹配（重合型号 + 价格 + 靠谱分，镜像 / 同品牌去重）与更省钱 / 更稳备选 |
+| `tools/dashboard.py` | 站点页第一层（体检结论卡、近 30 天在线心跳与价格阶梯走势、同行横向对比、热门模型比价条）与 `/stations/`「省钱 vs 靠谱」气泡图 HTML |
+| `tools/timeseries.py` | 30 天滚动时序账本 `data/timeseries.json.gz`：从 `data/fetch-runs` 与 `data/history` 回填，每站最多 120 个点（6 小时一次），不受调价日志条数淘汰影响 |
+| `tools/profile_schema.py` | 全量原始快照字段审计：覆盖率、零值率、枚举、脏占位链接、`billing_expr` 变量表，以及缓存三值语义 / 字段展示门槛 / 对比页内嵌数据体积三项实验与硬性不变量 |
 | `tools/verify_page.py` | `/verify/` LLM 模型真伪鉴别页（支持在线边缘无状态验真与本机开源脚本双模式） |
 | `tools/verify_model.py` | 本机零依赖 LLM 真伪与智商抽检 CLI：Mulberry32 动态种子出题，`--tier l1_auth/l2_iq/l3_deep`，输出真伪特征分 `auth_score` 与智商保真分 `iq_score`，可用 `--reference-url` 同种子差分比对官方端点；与 `functions/api/verify.js` 1:1 对齐 |
 | `functions/api/verify.js` | Cloudflare Pages 无状态边缘验真接口（`POST /api/verify`，严格 SSRF 防护、绝不落盘 API Key） |

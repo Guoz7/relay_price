@@ -1,4 +1,4 @@
-"""Interactive TCO / Hybrid-Routing / Primary+Backup Relay Calculator (/calc/) + /data/calc.json.
+"""Interactive TCO / Hybrid-Routing / Primary+Backup Relay Calculator (/calc/) with its model data inlined in the page.
 
 Addresses the full buyer decision funnel:
 1. Cross-model monthly cost comparison (Official API vs. Best Reliable Relay vs. Hybrid Routing savings)
@@ -100,12 +100,8 @@ def build_calc(
             "picks": picks,
         })
 
-    calc_json = dist_dir / "data" / "calc.json"
-    calc_json.parent.mkdir(parents=True, exist_ok=True)
-    calc_json.write_text(
-        json.dumps({"usd_cny_rate": usd_rate, "models": payload_models}, ensure_ascii=False, separators=(",", ":")),
-        encoding="utf-8",
-    )
+    calc_data = (json.dumps({"usd_cny_rate": usd_rate, "models": payload_models}, ensure_ascii=False, separators=(",", ":"))
+                 .replace("<", "\\u003c"))
 
     body = f"""
 <section class="hero sm">
@@ -159,6 +155,7 @@ def build_calc(
     <li><b>先小额实测三件事再续费</b>：① 连续发两轮同前缀请求看缓存是否真命中；② 核对后台单次扣费与公开标价是否一致；③ 用你的真实代码/业务 Prompt 测工具调用与响应速度。</li>
   </ul>
 </section>
+<script type="application/json" id="calc-data">{calc_data}</script>
 <script>
 (function(){{
   var PRESETS = {{
@@ -226,7 +223,7 @@ def build_calc(
       document.getElementById('c-note').textContent = '模型官网参考价与上下文规格同步自开源仓库 models.dev / LiteLLM；中转价取常规按量推荐区（已剔除 Kiro/逆向/特惠与未核实极端低价）。';
     }}
   }}
-  fetch('/data/calc.json').then(function(r){{return r.json();}}).then(function(d){{
+  (function(d){{
     DATA = d;
     var hs = document.getElementById('c-heavy'), ls = document.getElementById('c-light');
     d.models.forEach(function(m){{
@@ -236,7 +233,7 @@ def build_calc(
     hs.value = d.models.some(function(m){{return m.id==='claude-sonnet-5-5';}}) ? 'claude-sonnet-5-5' : d.models[0].id;
     ls.value = d.models.some(function(m){{return m.id==='deepseek-v4.1-flash';}}) ? 'deepseek-v4.1-flash' : d.models[0].id;
     render();
-  }});
+  }})(JSON.parse(document.getElementById('calc-data').textContent));
   ['c-req','c-in','c-out','c-cache','c-heavy','c-light'].forEach(function(id){{
     var el = document.getElementById(id);
     if(el) el.addEventListener('input', render);

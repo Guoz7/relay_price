@@ -104,14 +104,15 @@ class VerifyAndInsightsTests(unittest.TestCase):
             it = {"domain_age_days": 730, "domain_registered_at": "2024-11-27", "domain_expires_at": "2027-11-27",
                   "registrar": "Cloudflare", "tranco_rank": 120000, "sources": ["linux.do"]}
             html = B._station_bento("demo.test", st, [q], it, {"attempts": 10, "successes": 10, "ms": [420]}, None, revs["demo.test"])
-            self.assertIn("价格稳定性", html)
+            self.assertIn("防暗涨记录", html)
             self.assertIn("Cloudflare", html)
             self.assertIn("Tranco #120,000", html)
             self.assertIn("/verify/?base_url=https%3A%2F%2Fdemo.test", html)
             self.assertIn("★ 5.0 / 5", html)
             self.assertIn("@alice", html)
-            self.assertIn("LLM 模型真伪与智商抽检", html)
-            self.assertIn("L0", html)
+            self.assertIn("模型真伪与降智抽检", html)
+            self.assertIn("最高只给 B 级（74 分）", html)
+            self.assertNotIn("Stage 1", html)
             self.assertEqual(html.count("<div"), html.count("</div>"))
 
     def test_probe_panel_and_bento_render_authenticity_iq_tiers(self):
@@ -130,7 +131,7 @@ class VerifyAndInsightsTests(unittest.TestCase):
             self.assertIn(txt, panel)
         self.assertEqual(panel.count("<div"), panel.count("</div>"))
         html = B._station_bento("demo.test", {"display_name": "Demo", "score": sc}, [], {}, {}, None, [])
-        self.assertIn("LLM 模型真伪与智商抽检", html)
+        self.assertIn("模型真伪与降智抽检", html)
         self.assertIn("篡改被接受 1 次", html)
         self.assertEqual(html.count("<div"), html.count("</div>"))
 
@@ -298,8 +299,10 @@ class VerifyAndInsightsTests(unittest.TestCase):
         html = B.station_rank_table(stations, {}, datetime(2026, 11, 27, tzinfo=timezone.utc),
                                     intel={"a.test": {"domain_age_days": 800}}, stability_map=stab)
         self.assertIn('table class="qt sortable rank"', html)
-        self.assertIn('data-first="desc"><button type="button">域名时长', html)
-        self.assertIn('data-first="desc"', html.split("更新")[0][-60:])
+        self.assertIn('data-first="desc"><button type="button">开站时长', html)
+        self.assertIn('data-first="desc" title="站内定时巡检公开接口的成功比例"><button type="button">近 30 天在线', html)
+        for head in ("靠谱度", "相对价格", "防暗涨", "型号数"):
+            self.assertIn(f'<button type="button">{head}</button>', html)
         self.assertIn('data-v="na"', html)
         self.assertIn('data-v="800"', html)
         self.assertIn(f'class="sbar danger" style="--v:{stab["a.test"]["stability_score"]}%"', html)
@@ -339,7 +342,8 @@ class VerifyAndInsightsTests(unittest.TestCase):
         self.assertIn("证据完整度 100%", html)
         self.assertIn("短板拖累", html)
         self.assertIn('<li class="wl">', html)
-        self.assertIn("未实测平滑封顶", html)
+        self.assertIn("还没人工实测，按规则压到", html)
+        self.assertNotIn("Stage 1 封顶", html)
         for k in S.DIM_ORDER:
             self.assertIn(f"ev-{k}", html)
         self.assertEqual(html.count("<li"), html.count("</li>"))
@@ -409,11 +413,13 @@ class VerifyAndInsightsTests(unittest.TestCase):
         self.assertLess(len(html.encode()), 2500)
         self.assertEqual(B.model_dist_chart("x", std[:2], [], None, None, {}), "")
 
-    def test_rank_table_purity_column_and_one_decimal_scores(self):
+    def test_rank_table_plain_columns_and_one_decimal_scores(self):
         stations = {"a.test": self._seven_station(), "b.test": self._station("b.test")}
         html = B.station_rank_table(stations, {}, datetime(2026, 11, 27, tzinfo=timezone.utc))
-        self.assertIn('<button type="button">纯净</button>', html)
-        self.assertIn('data-v="na"><span class="muted">—</span>', html)
+        self.assertNotIn('<button type="button">纯净</button>', html)
+        self.assertIn('<button type="button">相对价格</button>', html)
+        self.assertIn('data-v="na"><span class="muted">暂无比价基线</span>', html)
+        self.assertIn("分项：", html)
         self.assertIn(f'<b>{stations["a.test"]["score"].total:.1f}</b>', html)
         self.assertEqual(html.count("<tr>"), html.count("</tr>"))
 

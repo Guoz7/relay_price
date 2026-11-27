@@ -301,3 +301,144 @@ def model_price_dist_svg(
     label = f"常规按量{what}分布：{line}" + (f"；官方 {p(official)}" if official else "") + (f"；推荐 {p(rec)}" if rec else "") + (
         f"；特惠/逆向中位 {p(alt_median)}" if alt_median else "")
     return _svg("mdist", 400, 66, label, body)
+
+
+# ---------------------------------------------------------------- 6. consumer dashboard (heartbeat / latency / step price)
+_CST_OFFSET_H = 8
+
+
+def ts_label(ts: str) -> str:
+    """Ledger hour stamp "2026-11-26T12:00Z" -> Beijing time "11-26 20:00"."""
+    try:
+        dt = datetime.strptime(str(ts)[:16], "%Y-%m-%dT%H:%M").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return str(ts)
+    from datetime import timedelta
+
+    return (dt + timedelta(hours=_CST_OFFSET_H)).strftime("%m-%d %H:%M")
+
+
+def _epoch(ts: str) -> float | None:
+    try:
+        return datetime.strptime(str(ts)[:16], "%Y-%m-%dT%H:%M").replace(tzinfo=timezone.utc).timestamp()
+    except ValueError:
+        return None
+
+
+def _fin(v: Any) -> bool:
+    return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
+
+
+def heartbeat_svg(points: Sequence[Sequence[Any]]) -> str:
+    """One bar per scheduled check: green = 在线, red = 异常, grey = 未巡检. points = [(ts, ok_01|None, ms|None), ...]."""
+    pts = [p for p in points if p and p[0]]
+    if not pts:
+        return ""
+    w, h, top, bh = 600, 46, 2, 30
+    n = len(pts)
+    bw = w / n
+    gap = 1.0 if bw >= 3 else 0.0
+    groups: dict[str, list[str]] = {"hb-ok": [], "hb-bad": [], "hb-na": []}
+    n_ok = n_bad = 0
+    for i, (ts, ok, ms) in enumerate((p[0], p[1] if len(p) > 1 else None, p[2] if len(p) > 2 else None) for p in pts):
+        cls = "hb-ok" if ok == 1 else ("hb-bad" if ok == 0 else "hb-na")
+        n_ok += ok == 1
+        n_bad += ok == 0
+        state = "在线" if ok == 1 else ("打不开" if ok == 0 else "未巡检")
+        tip = f"{ts_label(ts)} · {state}" + (f" · 响应 {int(ms)}ms" if (ok == 1 and _fin(ms)) else "")
+        groups[cls].append(f'<rect x="{_n(i * bw)}" y="{top}" width="{_n(max(0.6, bw - gap))}" height="{bh}" rx="1" data-tip="{_e(tip)}"/>')
+    body = "".join(f'<g class="{c}">{"".join(r)}</g>' for c, r in groups.items() if r)
+    body += (f'<text class="t2" x="0" y="{h - 2}">{_e(ts_label(pts[0][0]))}</text>'
+             f'<text class="t2" x="{w}" y="{h - 2}" text-anchor="end">最近一次 {_e(ts_label(pts[-1][0]))}</text>')
+    label = f"近 {n} 次巡检：{n_ok} 次在线，{n_bad} 次打不开"
+    return _svg("hb", w, h, label, body)
+
+
+def latency_sparkline_svg(points: Sequence[Sequence[Any]]) -> str:
+    """Response-time sparkline over successful checks (values winsorized at 1.25x P90 so one stall never flattens the line)."""
+    pts = [(p[0], float(p[2])) for p in points if len(p) > 2 and p[1] == 1 and _fin(p[2]) and p[2] >= 0]
+    if len(pts) < 2:
+        return ""
+    w, h, y0, y1 = 600, 54, 6, 40
+    vals = [v for _, v in pts]
+    p90 = quantile(vals, .9) or max(vals)
+    hi = max(1.0, p90 * 1.25)
+    lo = 0.0
+    med = quantile(vals, .5) or 0.0
+    n = len(pts)
+
+    def X(i: int) -> float:
+        return w * i / (n - 1)
+
+    def Y(v: float) -> float:
+        return y1 - (y1 - y0) * (min(v, hi) - lo) / (hi - lo)
+
+    line = " ".join(f"{_n(X(i))},{_n(Y(v))}" for i, (_, v) in enumerate(pts))
+    dots = "".join(
+        f'<circle cx="{_n(X(i))}" cy="{_n(Y(v))}" r="5" data-tip="{_e(f"{ts_label(ts)} · 响应 {int(v)}ms" + ("（偏慢）" if v > p90 else ""))}"/>'
+        for i, (ts, v) in enumerate(pts)
+    )
+    my = _n(Y(med))
+    body = (f'<path class="lt-md" d="M0 {my}H{w}"/><polyline class="lt" points="{line}"/><g class="lt-hit">{dots}</g>'
+            f'<text class="t2" x="0" y="{h - 2}">平时中位 {int(med)}ms</text>'
+            f'<text class="t2" x="{w}" y="{h - 2}" text-anchor="end">偏慢时 {int(p90)}ms</text>')
+    return _svg("lat", w, h, f"接口响应：平时中位 {int(med)}ms，偏慢时 {int(p90)}ms（{n} 次成功巡检）", body)
+
+
+def price_step_svg(points: Sequence[Sequence[Any]], ref: Sequence[Sequence[Any]] | None = None, *,
+                   ref_label: str = "同行均价", unit: str = "¥", what: str = "输入价 / 百万 token") -> str:
+    """Step-after price line (price holds until the next snapshot) with a dashed reference line and hover hit zones."""
+    pts = sorted(((ts, float(v)) for ts, v in points if _fin(v) and v > 0 and _epoch(ts) is not None), key=lambda x: x[0])
+    if len(pts) < 2:
+        return ""
+    refs = sorted(((ts, float(v)) for ts, v in (ref or []) if _fin(v) and v > 0 and _epoch(ts) is not None), key=lambda x: x[0])
+    w, h, x0, x1, y0, y1 = 600, 150, 46, 594, 10, 122
+    t0 = min(_epoch(pts[0][0]), _epoch(refs[0][0]) if refs else _epoch(pts[0][0]))
+    t1 = max(_epoch(pts[-1][0]), _epoch(refs[-1][0]) if refs else _epoch(pts[-1][0]))
+    if t1 <= t0:
+        t1 = t0 + 3600
+    vals = [v for _, v in pts] + [v for _, v in refs]
+    lo, hi = min(vals), max(vals)
+    pad = (hi - lo) * 0.12 if hi > lo else max(hi * 0.1, 1e-6)
+    lo, hi = max(0.0, lo - pad), hi + pad
+
+    def X(ts: str) -> float:
+        return x0 + (x1 - x0) * ((_epoch(ts) or t0) - t0) / (t1 - t0)
+
+    def Y(v: float) -> float:
+        return y1 - (y1 - y0) * (v - lo) / (hi - lo)
+
+    def step(series: list[tuple[str, float]]) -> str:
+        d = f"M{_n(X(series[0][0]))} {_n(Y(series[0][1]))}"
+        for ts, v in series[1:]:
+            d += f"H{_n(X(ts))}V{_n(Y(v))}"
+        return d + f"H{x1}"
+
+    ref_at = dict(refs)
+    body = "".join(f'<path class="gl" d="M{x0} {_n(Y(v))}H{x1}"/><text class="t2" x="{x0 - 4}" y="{_n(Y(v) + 3)}" text-anchor="end">{_e(fmt_price(v, unit))}</text>'
+                   for v in (lo + (hi - lo) * f for f in (0.15, 0.5, 0.85)))
+    if refs:
+        body += f'<path class="ps-ref" d="{step(refs)}"/>'
+    body += f'<path class="ps" d="{step(pts)}"/>'
+    hits = []
+    last_ref = None
+    for i, (ts, v) in enumerate(pts):
+        nx = X(pts[i + 1][0]) if i + 1 < len(pts) else x1
+        r = ref_at.get(ts, last_ref)
+        last_ref = r
+        tip = f"{ts_label(ts)} · 本站 {fmt_price(v, unit)}"
+        if r:
+            d = (v / r - 1) * 100
+            tip += f" · {ref_label} {fmt_price(r, unit)} · " + ("和同行差不多" if abs(d) < 3 else (f"比同行便宜 {-d:.0f}%" if d < 0 else f"比同行贵 {d:.0f}%"))
+        hits.append(f'<rect x="{_n(X(ts))}" y="{y0}" width="{_n(max(2.0, nx - X(ts)))}" height="{y1 - y0}" data-tip="{_e(tip)}"/>')
+        if i == 0 or v != pts[i - 1][1]:
+            hits.append(f'<circle class="ps-pt" cx="{_n(X(ts))}" cy="{_n(Y(v))}" r="3"/>')
+    body += f'<g class="ps-hit">{"".join(hits)}</g>'
+    body += (f'<text class="t2" x="{x0}" y="{h - 12}">{_e(ts_label(pts[0][0]))}</text>'
+             f'<text class="t2" x="{x1}" y="{h - 12}" text-anchor="end">{_e(ts_label(pts[-1][0]))}</text>'
+             f'<text class="t2" x="{x0}" y="{h - 1}"><tspan class="tac">━ 本站</tspan>'
+             + (f' · <tspan class="tref">┅ {_e(ref_label)}</tspan>' if refs else "") + f' · {_e(what)}</text>')
+    first, last = pts[0][1], pts[-1][1]
+    trend = "持平" if abs(last - first) < 1e-9 else ("下降" if last < first else "上涨")
+    label = f"本站价格走势（{len(pts)} 次快照）：{fmt_price(first, unit)} → {fmt_price(last, unit)}，整体{trend}"
+    return _svg("pstep", w, h, label, body)
